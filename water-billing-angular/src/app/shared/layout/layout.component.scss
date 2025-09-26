@@ -1,0 +1,359 @@
+// Topbar styling improvements
+.topbar {
+  .dropdown {
+    .dropdown-toggle {
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+        border-radius: 0.375rem;
+      }
+      
+      &:focus {
+        box-shadow: none;
+        outline: none;
+      }
+      
+      .img-profile {
+        border: 2px solid #e3e6f0;
+      }
+    }
+    
+    .dropdown-menu {
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      border-radius: 0.375rem;
+      min-width: 200px;
+      
+      .dropdown-item {
+        padding: 0.5rem 1rem;
+        
+        &:hover {
+          background-color: #f8f9fc;
+        }
+        
+        i {
+          width: 16px;
+          text-align: center;
+        }
+      }
+      
+      .dropdown-header {
+        padding: 0.75rem 1rem 0.5rem;
+        background-color: #f8f9fc;
+        border-bottom: 1px solid #e3e6f0;
+        margin-bottom: 0;
+      }
+      
+      .dropdown-divider {
+        margin: 0.5rem 0;
+      }
+    }
+  }
+}
+
+// SB Admin 2 Layout Styles
+#wrapper {
+  display: flex;
+  
+  #content-wrapper {
+    background-color: #f8f9fc;
+    width: 100%;
+    overflow-x: hidden;
+  }
+  
+  #content {
+    flex: 1 0 auto;
+  }
+}
+
+.sidebar {
+  width: 14rem;
+  min-height: 100vh;
+  
+  .sidebar-brand {
+    height: 4.375rem;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 800;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.05rem;
+    z-index: 1;
+    
+    .sidebar-brand-icon i {
+      font-size: 2rem;
+    }
+    
+    .sidebar-brand-text {
+      color: rgba(255, 255, 255, 0.8);
+      
+      .brand-main {
+        font-size: 0.85rem;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+        line-height: 1.2;
+        color: #fff;
+      }
+      
+      .brand-sub {
+        font-size: 0.65rem;
+        font-weight: 600;
+        opacity: 0.9;
+        letter-spacing: 0.8px;
+        line-height: 1;
+        margin-top: -1px;
+        color: rgba(255, 255, 255, 0.9);
+      }
+    }
+    
+    .sidebar-brand-icon {
+      img {
+        object-fit: contain;
+      }
+    }
+  }
+  
+  .sidebar-heading {
+    text-align: center;
+    padding: 0 1rem;
+    font-weight: 800;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1rem;
+    color: rgba(255, 255, 255, 0.4);
+  }
+  
+  .nav-item {
+    position: relative;
+    
+    .nav-link {
+      text-align: left;
+      padding: 1rem;
+      width: 14rem;
+      color: rgba(255, 255, 255, 0.8);
+      
+      i {
+        font-size: 0.85rem;
+        margin-right: 0.25rem;
+      }
+      
+      span {
+        font-size: 0.85rem;
+        display: inline;
+      }
+      
+      &:hover {
+        color: #fff;
+      }
+      
+      &.active {
+        color: #fff;
+      }
+    }
+    
+    &:first-child .nav-link {
+      padding-top: 0.75rem;
+    }
+  }
+  
+  .sidebar-divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    margin: 0 1rem 1rem;
+  }
+  
+  .collapse-inner {
+    border-radius: 0.35rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+  }
+  
+  .collapse-header {
+    margin: 0;
+    white-space: nowrap;
+    padding: 0.5rem 1.5rem;
+    text-transform: uppercase;
+    font-weight: 800;
+    font-size: 0.65rem;
+    color: #b7b9cc;
+  }
+  
+  .collapse-item {
+    padding: 0.5rem 1rem;
+    margin: 0 0.5rem;
+    display: block;
+    color: #3a3b45;
+    text-decoration: none;
+    border-radius: 0.35rem;
+    white-space: nowrap;
+    
+    &:hover {
+      color: #5a5c69;
+      background-color: #eaecf4;
+    }
+    
+    &.active {
+      color: #6e707e;
+      font-weight: 700;
+    }
+  }
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
+  background-size: cover;
+}
+
+.topbar {
+  height: 4.375rem;
+  
+  .navbar-search {
+    .form-control {
+      font-size: 0.85rem;
+      height: auto;
+      border-color: transparent;
+      
+      &:focus {
+        border-color: #dddfeb;
+      }
+    }
+    
+    .btn {
+      border-color: transparent;
+    }
+  }
+  
+  .topbar-divider {
+    width: 0;
+    border-right: 1px solid #e3e6f0;
+    height: calc(4.375rem - 2rem);
+    margin: auto 1rem;
+  }
+  
+  .nav-item {
+    .nav-link {
+      color: #5a5c69;
+      padding: 0.75rem 1rem;
+      
+      &:hover {
+        color: #5a5c69;
+      }
+    }
+    
+    &.no-arrow .dropdown-toggle::after {
+      display: none;
+    }
+  }
+  
+  .dropdown-list {
+    padding: 0;
+    border: none;
+    overflow: hidden;
+    
+    .dropdown-header {
+      background-color: #4e73df;
+      border: 1px solid #4e73df;
+      padding-top: 0.75rem;
+      padding-bottom: 0.75rem;
+      color: #fff;
+    }
+  }
+  
+  .img-profile {
+    height: 2rem;
+    width: 2rem;
+  }
+}
+
+.badge-counter {
+  position: absolute;
+  transform: scale(0.7);
+  transform-origin: top right;
+  right: 0.25rem;
+  margin-top: -0.25rem;
+}
+
+.scroll-to-top {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  display: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  text-align: center;
+  color: #fff;
+  background: rgba(90, 92, 105, 0.5);
+  line-height: 46px;
+  
+  &:focus,
+  &:hover {
+    color: white;
+  }
+  
+  &:hover {
+    background: #5a5c69;
+  }
+  
+  i {
+    font-weight: 800;
+  }
+}
+
+.sticky-footer {
+  flex-shrink: 0;
+  
+  .copyright {
+    line-height: 1;
+    font-size: 0.8rem;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .sidebar {
+    width: 6.5rem;
+    
+    .sidebar-brand .sidebar-brand-text {
+      display: none;
+    }
+    
+    .nav-item .nav-link span {
+      display: none;
+    }
+    
+    .sidebar-heading {
+      display: none;
+    }
+  }
+  
+  .sidebar.toggled {
+    width: 0 !important;
+    overflow: hidden;
+  }
+  
+  .topbar {
+    .dropdown-toggle span {
+      display: none !important;
+    }
+  }
+}
+
+.container-fluid {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+// Animation classes for SweetAlert2 and other animations
+.animated--grow-in {
+  animation-name: growIn;
+  animation-duration: 200ms;
+  animation-timing-function: transform cubic-bezier(0.18, 1.25, 0.4, 1), opacity cubic-bezier(0, 1, 0.4, 1);
+}
+
+@keyframes growIn {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

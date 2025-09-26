@@ -1,0 +1,239 @@
+<div id="wrapper">
+  <!-- Sidebar -->
+  <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar" [class.toggled]="sidebarToggled">
+    <!-- Sidebar - Brand -->
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" routerLink="/dashboard">
+      <div class="sidebar-brand-icon mr-2">
+        <img src="assets/logo.png" alt="Denkam Waters" width="32" height="32" class="rounded">
+      </div>
+      <div class="sidebar-brand-text">
+        <div class="brand-main">WATER BILLING</div>
+        <div class="brand-sub">DENKAM</div>
+      </div>
+    </a>
+
+    <!-- Divider -->
+    <hr class="sidebar-divider my-0">
+
+    <!-- Nav Item - Dashboard -->
+    <li class="nav-item">
+      <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">
+        <i class="fas fa-fw fa-tachometer-alt"></i>
+        <span>Dashboard</span>
+      </a>
+    </li>
+
+    <!-- Divider -->
+    <hr class="sidebar-divider">
+
+    <!-- ADMIN SECTION -->
+    <div *ngIf="isAdmin()">
+      <div class="sidebar-heading">Management</div>
+      
+      <li class="nav-item">
+        <a class="nav-link" routerLink="/clients" routerLinkActive="active">
+          <i class="fas fa-fw fa-users"></i>
+          <span>Clients</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseBilling" 
+           aria-expanded="true" aria-controls="collapseBilling">
+          <i class="fas fa-fw fa-file-invoice-dollar"></i>
+          <span>Billing</span>
+        </a>
+        <div id="collapseBilling" class="collapse" aria-labelledby="headingBilling" data-bs-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Billing Sections:</h6>
+            <a class="collapse-item" routerLink="/bills/ongoing">Ongoing Bills</a>
+            <a class="collapse-item" routerLink="/bills/history">Billing History</a>
+            <a class="collapse-item" routerLink="/payments">Payments</a>
+          </div>
+        </div>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link" routerLink="/users" routerLinkActive="active">
+          <i class="fas fa-fw fa-user-cog"></i>
+          <span>Users</span>
+        </a>
+      </li>
+
+      <hr class="sidebar-divider">
+      <div class="sidebar-heading">Analysis & Settings</div>
+      
+      <li class="nav-item">
+        <a class="nav-link" routerLink="/reports" routerLinkActive="active">
+          <i class="fas fa-fw fa-chart-area"></i>
+          <span>Reports</span>
+        </a>
+      </li>
+      
+      <li class="nav-item">
+        <a class="nav-link" routerLink="/settings" routerLinkActive="active">
+          <i class="fas fa-fw fa-cog"></i>
+          <span>Settings</span>
+        </a>
+      </li>
+    </div>
+
+    <!-- METER READER SECTION -->
+    <div *ngIf="isMeterReader()">
+      <div class="sidebar-heading">Operations</div>
+      
+      <li class="nav-item">
+        <a class="nav-link" routerLink="/clients" routerLinkActive="active">
+          <i class="fas fa-fw fa-users"></i>
+          <span>Clients</span>
+        </a>
+      </li>
+      
+      <li class="nav-item">
+        <a class="nav-link" routerLink="/readings" routerLinkActive="active">
+          <i class="fas fa-fw fa-tachometer-alt"></i>
+          <span>Meter Readings</span>
+        </a>
+      </li>
+      
+      <li class="nav-item">
+        <a class="nav-link" routerLink="/bills/ongoing" routerLinkActive="active">
+          <i class="fas fa-fw fa-file-invoice-dollar"></i>
+          <span>Bills</span>
+        </a>
+      </li>
+    </div>
+
+    <!-- CLIENT SECTION -->
+    <div *ngIf="isClient()">
+      <div class="sidebar-heading">My Account</div>
+      
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseMyBilling" 
+           aria-expanded="true" aria-controls="collapseMyBilling">
+          <i class="fas fa-fw fa-file-invoice-dollar"></i>
+          <span>My Bills</span>
+        </a>
+        <div id="collapseMyBilling" class="collapse" aria-labelledby="headingMyBilling" data-bs-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">My Billing:</h6>
+            <a class="collapse-item" routerLink="/bills/ongoing">Current Bills</a>
+            <a class="collapse-item" routerLink="/bills/history">Payment History</a>
+          </div>
+        </div>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link" routerLink="/reports" routerLinkActive="active">
+          <i class="fas fa-fw fa-chart-bar"></i>
+          <span>My Reports</span>
+        </a>
+      </li>
+    </div>
+
+    <!-- Divider -->
+    <hr class="sidebar-divider d-none d-md-block">
+
+    <!-- Sidebar Toggler (Sidebar) -->
+    <div class="text-center d-none d-md-inline">
+      <button class="rounded-circle border-0" id="sidebarToggle" (click)="toggleSidebar()"></button>
+    </div>
+  </ul>
+  <!-- End of Sidebar -->
+
+  <!-- Content Wrapper -->
+  <div id="content-wrapper" class="d-flex flex-column">
+    <!-- Main Content -->
+    <div id="content">
+      <!-- Topbar -->
+      <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+        <div class="container-fluid">
+          <!-- Left Side: Sidebar Toggle + Page Title -->
+          <div class="d-flex align-items-center">
+            <!-- Sidebar Toggle (Topbar) -->
+            <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3" (click)="toggleSidebar()">
+              <i class="fa fa-bars"></i>
+            </button>
+            <!-- Page Title -->
+            <h1 class="h5 mb-0 text-gray-800 d-none d-sm-block">{{ getPageTitle() }}</h1>
+          </div>
+
+          <!-- Center: Action Buttons (if any) -->
+          <div class="d-flex align-items-center">
+            <!-- Add any center buttons here if needed -->
+          </div>
+
+          <!-- Right Side: User Profile Dropdown -->
+          <div class="d-flex align-items-center ml-auto">
+            <div class="dropdown" *ngIf="currentUser">
+              <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center" 
+                      type="button" 
+                      id="userDropdown" 
+                      data-bs-toggle="dropdown" 
+                      aria-expanded="false"
+                      style="border: none; color: #5a5c69;">
+                <span class="d-none d-sm-inline small font-weight-medium">
+                  {{ getUserDisplayName() }} ({{ currentUser.role }})
+                </span>
+                <i class="fas fa-caret-down ml-2"></i>
+              </button>
+              <!-- Dropdown Menu -->
+              <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                <li class="dropdown-header text-center">
+                  <strong>{{ getUserDisplayName() }}</strong>
+                  <br>
+                  <small class="text-muted">{{ currentUser.role }}</small>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li *ngIf="!isMeterReader()">
+                  <a class="dropdown-item" routerLink="/home">
+                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                    Profile
+                  </a>
+                </li>
+                <li *ngIf="isAdmin()">
+                  <a class="dropdown-item" routerLink="/settings">
+                    <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
+                    Settings
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <a class="dropdown-item" href="#" (click)="logout()">
+                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                    Logout
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <!-- End of Topbar -->
+
+      <!-- Begin Page Content -->
+      <div class="container-fluid">
+        <router-outlet></router-outlet>
+      </div>
+      <!-- /.container-fluid -->
+    </div>
+    <!-- End of Main Content -->
+
+    <!-- Footer -->
+    <footer class="sticky-footer bg-white">
+      <div class="container my-auto">
+        <div class="copyright text-center my-auto">
+          <span>© 2025 Developed by <strong>Lawrence Mbugua</strong>. All rights reserved.</span>
+        </div>
+      </div>
+    </footer>
+    <!-- End of Footer -->
+  </div>
+  <!-- End of Content Wrapper -->
+</div>
+<!-- End of Page Wrapper -->
+
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+  <i class="fas fa-angle-up"></i>
+</a>

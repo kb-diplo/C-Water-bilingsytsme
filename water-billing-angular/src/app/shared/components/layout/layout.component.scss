@@ -1,0 +1,152 @@
+// SB Admin 2 Layout Styles
+#wrapper {
+  display: flex;
+  
+  #content-wrapper {
+    background-color: #f8f9fc;
+    width: 100%;
+    overflow-x: hidden;
+  }
+}
+
+.sidebar {
+  width: 14rem;
+  min-height: 100vh;
+  
+  &.toggled {
+    width: 6.5rem;
+    
+    .sidebar-brand-text {
+      display: none;
+    }
+    
+    .sidebar-heading {
+      display: none;
+    }
+    
+    .nav-link span {
+      display: none;
+    }
+    
+    .collapse-inner {
+      display: none;
+    }
+  }
+}
+
+.sidebar-brand {
+  height: 4.375rem;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 800;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  z-index: 1;
+}
+
+.sidebar-brand-icon i {
+  font-size: 2rem;
+}
+
+.sidebar-brand-text {
+  margin-left: 0.25rem;
+}
+
+.sidebar-divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  margin: 0 1rem 1rem;
+}
+
+.sidebar-heading {
+  text-align: center;
+  padding: 0 1rem;
+  font-weight: 800;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.nav-item {
+  .nav-link {
+    text-align: left;
+    padding: 1rem;
+    width: 14rem;
+    color: rgba(255, 255, 255, 0.8);
+    
+    &:hover {
+      color: #fff;
+    }
+    
+    &.active {
+      color: #fff;
+    }
+    
+    i {
+      font-size: 0.85rem;
+      margin-right: 0.25rem;
+    }
+  }
+}
+
+.topbar {
+  height: 4.375rem;
+  
+  .navbar-nav .nav-item .nav-link {
+    color: #5a5c69;
+    
+    &:hover {
+      color: #5a5c69;
+    }
+  }
+}
+
+.scroll-to-top {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  display: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  text-align: center;
+  color: #fff;
+  background: rgba(90, 92, 105, 0.5);
+  line-height: 46px;
+  
+  &:focus,
+  &:hover {
+    color: white;
+  }
+  
+  &:hover {
+    background: #5a5c69;
+  }
+  
+  i {
+    font-weight: 800;
+  }
+}
+
+.sticky-footer {
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 6.5rem;
+    
+    .sidebar-brand-text {
+      display: none;
+    }
+    
+    .sidebar-heading {
+      display: none;
+    }
+    
+    .nav-link span {
+      display: none;
+    }
+  }
+}
