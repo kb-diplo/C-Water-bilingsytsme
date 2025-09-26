@@ -1,0 +1,360 @@
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+  <h1 class="h3 mb-0 text-gray-800">
+    {{ getGreeting() }}, {{ getUserName() }}!
+  </h1>
+  <div *ngIf="authService.isAdmin()">
+    <a routerLink="/reports" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+      <i class="fas fa-download fa-sm text-white-50"></i> Generate Report
+    </a>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-primary" role="status">
+    <span class="sr-only">Loading...</span>
+  </div>
+  <p class="mt-3 text-muted">Loading dashboard data...</p>
+</div>
+
+<!-- Content Row - Admin/MeterReader Dashboard -->
+<div *ngIf="!loading && (authService.isAdmin() || authService.isMeterReader())">
+  <!-- Metric Cards Row -->
+  <div class="row">
+    <!-- Total Clients Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-primary shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                Total Clients
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {{ stats.totalClients | number }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-users fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Clients Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-success shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                Active Clients
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {{ stats.activeClients | number }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-user-check fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Revenue Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-info shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                Total Revenue
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                Ksh {{ stats.totalRevenue | number:'1.2-2' }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Outstanding Payments Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                Outstanding
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                Ksh {{ stats.outstandingPayments | number:'1.2-2' }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bills Status Row -->
+  <div class="row">
+    <!-- Paid Bills Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-success shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                Paid Bills
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {{ stats.paidBills | number }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Bills Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                Pending Bills
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {{ stats.pendingBills | number }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-clock fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overdue Bills Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-danger shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                Overdue Bills
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {{ stats.overdueBills | number }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Bills Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-primary shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                Total Bills
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {{ stats.totalBills | number }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-file-invoice fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions Row -->
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <!-- Admin Actions -->
+            <div *ngIf="authService.isAdmin()" class="col-md-12">
+              <div class="row">
+                <div class="col-md-3 mb-3">
+                  <a routerLink="/clients" class="btn btn-primary btn-block">
+                    <i class="fas fa-users mr-2"></i>Manage Clients
+                  </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                  <a routerLink="/bills/ongoing" class="btn btn-warning btn-block">
+                    <i class="fas fa-file-invoice mr-2"></i>View Bills
+                  </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                  <a routerLink="/payments/record" class="btn btn-success btn-block">
+                    <i class="fas fa-money-bill-wave mr-2"></i>Record Payment
+                  </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                  <a routerLink="/reports" class="btn btn-info btn-block">
+                    <i class="fas fa-chart-bar mr-2"></i>View Reports
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Meter Reader Actions -->
+            <div *ngIf="authService.isMeterReader()" class="col-md-12">
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <a routerLink="/clients" class="btn btn-primary btn-block">
+                    <i class="fas fa-users mr-2"></i>View Clients
+                  </a>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <a routerLink="/readings/add" class="btn btn-success btn-block">
+                    <i class="fas fa-tachometer-alt mr-2"></i>Add Reading
+                  </a>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <a routerLink="/bills/ongoing" class="btn btn-warning btn-block">
+                    <i class="fas fa-file-invoice mr-2"></i>View Bills
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Client Dashboard -->
+<div *ngIf="!loading && authService.isClient()">
+  <div class="row">
+    <!-- My Bills Card -->
+    <div class="col-xl-4 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                My Pending Bills
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {{ stats.pendingBills | number }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-file-invoice fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Outstanding Amount Card -->
+    <div class="col-xl-4 col-md-6 mb-4">
+      <div class="card border-left-danger shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                Amount Due
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                Ksh {{ stats.outstandingPayments | number:'1.2-2' }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paid Bills Card -->
+    <div class="col-xl-4 col-md-6 mb-4">
+      <div class="card border-left-success shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                Paid This Year
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {{ stats.paidBills | number }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client Quick Actions -->
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3 mb-3">
+              <a routerLink="/bills/ongoing" class="btn btn-primary btn-block">
+                <i class="fas fa-file-invoice mr-2"></i>View My Bills
+              </a>
+            </div>
+            <div class="col-md-3 mb-3">
+              <a routerLink="/bills/history" class="btn btn-info btn-block">
+                <i class="fas fa-history mr-2"></i>Payment History
+              </a>
+            </div>
+            <div class="col-md-3 mb-3">
+              <a routerLink="/reports" class="btn btn-success btn-block">
+                <i class="fas fa-chart-bar mr-2"></i>My Reports
+              </a>
+            </div>
+            <div class="col-md-3 mb-3">
+              <a href="mailto:support@waterbilling.com" class="btn btn-warning btn-block">
+                <i class="fas fa-envelope mr-2"></i>Contact Support
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

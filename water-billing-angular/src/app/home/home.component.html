@@ -1,0 +1,217 @@
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="#home" (click)="scrollToSection('home', $event)" style="cursor: pointer;">
+      <div class="brand-logo">
+        <img src="assets/logo.png" alt="Denkam Waters" class="logo-img me-2">
+        <span class="brand-text">DENKAM WATERS COMPANY LIMITED</span>
+      </div>
+    </a>
+    
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="activeSection === 'home'" href="#home" (click)="scrollToSection('home', $event)">HOME</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="activeSection === 'about'" href="#about" (click)="scrollToSection('about', $event)">ABOUT US</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="activeSection === 'features'" href="#features" (click)="scrollToSection('features', $event)">FEATURES</a>
+        </li>
+        <li class="nav-item ms-3">
+          <a routerLink="/login" class="btn btn-login">
+            <i class="fas fa-sign-in-alt me-2"></i>
+            LOGIN
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero-section d-flex align-items-center" id="home">
+  <div class="container">
+    <div class="row align-items-center min-vh-100">
+      <div class="col-lg-6">
+        <div class="hero-content">
+          <h1 class="hero-title">
+            Water Billing Management System
+          </h1>
+          <p class="hero-description">
+            A comprehensive water billing system designed for efficient management of customer accounts, meter readings and billing processes. It features a supplier-side dashboard for staff and a client-facing portal for customers.
+          </p>
+          <div class="hero-buttons">
+            <a routerLink="/login" class="btn btn-login-hero me-3">
+              LOGIN
+            </a>
+            <a href="#about" class="btn btn-learn-more" (click)="scrollToSection('about', $event)">
+              LEARN MORE
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="hero-image">
+          <img src="assets/water.png" alt="Water Billing Management" class="img-fluid hero-img">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="features-section py-5">
+  <div class="container">
+    <div class="row">
+      <div class="col-12 text-center mb-5">
+        <h2 class="section-title">Our Features</h2>
+        <p class="section-subtitle">Our platform offers a comprehensive suite of tools to manage water billing efficiently.</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="feature-card text-center">
+          <div class="feature-icon consumption">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <h4>Consumption Analytics</h4>
+          <p>Track water usage over time with intuitive charts and graphs. Understand consumption patterns and identify potential leaks early.</p>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="feature-card text-center">
+          <div class="feature-icon billing">
+            <i class="fas fa-file-invoice-dollar"></i>
+          </div>
+          <h4>Online Bill Access</h4>
+          <p>View and download water bills anytime, anywhere. No more waiting for paper bills in the mail. Securely access billing history online.</p>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="feature-card text-center">
+          <div class="feature-icon payments">
+            <i class="fas fa-credit-card"></i>
+          </div>
+          <h4>Billing</h4>
+          <p>Our system allows entry of meter readings simplifying the entire billing process and ensuring accuracy and timeliness.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- About Section -->
+<section id="about" class="about-section py-5 bg-light">
+  <div class="container">
+    <div class="row">
+      <div class="col-12 text-center mb-5">
+        <h2 class="section-title">About Denkam Waters</h2>
+        <p class="section-subtitle">Learn more about our commitment to providing quality water services to our community.</p>
+      </div>
+    </div>
+    <div class="row align-items-center">
+      <div class="col-lg-8 mx-auto">
+        <div class="about-content text-center">
+          <p class="lead mb-4">
+            We are committed to providing clean, reliable water services to the Denkam community.
+          </p>
+          <p class="about-description">
+            Denkam Waters has been serving the Kahawa Wendani estate since 2020, providing clean and reliable water to over 1,200 connections including homes and businesses. Our dedicated team works tirelessly to ensure consistent water supply and excellent customer service.
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row mt-5">
+      <div class="col-lg-6">
+        <div class="mission-vision">
+          <h3>Our Mission</h3>
+          <p>To provide clean, safe, and reliable water services to our community while maintaining environmental sustainability and operational excellence.</p>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="mission-vision">
+          <h3>Our Vision</h3>
+          <p>To be the leading water service provider in Kiambu County, recognized for our commitment to quality, innovation, and community service.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Footer -->
+<footer class="footer-section py-5">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-4 mb-4">
+        <div class="footer-brand">
+          <h4>DENKAM WATERS</h4>
+          <p class="footer-description">
+            Providing clean, reliable water services to the Denkam community for over a decade.
+          </p>
+          <div class="social-links">
+            <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4 mb-4">
+        <h5 class="footer-title">OUR SERVICES</h5>
+        <ul class="footer-links">
+          <li><a href="#">Water Distribution</a></li>
+          <li><a href="#">Billing Management</a></li>
+          <li><a href="#">Customer Support</a></li>
+          <li><a href="#">Infrastructure Maintenance</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-4 mb-4">
+        <h5 class="footer-title">CONTACT US</h5>
+        <div class="contact-info">
+          <p><strong>Denkam Waters Company Limited</strong></p>
+          <p>Kahawa Wendani<br>Kiambu County, Kenya</p>
+          <p><strong>Phone:</strong> +254 757 690 915</p>
+          <p><strong>Email:</strong> info@denkamwaters.co.ke</p>
+        </div>
+        <div class="opening-hours mt-3">
+          <h6>OPENING HOURS</h6>
+          <p>Monday - Friday: 8:00 AM - 5:00 PM<br>
+          Saturday: 9:00 AM - 1:00 PM<br>
+          Sunday: Closed<br>
+          Public Holidays: Closed</p>
+        </div>
+      </div>
+    </div>
+    <hr class="footer-divider">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <p class="footer-copyright mb-0">
+          Copyright © Water Billing System 2025
+        </p>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <p class="footer-developer mb-0">
+          Developed by <strong>Lawrence Mbugua</strong> 2025 | <a href="https://github.com/kb-diplo" class="text-primary">GitHub</a> | <a href="http://www.linkedin.com/in/mbugualawrence" class="text-primary">LinkedIn</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Back to Top Button -->
+<button 
+  class="back-to-top" 
+  [class.show]="showBackToTop"
+  (click)="scrollToTop()"
+  title="Back to Top">
+  <i class="fas fa-arrow-up"></i>
+</button>

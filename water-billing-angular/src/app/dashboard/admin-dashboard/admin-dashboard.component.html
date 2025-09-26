@@ -1,0 +1,237 @@
+<div class="container-fluid">
+  <!-- Dashboard Header -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1 class="h3 mb-0 text-gray-800">Good Afternoon, {{ currentUser?.username || 'Admin' }}!</h1>
+      <p class="mb-0 text-gray-600">Welcome to your admin dashboard</p>
+    </div>
+    <div class="d-flex align-items-center">
+      <a routerLink="/clients" class="btn btn-primary btn-sm shadow-sm mr-2">
+        <i class="fas fa-users fa-sm text-white-50"></i> Manage Clients
+      </a>
+      <a routerLink="/reports" class="btn btn-success btn-sm shadow-sm">
+        <i class="fas fa-chart-bar fa-sm text-white-50"></i> View Reports
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary Cards Row -->
+  <div class="row">
+    <!-- Clients Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-primary shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <a routerLink="/clients">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                  Total Clients
+                </div>
+              </a>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.clients }}</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-users fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Bills Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-info shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <a routerLink="/bills/ongoing">
+                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                  Total Bills
+                </div>
+              </a>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.bills }}</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-file-invoice fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revenue Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-success shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <a routerLink="/reports">
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                  Total Revenue
+                </div>
+              </a>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">Ksh {{ (stats.totalRevenue | number:'1.2-2') || '0.00' }}</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Outstanding Payments Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <a routerLink="/reports">
+                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                  Outstanding
+                </div>
+              </a>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">Ksh {{ (stats.outstandingPayments | number:'1.2-2') || '0.00' }}</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Cards Row -->
+  <div class="row">
+    <!-- Paid Bills Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-success shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <a routerLink="/reports">
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                  Paid Bills
+                </div>
+              </a>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.paidBillsCount }}</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Bills Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <a routerLink="/reports">
+                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                  Pending Bills
+                </div>
+              </a>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.pendingBillsCount }}</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-clock fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overdue Bills Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-danger shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <a routerLink="/reports">
+                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                  Overdue Bills
+                </div>
+              </a>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.overdueBillsCount }}</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Meter Readers Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-info shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <a routerLink="/users">
+                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                  Meter Readers
+                </div>
+              </a>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.meterReadersCount }}</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-user-tie fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts and Tables Row -->
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Billing Analytics</div>
+        </div>
+        <div class="card-body">
+          <canvas id="billingChart" width="400" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Ongoing Bills</div>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Bill #</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let bill of ongoingBills">
+                  <td>Bill #{{ bill.id }}</td>
+                  <td>
+                    <span class="badge" 
+                          [class.badge-success]="bill.status === 'Paid'"
+                          [class.badge-warning]="bill.status === 'Pending'"
+                          [class.badge-danger]="bill.status === 'Overdue'">
+                      {{ bill.status }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
