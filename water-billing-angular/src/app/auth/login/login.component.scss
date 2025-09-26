@@ -1,0 +1,257 @@
+// Main container - Match forgot password page exactly
+.login-container {
+  min-height: 100vh;
+  background: linear-gradient(rgba(0, 188, 212, 0.1), rgba(0, 151, 167, 0.1)), url('/assets/bg.jpg');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.login-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0;
+  position: relative;
+  z-index: 1;
+}
+
+// Card styling - Match forgot password page
+.login-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 3rem;
+  width: 100%;
+  max-width: 450px;
+  margin: 0 1rem;
+}
+
+.card-body {
+  padding: 0; // Remove extra padding since card already has padding
+  background: transparent;
+}
+
+// Back to Home Button
+.back-to-home {
+  .btn-back {
+    color: #0891b2;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    
+    &:hover {
+      color: #0e7490;
+      text-decoration: none;
+      transform: translateX(-2px);
+    }
+    
+    i {
+      transition: transform 0.3s ease;
+    }
+    
+    &:hover i {
+      transform: translateX(-3px);
+    }
+  }
+}
+
+// Header styling
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+
+  .login-logo {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+  }
+
+  h1 {
+    color: #00bcd4;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    color: #666;
+    margin-bottom: 0;
+  }
+}
+
+// Form styling
+.login-form {
+  .form-group {
+    margin-bottom: 1.5rem;
+    
+    label {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+  }
+}
+
+.form-control-user {
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+  border: 2px solid #e9ecef;
+  transition: all 0.3s ease;
+  
+  &:focus {
+    border-color: #00bcd4;
+    box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, 0.15);
+  }
+  
+  &.is-invalid {
+    border-color: #dc3545;
+  }
+}
+
+// Password input container
+.password-input-container {
+  position: relative;
+  
+  .form-control-user {
+    padding-right: 3rem; // Make room for the toggle button
+  }
+  
+  .password-toggle-btn {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      color: #00bcd4;
+      background-color: rgba(0, 188, 212, 0.1);
+    }
+    
+    &:focus {
+      outline: none;
+      color: #00bcd4;
+      box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.2);
+    }
+    
+    i {
+      font-size: 1rem;
+    }
+  }
+}
+
+.btn-user {
+  border-radius: 12px;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #00bcd4, #0097a7);
+  border: none;
+  transition: all 0.3s ease;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 188, 212, 0.3);
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.invalid-feedback {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #dc3545;
+}
+
+// Links and extras
+.login-extras {
+  margin-top: 2rem;
+  text-align: center;
+  
+  hr {
+    margin: 1.5rem 0;
+    border-color: #e9ecef;
+  }
+  
+  a {
+    color: #00bcd4;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    
+    &:hover {
+      color: #0097a7;
+      text-decoration: underline;
+    }
+  }
+}
+
+// Footer
+.login-footer {
+  background: rgba(0, 0, 0, 0.1);
+  color: white;
+  text-align: center;
+  padding: 1.5rem 0;
+  position: relative;
+  z-index: 1;
+  
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.9;
+    
+    strong {
+      font-weight: 600;
+    }
+  }
+}
+
+// Loading spinner
+.spinner-border-sm {
+  margin-right: 0.5rem;
+}
+
+// Responsive design
+@media (max-width: 576px) {
+  .card-body {
+    padding: 2rem 1.5rem;
+  }
+  
+  .login-header h1 {
+    font-size: 1.75rem;
+  }
+}
+
+// Animation
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-card {
+  animation: fadeInUp 0.6s ease-out;
+}

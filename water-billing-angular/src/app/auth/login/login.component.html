@@ -1,0 +1,82 @@
+<div class="login-container">
+  <!-- Main login content -->
+  <div class="login-content">
+    <div class="login-card card">
+      <div class="card-body">
+        <!-- Back to Home Button -->
+        <div class="back-to-home mb-3">
+          <a routerLink="/home" class="btn-back">
+            <i class="fas fa-arrow-left me-2"></i>Back to Home
+          </a>
+        </div>
+
+        <!-- Header -->
+        <div class="login-header text-center">
+          <img src="assets/water.png" alt="Denkam Waters" class="login-logo mb-3" onerror="this.style.display='none'">
+          <h1>Welcome Back!</h1>
+          <p class="subtitle">Sign in to your Denkam Waters account</p>
+        </div>
+        
+        <!-- Login Form -->
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+          <div class="form-group">
+            <label for="username">Username or Email</label>
+            <input 
+              id="username"
+              type="text" 
+              formControlName="username"
+              class="form-control form-control-user" 
+              [class.is-invalid]="f['username'].invalid && f['username'].touched"
+              placeholder="Enter your username or email"
+              required>
+            <div class="invalid-feedback" *ngIf="f['username'].invalid && f['username'].touched">
+              <div *ngIf="f['username'].errors?.['required']">Username or email is required</div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="password-input-container">
+              <input 
+                id="password"
+                [type]="showPassword ? 'text' : 'password'" 
+                formControlName="password"
+                class="form-control form-control-user"
+                [class.is-invalid]="f['password'].invalid && f['password'].touched"
+                placeholder="Enter your password"
+                required>
+              <button 
+                type="button" 
+                class="password-toggle-btn"
+                (click)="togglePasswordVisibility()"
+                [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+                <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </button>
+            </div>
+            <div class="invalid-feedback" *ngIf="f['password'].invalid && f['password'].touched">
+              Password is required
+            </div>
+          </div>
+          
+          <button 
+            type="submit" 
+            class="btn btn-primary btn-user w-100"
+            [disabled]="loading || loginForm.invalid">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm"></span>
+            {{ loading ? 'Signing In...' : 'Login' }}
+          </button>
+          
+          <div class="login-extras">
+            <hr>
+            <a routerLink="/forgot-password" class="small">Forgot Password?</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Footer -->
+  <div class="login-footer">
+    <p>© 2025 <strong>Denkam Waters</strong>. All rights reserved.</p>
+  </div>
+</div>
