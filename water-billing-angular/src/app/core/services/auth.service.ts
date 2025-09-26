@@ -171,4 +171,14 @@ export class AuthService {
     const user = this.getCurrentUser();
     return user ? roles.includes(user.role) : false;
   }
+
+  getRole(): string | null {
+    const user = this.getCurrentUser();
+    return user?.role || null;
+  }
+
+  getUserId(): number | null {
+    const user = this.getCurrentUser();
+    return user?.id || null;
+  }
 }

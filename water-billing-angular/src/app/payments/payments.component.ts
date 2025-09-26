@@ -233,7 +233,8 @@ export class PaymentsComponent implements OnInit {
     }).format(amount);
   }
 
-  formatDate(date: string): string {
-    return new Date(date).toLocaleDateString('en-KE');
+  formatDate(date: string | Date): string {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString('en-KE');
   }
 }
