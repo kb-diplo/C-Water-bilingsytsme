@@ -35,6 +35,13 @@ public partial class Program
         // Register Email Service
         builder.Services.AddScoped<IEmailService, EmailService>();
 
+        // Configure Mpesa Settings
+        builder.Services.Configure<MpesaSettings>(
+            builder.Configuration.GetSection("MpesaSettings"));
+
+        // Register Mpesa Service
+        builder.Services.AddHttpClient<IMpesaService, MpesaService>();
+
         // Add CORS
         builder.Services.AddCors(options =>
         {

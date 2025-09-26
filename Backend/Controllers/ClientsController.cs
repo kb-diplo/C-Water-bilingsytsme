@@ -161,6 +161,21 @@ namespace MyApi.Controllers
                 _context.Clients.Add(client);
                 await _context.SaveChangesAsync();
 
+                // Create initial meter reading of 0 for new clients
+                var initialReading = new MeterReading
+                {
+                    ClientId = client.Id,
+                    CurrentReading = 0,
+                    PreviousReading = 0,
+                    UnitsUsed = 0,
+                    ReadingDate = DateTime.UtcNow,
+                    RecordedByUserId = currentUserId,
+                    Status = "Approved"
+                };
+
+                _context.MeterReadings.Add(initialReading);
+                await _context.SaveChangesAsync();
+
                 var result = new {
                     Id = client.Id,
                     Username = user.Username,

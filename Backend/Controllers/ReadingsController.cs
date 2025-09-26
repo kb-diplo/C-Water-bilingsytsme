@@ -32,6 +32,13 @@ namespace MyApi.Controllers
                 .FirstOrDefaultAsync();
 
             var previousReading = lastReading?.CurrentReading ?? 0;
+
+            // VALIDATION: New reading cannot be less than previous reading
+            if (dto.CurrentReading < previousReading)
+            {
+                return BadRequest($"New reading ({dto.CurrentReading}) cannot be less than previous reading ({previousReading}). Please verify the meter reading.");
+            }
+
             var unitsUsed = dto.CurrentReading - previousReading;
 
             var reading = new MeterReading
@@ -40,14 +47,18 @@ namespace MyApi.Controllers
                 CurrentReading = dto.CurrentReading,
                 PreviousReading = previousReading,
                 UnitsUsed = unitsUsed,
-                RecordedByUserId = userId
+                RecordedByUserId = userId,
+                Status = "Approved"
             };
 
             _context.MeterReadings.Add(reading);
             await _context.SaveChangesAsync();
 
-            // Auto-generate bill
-            await GenerateBill(reading);
+            // Auto-generate bill only if units were used
+            if (unitsUsed > 0)
+            {
+                await GenerateBill(reading);
+            }
 
             // Return DTO instead of entity to prevent cycles
             var responseDto = new MeterReadingResponseDto
@@ -96,7 +107,46 @@ namespace MyApi.Controllers
             return Ok(readings);
         }
 
+        /// <summary>
+        /// Get readings for a specific client
+        /// </summary>
+        [HttpGet("client/{clientId}")]
+        [Authorize(Roles = "Admin,MeterReader,Client")]
+        public async Task<ActionResult<IEnumerable<MeterReadingResponseDto>>> GetClientReadings(int clientId)
+        {
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var currentUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
+            // Check if client exists
+            var client = await _context.Clients.FindAsync(clientId);
+            if (client == null) return NotFound("Client not found");
+
+            // Clients can only view their own readings
+            if (currentUserRole == "Client" && client.CreatedByUserId != currentUserId)
+                return Forbid("You can only view your own readings");
+
+            var readings = await _context.MeterReadings
+                .Include(r => r.Client)
+                .Include(r => r.RecordedByUser)
+                .Where(r => r.ClientId == clientId)
+                .OrderByDescending(r => r.ReadingDate)
+                .Select(r => new MeterReadingResponseDto
+                {
+                    Id = r.Id,
+                    ClientId = r.ClientId,
+                    ClientName = r.Client.FullName,
+                    MeterNumber = r.Client.MeterNumber,
+                    CurrentReading = r.CurrentReading,
+                    PreviousReading = r.PreviousReading,
+                    UnitsUsed = r.UnitsUsed,
+                    ReadingDate = r.ReadingDate,
+                    Status = r.Status,
+                    RecordedByUsername = r.RecordedByUser.Username ?? "System"
+                })
+                .ToListAsync();
+
+            return Ok(readings);
+        }
 
         private async Task GenerateBill(MeterReading reading)
         {
@@ -119,7 +169,7 @@ namespace MyApi.Controllers
                 TotalAmount = amount,
                 DueDate = dueDate,
                 CreatedByUserId = userId,
-                Status = "Pending"
+                Status = "Unpaid"
             };
 
             _context.Bills.Add(bill);

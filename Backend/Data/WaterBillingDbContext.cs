@@ -13,6 +13,7 @@ namespace MyApi.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<SystemSettings> SystemSettings { get; set; }
         public DbSet<Users> Users { get; set; }
+        public DbSet<MpesaTransaction> MpesaTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -116,6 +117,24 @@ namespace MyApi.Data
                 .WithMany(u => u.Payments)
                 .HasForeignKey(p => p.RecordedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // MpesaTransaction configuration
+            modelBuilder.Entity<MpesaTransaction>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Bill)
+                    .WithMany()
+                    .HasForeignKey(e => e.BillId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.Property(e => e.Amount).HasPrecision(10, 2);
+                entity.Property(e => e.PhoneNumber).HasMaxLength(15);
+                entity.Property(e => e.MerchantRequestID).HasMaxLength(100);
+                entity.Property(e => e.CheckoutRequestID).HasMaxLength(100);
+                entity.Property(e => e.Status).HasMaxLength(20);
+                entity.Property(e => e.MpesaReceiptNumber).HasMaxLength(50);
+                entity.Property(e => e.TransactionDate).HasMaxLength(50);
+                entity.Property(e => e.ErrorMessage).HasMaxLength(500);
+            });
         }
     }
 }
