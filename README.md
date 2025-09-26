@@ -182,7 +182,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 **Lawrence Mbugua**
 - GitHub: [@kb-diplo](https://github.com/kb-diplo)
-- Email: tingzlarry@gmail.com
+- Email: mbugualawrencee@gmail.com
 
 ## 🙏 Acknowledgments
 

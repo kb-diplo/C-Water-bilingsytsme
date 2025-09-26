@@ -168,4 +168,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-For support, email support@example.com
+For support, email mbugualawrencee@gmail.com
+
+## Developer
+
+**Lawrence Mbugua**
+- Email: mbugualawrencee@gmail.com
+- GitHub: [@kb-diplo](https://github.com/kb-diplo)

@@ -1,6 +1,6 @@
 ### Water Billing System - JWT Testing
 
-@baseUrl = http://localhost:5015
+@baseUrl = https://localhost:44372
 @contentType = application/json
 
 ### 1. Login to get JWT token
@@ -8,8 +8,8 @@ POST {{baseUrl}}/api/auth/login
 Content-Type: {{contentType}}
 
 {
-  "username": "admin",
-  "password": "Admin123"
+  "username": "YOUR_USERNAME_HERE",
+  "password": "YOUR_PASSWORD_HERE"
 }
 
 ### 2. Test protected endpoint with JWT token
@@ -33,14 +33,29 @@ GET {{baseUrl}}/api/bills
 Authorization: Bearer YOUR_JWT_TOKEN_HERE
 Content-Type: {{contentType}}
 
-### JWT Token Details:
-# Secret Key: super_secret_key_12345_super_secret_key_67890_secure_jwt_key
-# Issuer: MyApi
-# Audience: MyApiUsers
-# Expiry: 30 minutes
+### 6. Test payments endpoint
+GET {{baseUrl}}/api/payments
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: {{contentType}}
+
+### 7. Test readings endpoint
+GET {{baseUrl}}/api/readings
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: {{contentType}}
+
+### JWT Token Configuration:
+# Token expiry: 30 minutes
+# Roles: Admin, MeterReader, Client
+# Authentication: Bearer token in Authorization header
 
 ### How to use:
-# 1. Run the login request first
-# 2. Copy the "token" from the response
-# 3. Replace "YOUR_JWT_TOKEN_HERE" with your actual token
-# 4. Run the other requests to test authentication
+# 1. Update the login credentials with your actual username/password
+# 2. Run the login request first
+# 3. Copy the "token" from the response
+# 4. Replace "YOUR_JWT_TOKEN_HERE" with your actual token in subsequent requests
+# 5. Run the other requests to test authentication
+
+### Security Notes:
+# - Never commit real credentials to version control
+# - Use environment variables for sensitive configuration
+# - Rotate JWT secrets regularly in production
