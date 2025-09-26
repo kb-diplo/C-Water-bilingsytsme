@@ -1,0 +1,153 @@
+# ==============================================
+# Water Billing System - Complete .gitignore
+# ==============================================
+
+# ============ SENSITIVE FILES ============
+# Configuration files with secrets
+Backend/appsettings.json
+Backend/appsettings.Development.json
+Backend/appsettings.Production.json
+**/appsettings.*.json
+# Allow example/template files
+!**/appsettings.example.json
+!**/appsettings.template.json
+
+# Environment files
+**/.env
+**/.env.local
+**/.env.development
+**/.env.production
+
+# ============ C# / .NET BACKEND ============
+# Build results
+Backend/bin/
+Backend/obj/
+Backend/out/
+
+# Visual Studio files
+Backend/.vs/
+*.user
+*.suo
+*.sln.docstates
+*.tmp
+
+# NuGet packages
+Backend/packages/
+*.nupkg
+*.snupkg
+
+# Entity Framework
+Backend/Migrations/
+
+# Logs
+Backend/logs/
+*.log
+
+# ============ ANGULAR FRONTEND ============
+# Dependencies
+water-billing-angular/node_modules/
+water-billing-angular/npm-debug.log*
+water-billing-angular/yarn-debug.log*
+water-billing-angular/yarn-error.log*
+
+# Build outputs
+water-billing-angular/dist/
+water-billing-angular/tmp/
+water-billing-angular/out-tsc/
+water-billing-angular/bazel-out/
+
+# Angular specific
+water-billing-angular/.angular/cache/
+water-billing-angular/.sass-cache/
+water-billing-angular/connect.lock
+water-billing-angular/coverage/
+water-billing-angular/libpeerconnection.log
+water-billing-angular/testem.log
+water-billing-angular/typings/
+
+# ============ IDE & EDITORS ============
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+# Visual Studio
+.vs/
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# JetBrains IDEs
+.idea/
+*.swp
+*.swo
+
+# ============ SYSTEM FILES ============
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# ============ TESTING & COVERAGE ============
+# Test results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# Coverage reports
+coverage/
+*.lcov
+
+# ============ TEMPORARY FILES ============
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+*.backup
+
+# ============ SECURITY & KEYS ============
+# SSL certificates
+*.pfx
+*.p12
+*.key
+*.pem
+*.crt
+
+# API keys and secrets
+secrets.json
+*.secrets
+
+# ============ DOCUMENTATION ============
+# Generated documentation
+docs/_build/
+site/
+
+# ============ DEPLOYMENT ============
+# Deployment packages
+*.zip
+*.tar.gz
+*.rar
+
+# Docker
+.dockerignore
+Dockerfile.prod
