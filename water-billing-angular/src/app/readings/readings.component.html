@@ -1,0 +1,172 @@
+<div class="container-fluid">
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Meter Readings</h1>
+    <div class="d-flex">
+      <button *ngIf="isAdmin() || isMeterReader()" 
+              class="btn btn-primary btn-sm me-2"
+              (click)="openAddModal()">
+        <i class="fas fa-plus fa-sm text-white-50"></i> Add Reading
+      </button>
+    </div>
+  </div>
+
+  <!-- Search and Filter -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Search Readings</h6>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Search by client name, meter number, or reader..."
+              [(ngModel)]="searchTerm"
+              (input)="onSearch()">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Readings Table -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Meter Reading Records</h6>
+    </div>
+    <div class="card-body">
+      <div *ngIf="loading" class="text-center">
+        <div class="spinner-border text-primary" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
+
+      <div *ngIf="!loading" class="table-responsive">
+        <table class="table table-bordered" width="100%" cellspacing="0">
+          <thead>
+            <tr>
+              <th>Reading ID</th>
+              <th>Client Name</th>
+              <th>Meter Number</th>
+              <th>Previous Reading</th>
+              <th>Current Reading</th>
+              <th>Consumption</th>
+              <th>Reading Date</th>
+              <th>Read By</th>
+              <th>Status</th>
+              <th *ngIf="isAdmin()">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let reading of filteredReadings">
+              <td>{{ reading.id }}</td>
+              <td class="font-weight-bold text-dark">{{ reading.clientName }}</td>
+              <td>{{ reading.meterNumber }}</td>
+              <td>{{ reading.previousReading | number:'1.2-2' }} m³</td>
+              <td>{{ reading.currentReading | number:'1.2-2' }} m³</td>
+              <td class="font-weight-bold text-primary">{{ reading.consumption | number:'1.2-2' }} m³</td>
+              <td>{{ reading.readingDate | date:'MMM d, y' }}</td>
+              <td>{{ reading.readBy }}</td>
+              <td>
+                <span class="badge" 
+                      [ngClass]="{
+                        'badge-success': reading.status === 'Verified',
+                        'badge-warning': reading.status === 'Pending',
+                        'badge-info': reading.status === 'Draft'
+                      }">
+                  {{ reading.status }}
+                </span>
+              </td>
+              <td *ngIf="isAdmin()" class="text-center">
+                <button class="btn btn-info btn-sm me-1" title="View Details">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-warning btn-sm" title="Edit Reading">
+                  <i class="fas fa-edit"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredReadings.length === 0">
+              <td [attr.colspan]="isAdmin() ? 10 : 9" class="text-center text-muted">
+                No meter readings found
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Reading Modal -->
+<div class="modal fade" [class.show]="showAddModal" [style.display]="showAddModal ? 'block' : 'none'" 
+     tabindex="-1" role="dialog" *ngIf="showAddModal">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Meter Reading</h5>
+        <button type="button" class="btn-close" (click)="closeAddModal()"></button>
+      </div>
+      <form [formGroup]="readingForm" (ngSubmit)="onSubmit()">
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label for="clientId">Client</label>
+                <select formControlName="clientId" class="form-control" 
+                        [class.is-invalid]="f['clientId'].invalid && f['clientId'].touched">
+                  <option value="">Select Client</option>
+                  <!-- Add client options here -->
+                </select>
+                <div class="invalid-feedback" *ngIf="f['clientId'].invalid && f['clientId'].touched">
+                  Client is required
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label for="currentReading">Current Reading (m³)</label>
+                <input type="number" formControlName="currentReading" class="form-control"
+                       [class.is-invalid]="f['currentReading'].invalid && f['currentReading'].touched"
+                       placeholder="Enter current reading" step="0.01">
+                <div class="invalid-feedback" *ngIf="f['currentReading'].invalid && f['currentReading'].touched">
+                  <div *ngIf="f['currentReading'].errors?.['required']">Current reading is required</div>
+                  <div *ngIf="f['currentReading'].errors?.['min']">Reading must be positive</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label for="readingDate">Reading Date</label>
+                <input type="date" formControlName="readingDate" class="form-control"
+                       [class.is-invalid]="f['readingDate'].invalid && f['readingDate'].touched">
+                <div class="invalid-feedback" *ngIf="f['readingDate'].invalid && f['readingDate'].touched">
+                  Reading date is required
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label for="notes">Notes (Optional)</label>
+                <textarea formControlName="notes" class="form-control" rows="3"
+                          placeholder="Any additional notes..."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeAddModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="readingForm.invalid">
+            Add Reading
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showAddModal" *ngIf="showAddModal"></div>
