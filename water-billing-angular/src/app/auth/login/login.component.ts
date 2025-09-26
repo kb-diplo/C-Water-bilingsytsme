@@ -34,7 +34,7 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/dashboard']);
+      this.authService.redirectToDashboard();
     }
   }
 
@@ -57,17 +57,8 @@ export class LoginComponent implements OnInit {
           showConfirmButton: false
         });
         
-        // Role-based dashboard routing
-        const role = response.role;
-        if (role === 'Admin') {
-          this.router.navigate(['/dashboard/admin']);
-        } else if (role === 'MeterReader') {
-          this.router.navigate(['/dashboard/meter-reader']);
-        } else if (role === 'Client') {
-          this.router.navigate(['/dashboard/client']);
-        } else {
-          this.router.navigate(['/dashboard']);
-        }
+        // Use the centralized dashboard routing
+        this.authService.redirectToDashboard();
       },
       error: (error) => {
         this.loading = false;

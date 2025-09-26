@@ -85,10 +85,18 @@ export class AuthService {
   }
 
   logout(): void {
+    // Clear all authentication data
     localStorage.removeItem('token');
     localStorage.removeItem('currentUser');
+    sessionStorage.clear(); // Clear any session data
     this.currentUserSubject.next(null);
-    this.router.navigate(['/login']);
+    
+    // Navigate to login page
+    this.router.navigate(['/login'], { replaceUrl: true }).then(() => {
+      // Optional: Only reload if there are cached issues
+      // For now, let's not force reload to provide smoother UX
+      console.log('Logout successful - redirected to login');
+    });
   }
 
   getToken(): string | null {
@@ -180,5 +188,26 @@ export class AuthService {
   getUserId(): number | null {
     const user = this.getCurrentUser();
     return user?.id || null;
+  }
+
+  getDashboardRoute(): string {
+    const user = this.getCurrentUser();
+    if (!user) return '/login';
+    
+    switch (user.role) {
+      case 'Admin':
+        return '/dashboard/admin';
+      case 'MeterReader':
+        return '/dashboard/meter-reader';
+      case 'Client':
+        return '/dashboard/client';
+      default:
+        return '/dashboard';
+    }
+  }
+
+  redirectToDashboard(): void {
+    const dashboardRoute = this.getDashboardRoute();
+    this.router.navigate([dashboardRoute]);
   }
 }
