@@ -26,6 +26,7 @@ export class ClientsListComponent implements OnInit {
   isEditMode = false;
   editingClientId: number | null = null;
   selectedClient: Client | null = null;
+  readingLoading = false;
   clientForm: FormGroup;
   readingForm: FormGroup;
   
@@ -57,7 +58,7 @@ export class ClientsListComponent implements OnInit {
     });
 
     this.readingForm = this.formBuilder.group({
-      currentReading: ['', [Validators.required, Validators.min(0)]]
+      currentReading: ['', [Validators.required, Validators.min(0.01)]]
     });
 
     // Setup debounced search
@@ -420,24 +421,51 @@ export class ClientsListComponent implements OnInit {
   }
 
   onSubmitReading(): void {
-    if (this.readingForm.invalid || !this.selectedClient) {
+    console.log('Form validation:', {
+      formValid: this.readingForm.valid,
+      formValue: this.readingForm.value,
+      selectedClient: this.selectedClient,
+      formErrors: this.readingForm.errors
+    });
+
+    if (this.readingForm.invalid) {
+      console.log('Form is invalid');
       this.markReadingFormTouched();
+      Swal.fire('Error', 'Please enter a valid current reading', 'error');
       return;
     }
 
+    if (!this.selectedClient) {
+      console.log('No client selected');
+      Swal.fire('Error', 'No client selected', 'error');
+      return;
+    }
+
+    const currentReadingValue = this.readingForm.value.currentReading;
+    if (!currentReadingValue || currentReadingValue <= 0) {
+      Swal.fire('Error', 'Please enter a valid positive reading value', 'error');
+      return;
+    }
+
+    this.readingLoading = true;
     const readingData: MeterReadingCreateDto = {
       clientId: this.selectedClient.id,
-      currentReading: parseFloat(this.readingForm.value.currentReading)
+      currentReading: parseFloat(currentReadingValue)
     };
+
+    console.log('Submitting reading data:', readingData);
 
     this.readingService.addReading(readingData).subscribe({
       next: (reading) => {
+        console.log('Reading added successfully:', reading);
+        this.readingLoading = false;
         this.closeReadingModal();
         Swal.fire('Success', `Meter reading added successfully for ${this.selectedClient?.fullName}`, 'success');
       },
       error: (error) => {
         console.error('Error adding reading:', error);
-        const errorMessage = error.error?.message || 'Failed to add meter reading';
+        this.readingLoading = false;
+        const errorMessage = error.error?.message || error.message || 'Failed to add meter reading';
         Swal.fire('Error', errorMessage, 'error');
       }
     });

@@ -254,27 +254,32 @@
         </div>
         
         <form [formGroup]="readingForm" (ngSubmit)="onSubmitReading()">
-          <div class="form-group">
+          <div class="form-group mb-3">
             <label for="currentReading">Current Reading (m³) *</label>
             <input type="number" 
+                   id="currentReading"
                    formControlName="currentReading" 
                    class="form-control"
                    [class.is-invalid]="readingForm.get('currentReading')?.invalid && readingForm.get('currentReading')?.touched"
                    placeholder="Enter current meter reading" 
-                   step="0.01">
+                   step="0.01"
+                   min="0.01">
             <div class="invalid-feedback" *ngIf="readingForm.get('currentReading')?.invalid && readingForm.get('currentReading')?.touched">
               <div *ngIf="readingForm.get('currentReading')?.errors?.['required']">Current reading is required</div>
-              <div *ngIf="readingForm.get('currentReading')?.errors?.['min']">Reading must be positive</div>
+              <div *ngIf="readingForm.get('currentReading')?.errors?.['min']">Reading must be greater than 0</div>
             </div>
-          </div>
-          
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="closeReadingModal()">Cancel</button>
-            <button type="submit" class="btn btn-success" [disabled]="readingForm.invalid">
-              <i class="fas fa-tachometer-alt me-1"></i> Add Reading
-            </button>
+            <small class="form-text text-muted">Enter the current meter reading in cubic meters (m³)</small>
           </div>
         </form>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeReadingModal()" [disabled]="readingLoading">Cancel</button>
+          <button type="button" class="btn btn-success" (click)="onSubmitReading()" [disabled]="readingForm.invalid || readingLoading">
+            <span *ngIf="readingLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+            <i *ngIf="!readingLoading" class="fas fa-tachometer-alt me-1"></i> 
+            {{ readingLoading ? 'Adding Reading...' : 'Add Reading' }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
