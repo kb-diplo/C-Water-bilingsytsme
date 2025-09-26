@@ -1,0 +1,126 @@
+<div class="container-fluid">
+  <div class="mb-4">
+    <h1 class="h3 mb-0 text-primary font-weight-bolder">{{ getDisplayTitle() }}</h1>
+  </div>
+
+  <div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+      <h6 class="m-0 font-weight-bold text-primary">
+        {{ isClient() ? 'My Current Bills' : 'Bills Data Table' }}
+      </h6>
+      <div class="col-md-4">
+        <div class="input-group">
+          <input 
+            type="text" 
+            class="form-control" 
+            placeholder="Search bills..." 
+            [(ngModel)]="searchTerm"
+            (input)="onSearch()">
+          <div class="input-group-append">
+            <span class="input-group-text">
+              <i class="fas fa-search"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <!-- Loading State -->
+      <div *ngIf="loading" class="text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading bills...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!loading && filteredBills.length === 0" class="text-center py-5">
+        <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">No Bills Found</h5>
+        <p class="text-muted">{{ isOngoing ? 'No ongoing bills available' : 'No billing history available' }}</p>
+      </div>
+
+      <!-- Bills Table -->
+      <div class="table-responsive" *ngIf="!loading && filteredBills.length > 0">
+        <table class="table table-bordered" width="100%" cellspacing="0">
+          <thead class="table-light">
+            <tr>
+              <th *ngIf="!isClient()">Client Name</th>
+              <th>Billing Period</th>
+              <th>Consumption (m³)</th>
+              <th>Amount (KSh)</th>
+              <th>Due Date</th>
+              <th>Penalty</th>
+              <th>Total Payable</th>
+              <th>Status</th>
+              <th *ngIf="isAdmin()">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let bill of filteredBills">
+              <td *ngIf="!isClient()" class="font-weight-bold text-dark">
+                {{ bill.clientName }}
+              </td>
+              <td>{{ bill.billingPeriod || '-' }}</td>
+              <td>{{ bill.consumption | number:'1.2-2' }} m³</td>
+              <td>KSh {{ bill.amount | number:'1.2-2' }}</td>
+              <td>{{ bill.dueDate ? (bill.dueDate | date:'MMM d, y') : '-' }}</td>
+              <td>KSh {{ bill.penalty | number:'1.2-2' }}</td>
+              <td class="font-weight-bold text-primary">KSh {{ bill.totalPayable | number:'1.2-2' }}</td>
+              <td>
+                <span class="badge" [ngClass]="getBadgeClass(bill.status)">
+                  {{ bill.status || 'Pending' }}
+                </span>
+              </td>
+              <td class="text-center" *ngIf="isAdmin()">
+                <div class="btn-group" role="group">
+                  <button 
+                    class="btn btn-sm btn-info" 
+                    (click)="sendReminder(bill)"
+                    title="Send Reminder">
+                    <i class="fas fa-envelope"></i>
+                  </button>
+                  <button 
+                    class="btn btn-sm btn-primary" 
+                    (click)="editBill(bill)"
+                    title="Edit Bill">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button 
+                    class="btn btn-sm btn-danger" 
+                    (click)="deleteBill(bill)"
+                    title="Delete Bill">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="text-center py-5" *ngIf="!loading && filteredBills.length === 0">
+        <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+        <h5 class="text-muted">No bills found</h5>
+        <p class="text-muted" *ngIf="isAdmin()">
+          Click 'Add New Bill' to create a new bill
+        </p>
+        <p class="text-muted" *ngIf="isClient()">
+          You don't have any {{ isOngoing ? 'pending' : 'historical' }} bills at the moment
+        </p>
+      </div>
+      
+      <div class="text-center py-4" *ngIf="loading">
+        <div class="spinner-border" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
+      
+      <div class="mt-4 text-center" *ngIf="!isAdmin() && filteredBills.length > 0">
+        <p class="text-muted">
+          <i class="fas fa-info-circle"></i> Please contact the office for payment instructions.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
