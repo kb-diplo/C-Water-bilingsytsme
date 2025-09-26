@@ -1,121 +1,239 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { RouterModule } from '@angular/router';
+import { PaymentService } from '../core/services/payment.service';
+import { MpesaService, MpesaStkPushRequest } from '../core/services/mpesa.service';
+import { BillService } from '../core/services/bill.service';
 import { AuthService } from '../core/services/auth.service';
-import Swal from 'sweetalert2';
-
-interface Payment {
-  id: number;
-  billId: number;
-  clientName: string;
-  amount: number;
-  paymentDate: string;
-  paymentMethod: string;
-  reference: string;
-  status: string;
-}
+import { PaymentCreateDto, PaymentResponseDto, BillResponseDto } from '../core/models/api.models';
 
 @Component({
   selector: 'app-payments',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './payments.component.html',
-  styleUrls: ['./payments.component.scss']
+  styleUrl: './payments.component.scss'
 })
 export class PaymentsComponent implements OnInit {
-  private apiUrl = 'https://localhost:44372/api';
-  payments: Payment[] = [];
-  filteredPayments: Payment[] = [];
-  searchTerm = '';
-  loading = true;
-  showAddModal = false;
-  newPayment = {
+  payments: PaymentResponseDto[] = [];
+  bills: BillResponseDto[] = [];
+  loading = false;
+  error = '';
+  success = '';
+
+  // Manual payment form
+  manualPayment: PaymentCreateDto = {
     billId: 0,
     amount: 0,
-    paymentMethod: '',
-    reference: '',
-    notes: ''
+    paymentMethod: 'Cash',
+    reference: ''
   };
 
+  // Mpesa payment form
+  mpesaPayment: MpesaStkPushRequest = {
+    billId: 0,
+    phoneNumber: '',
+    amount: 0
+  };
+
+  // Payment methods for dropdown
+  paymentMethods = ['Cash', 'Bank', 'Mpesa', 'Card'];
+
+  // Current user role
+  userRole = '';
+  isAdmin = false;
+  isClient = false;
+
   constructor(
-    private http: HttpClient,
+    private paymentService: PaymentService,
+    private mpesaService: MpesaService,
+    private billService: BillService,
     private authService: AuthService
   ) {}
 
   ngOnInit(): void {
-    this.loadPayments();
+    this.userRole = this.authService.getRole() || '';
+    this.isAdmin = this.userRole === 'Admin';
+    this.isClient = this.userRole === 'Client';
+    
+    this.loadData();
   }
 
-  loadPayments(): void {
+  loadData(): void {
     this.loading = true;
-    this.http.get<Payment[]>(`${this.apiUrl}/payments`).subscribe({
-      next: (payments) => {
-        this.payments = payments;
-        this.filteredPayments = payments;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading payments:', error);
-        this.loading = false;
-        Swal.fire('Error', 'Failed to load payments', 'error');
+    this.error = '';
+
+    if (this.isAdmin) {
+      // Admin can see all payments and bills
+      this.paymentService.getAllPayments().subscribe({
+        next: (payments) => {
+          this.payments = payments;
+          this.loading = false;
+        },
+        error: (error) => {
+          this.error = 'Failed to load payments';
+          this.loading = false;
+        }
+      });
+
+      this.billService.getAllBills().subscribe({
+        next: (bills) => {
+          this.bills = bills.filter(b => b.status === 'Unpaid');
+        },
+        error: (error) => {
+          console.error('Failed to load bills', error);
+        }
+      });
+    } else if (this.isClient) {
+      // Client can see their own payments and bills
+      const userId = this.authService.getUserId();
+      if (userId) {
+        this.billService.getClientBills(userId).subscribe({
+          next: (bills) => {
+            this.bills = bills.filter(b => b.status === 'Unpaid');
+            this.loading = false;
+          },
+          error: (error) => {
+            this.error = 'Failed to load your bills';
+            this.loading = false;
+          }
+        });
+
+        this.paymentService.getClientPayments(userId).subscribe({
+          next: (payments) => {
+            this.payments = payments;
+          },
+          error: (error) => {
+            console.error('Failed to load payments', error);
+          }
+        });
       }
-    });
+    }
   }
 
-  onSearch(): void {
-    if (!this.searchTerm.trim()) {
-      this.filteredPayments = this.payments;
+  recordManualPayment(): void {
+    if (!this.manualPayment.billId || !this.manualPayment.amount) {
+      this.error = 'Please select a bill and enter payment amount';
       return;
     }
 
-    this.filteredPayments = this.payments.filter(payment =>
-      payment.clientName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-      payment.reference.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-      payment.paymentMethod.toLowerCase().includes(this.searchTerm.toLowerCase())
-    );
-  }
+    this.loading = true;
+    this.error = '';
+    this.success = '';
 
-  recordPayment(): void {
-    this.http.post(`${this.apiUrl}/payments`, this.newPayment).subscribe({
-      next: () => {
-        this.showAddModal = false;
-        this.loadPayments();
-        Swal.fire('Success', 'Payment recorded successfully!', 'success');
-        this.resetForm();
+    this.paymentService.recordPayment(this.manualPayment).subscribe({
+      next: (response) => {
+        this.success = 'Payment recorded successfully!';
+        this.resetManualPaymentForm();
+        this.loadData();
       },
       error: (error) => {
-        console.error('Error recording payment:', error);
-        const errorMessage = error.error?.message || 'Error recording payment. Please try again.';
-        Swal.fire('Error', errorMessage, 'error');
+        this.error = error.error?.message || 'Failed to record payment';
+        this.loading = false;
       }
     });
   }
 
-  closeModal(): void {
-    this.showAddModal = false;
-    this.resetForm();
+  initiateMpesaPayment(): void {
+    if (!this.mpesaPayment.billId || !this.mpesaPayment.amount || !this.mpesaPayment.phoneNumber) {
+      this.error = 'Please fill in all Mpesa payment fields';
+      return;
+    }
+
+    if (!this.mpesaService.isValidPhoneNumber(this.mpesaPayment.phoneNumber)) {
+      this.error = 'Please enter a valid phone number (e.g., 0712345678)';
+      return;
+    }
+
+    this.loading = true;
+    this.error = '';
+    this.success = '';
+
+    // Format phone number
+    this.mpesaPayment.phoneNumber = this.mpesaService.formatPhoneNumber(this.mpesaPayment.phoneNumber);
+
+    this.mpesaService.initiateStkPush(this.mpesaPayment).subscribe({
+      next: (response) => {
+        if (response.responseCode === '0') {
+          this.success = response.customerMessage || 'Payment request sent to your phone. Please enter your M-Pesa PIN.';
+          this.resetMpesaPaymentForm();
+          
+          // Poll for transaction status
+          this.pollTransactionStatus(response.checkoutRequestID);
+        } else {
+          this.error = response.responseDescription || 'Failed to initiate M-Pesa payment';
+        }
+        this.loading = false;
+      },
+      error: (error) => {
+        this.error = error.error?.message || 'Failed to initiate M-Pesa payment';
+        this.loading = false;
+      }
+    });
   }
 
-  private resetForm(): void {
-    this.newPayment = {
+  private pollTransactionStatus(checkoutRequestId: string): void {
+    // Poll every 5 seconds for up to 2 minutes
+    let attempts = 0;
+    const maxAttempts = 24; // 2 minutes / 5 seconds
+
+    const poll = setInterval(() => {
+      attempts++;
+      
+      this.mpesaService.getTransactionStatus(checkoutRequestId).subscribe({
+        next: (status) => {
+          if (status.status === 'Success') {
+            clearInterval(poll);
+            this.success = 'Payment completed successfully!';
+            this.loadData();
+          } else if (status.status === 'Failed' || status.status === 'Cancelled') {
+            clearInterval(poll);
+            this.error = this.mpesaService.getStatusMessage(status.status);
+          } else if (attempts >= maxAttempts) {
+            clearInterval(poll);
+            this.error = 'Payment status check timed out. Please check your payment history.';
+          }
+        },
+        error: (error) => {
+          if (attempts >= maxAttempts) {
+            clearInterval(poll);
+            this.error = 'Payment status check failed. Please check your payment history.';
+          }
+        }
+      });
+    }, 5000);
+  }
+
+  resetManualPaymentForm(): void {
+    this.manualPayment = {
       billId: 0,
       amount: 0,
-      paymentMethod: '',
-      reference: '',
-      notes: ''
+      paymentMethod: 'Cash',
+      reference: ''
     };
   }
 
-  isAdmin(): boolean {
-    return this.authService.isAdmin();
+  resetMpesaPaymentForm(): void {
+    this.mpesaPayment = {
+      billId: 0,
+      phoneNumber: '',
+      amount: 0
+    };
   }
 
-  isMeterReader(): boolean {
-    return this.authService.isMeterReader();
+  getBillDisplay(bill: BillResponseDto): string {
+    return `${bill.billNumber} - ${bill.clientName} (KSh ${bill.totalAmount})`;
   }
 
-  isClient(): boolean {
-    return this.authService.isClient();
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-KE', {
+      style: 'currency',
+      currency: 'KES'
+    }).format(amount);
+  }
+
+  formatDate(date: string): string {
+    return new Date(date).toLocaleDateString('en-KE');
   }
 }

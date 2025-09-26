@@ -1,152 +1,245 @@
 <div class="container-fluid">
-  <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">Payments Management</h1>
-    <div class="d-flex">
-      <button *ngIf="isAdmin() || isMeterReader()" 
-              class="btn btn-primary btn-sm me-2"
-              (click)="showAddModal = true">
-        <i class="fas fa-plus fa-sm text-white-50"></i> Record Payment
-      </button>
+  <!-- Page Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="page-title">
+        <i class="fas fa-credit-card me-2"></i>
+        Payment Management
+      </h2>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a routerLink="/dashboard">Dashboard</a></li>
+          <li class="breadcrumb-item active">Payments</li>
+        </ol>
+      </nav>
     </div>
   </div>
 
-  <!-- Search and Filter -->
-  <div class="card shadow mb-4">
-    <div class="card-header py-3">
-      <h6 class="m-0 font-weight-bold text-primary">Search Payments</h6>
-    </div>
-    <div class="card-body">
-      <div class="row">
-        <div class="col-md-6">
-          <div class="form-group">
-            <input 
-              type="text" 
-              class="form-control" 
-              placeholder="Search by client name, reference, or payment method..."
-              [(ngModel)]="searchTerm"
-              (input)="onSearch()">
-          </div>
-        </div>
+  <!-- Alert Messages -->
+  <div class="row" *ngIf="error || success">
+    <div class="col-12">
+      <div class="alert alert-danger alert-dismissible fade show" *ngIf="error">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        {{ error }}
+        <button type="button" class="btn-close" (click)="error = ''"></button>
+      </div>
+      <div class="alert alert-success alert-dismissible fade show" *ngIf="success">
+        <i class="fas fa-check-circle me-2"></i>
+        {{ success }}
+        <button type="button" class="btn-close" (click)="success = ''"></button>
       </div>
     </div>
   </div>
 
-  <!-- Payments Table -->
-  <div class="card shadow mb-4">
-    <div class="card-header py-3">
-      <h6 class="m-0 font-weight-bold text-primary">Payment Records</h6>
-    </div>
-    <div class="card-body">
-      <div *ngIf="loading" class="text-center">
-        <div class="spinner-border text-primary" role="status">
-          <span class="sr-only">Loading...</span>
+  <!-- Payment Forms (Admin and Client) -->
+  <div class="row mb-4" *ngIf="isAdmin || isClient">
+    <!-- Manual Payment Form (Admin) -->
+    <div class="col-md-6" *ngIf="isAdmin">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-cash-register me-2"></i>
+            Record Manual Payment
+          </h5>
         </div>
-      </div>
-
-      <div *ngIf="!loading" class="table-responsive">
-        <table class="table table-bordered" width="100%" cellspacing="0">
-          <thead>
-            <tr>
-              <th>Payment ID</th>
-              <th>Client Name</th>
-              <th>Amount</th>
-              <th>Payment Date</th>
-              <th>Payment Method</th>
-              <th>Reference</th>
-              <th>Status</th>
-              <th *ngIf="isAdmin()">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let payment of filteredPayments">
-              <td>{{ payment.id }}</td>
-              <td class="font-weight-bold text-dark">{{ payment.clientName }}</td>
-              <td>KSh {{ payment.amount | number:'1.2-2' }}</td>
-              <td>{{ payment.paymentDate | date:'MMM d, y' }}</td>
-              <td>{{ payment.paymentMethod }}</td>
-              <td>{{ payment.reference }}</td>
-              <td>
-                <span class="badge" 
-                      [ngClass]="{
-                        'badge-success': payment.status === 'Completed',
-                        'badge-warning': payment.status === 'Pending',
-                        'badge-danger': payment.status === 'Failed'
-                      }">
-                  {{ payment.status }}
-                </span>
-              </td>
-              <td *ngIf="isAdmin()" class="text-center">
-                <button class="btn btn-info btn-sm me-1" title="View Details">
-                  <i class="fas fa-eye"></i>
-                </button>
-                <button class="btn btn-primary btn-sm" title="Print Receipt">
-                  <i class="fas fa-print"></i>
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="filteredPayments.length === 0">
-              <td [attr.colspan]="isAdmin() ? 8 : 7" class="text-center text-muted">
-                No payments found
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Record Payment Modal -->
-  <div class="modal fade" id="recordPaymentModal" tabindex="-1" role="dialog" *ngIf="showAddModal">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Record Payment</h5>
-          <button type="button" class="close" (click)="closeModal()">
-            <span>&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <form #paymentForm="ngForm" (ngSubmit)="recordPayment()">
-            <div class="form-group">
-              <label for="billId">Bill ID</label>
-              <input type="number" class="form-control" id="billId" 
-                     [(ngModel)]="newPayment.billId" name="billId" required>
-            </div>
-            <div class="form-group">
-              <label for="amount">Amount (KSh)</label>
-              <input type="number" class="form-control" id="amount" 
-                     [(ngModel)]="newPayment.amount" name="amount" 
-                     step="0.01" min="0" required>
-            </div>
-            <div class="form-group">
-              <label for="paymentMethod">Payment Method</label>
-              <select class="form-control" id="paymentMethod" 
-                      [(ngModel)]="newPayment.paymentMethod" name="paymentMethod" required>
-                <option value="">Select Method</option>
-                <option value="Cash">Cash</option>
-                <option value="M-Pesa">M-Pesa</option>
-                <option value="Bank Transfer">Bank Transfer</option>
-                <option value="Cheque">Cheque</option>
+        <div class="card-body">
+          <form (ngSubmit)="recordManualPayment()" #manualForm="ngForm">
+            <div class="mb-3">
+              <label for="billSelect" class="form-label">Select Bill *</label>
+              <select 
+                id="billSelect" 
+                class="form-select" 
+                [(ngModel)]="manualPayment.billId" 
+                name="billId" 
+                required>
+                <option value="0">Select a bill...</option>
+                <option *ngFor="let bill of bills" [value]="bill.id">
+                  {{ getBillDisplay(bill) }}
+                </option>
               </select>
             </div>
-            <div class="form-group">
-              <label for="reference">Reference Number</label>
-              <input type="text" class="form-control" id="reference" 
-                     [(ngModel)]="newPayment.reference" name="reference" required>
+
+            <div class="mb-3">
+              <label for="paymentMethod" class="form-label">Payment Method *</label>
+              <select 
+                id="paymentMethod" 
+                class="form-select" 
+                [(ngModel)]="manualPayment.paymentMethod" 
+                name="paymentMethod" 
+                required>
+                <option *ngFor="let method of paymentMethods" [value]="method">
+                  {{ method }}
+                </option>
+              </select>
             </div>
-            <div class="form-group">
-              <label for="notes">Notes (Optional)</label>
-              <textarea class="form-control" id="notes" 
-                        [(ngModel)]="newPayment.notes" name="notes" rows="3"></textarea>
+
+            <div class="mb-3">
+              <label for="amount" class="form-label">Amount (KSh) *</label>
+              <input 
+                type="number" 
+                id="amount" 
+                class="form-control" 
+                [(ngModel)]="manualPayment.amount" 
+                name="amount" 
+                min="1" 
+                step="0.01" 
+                required>
             </div>
+
+            <div class="mb-3">
+              <label for="reference" class="form-label">Reference/Receipt Number</label>
+              <input 
+                type="text" 
+                id="reference" 
+                class="form-control" 
+                [(ngModel)]="manualPayment.reference" 
+                name="reference" 
+                placeholder="Optional reference number">
+            </div>
+
+            <button 
+              type="submit" 
+              class="btn btn-primary" 
+              [disabled]="loading || !manualForm.valid">
+              <i class="fas fa-save me-2"></i>
+              <span *ngIf="loading">Recording...</span>
+              <span *ngIf="!loading">Record Payment</span>
+            </button>
           </form>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
-          <button type="button" class="btn btn-primary" 
-                  (click)="recordPayment()" [disabled]="!paymentForm.valid">
-            Record Payment
-          </button>
+      </div>
+    </div>
+
+    <!-- Mpesa Payment Form (Client) -->
+    <div class="col-md-6" *ngIf="isClient">
+      <div class="card">
+        <div class="card-header bg-success text-white">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-mobile-alt me-2"></i>
+            Pay via M-Pesa
+          </h5>
+        </div>
+        <div class="card-body">
+          <form (ngSubmit)="initiateMpesaPayment()" #mpesaForm="ngForm">
+            <div class="mb-3">
+              <label for="mpesaBillSelect" class="form-label">Select Bill *</label>
+              <select 
+                id="mpesaBillSelect" 
+                class="form-select" 
+                [(ngModel)]="mpesaPayment.billId" 
+                name="mpesaBillId" 
+                required>
+                <option value="0">Select a bill...</option>
+                <option *ngFor="let bill of bills" [value]="bill.id">
+                  {{ getBillDisplay(bill) }}
+                </option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="phoneNumber" class="form-label">Phone Number *</label>
+              <input 
+                type="tel" 
+                id="phoneNumber" 
+                class="form-control" 
+                [(ngModel)]="mpesaPayment.phoneNumber" 
+                name="phoneNumber" 
+                placeholder="0712345678" 
+                required>
+              <div class="form-text">Enter your M-Pesa registered phone number</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="mpesaAmount" class="form-label">Amount (KSh) *</label>
+              <input 
+                type="number" 
+                id="mpesaAmount" 
+                class="form-control" 
+                [(ngModel)]="mpesaPayment.amount" 
+                name="mpesaAmount" 
+                min="1" 
+                step="0.01" 
+                required>
+            </div>
+
+            <button 
+              type="submit" 
+              class="btn btn-success" 
+              [disabled]="loading || !mpesaForm.valid">
+              <i class="fas fa-mobile-alt me-2"></i>
+              <span *ngIf="loading">Processing...</span>
+              <span *ngIf="!loading">Pay with M-Pesa</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment History -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-history me-2"></i>
+            Payment History
+          </h5>
+        </div>
+        <div class="card-body">
+          <div *ngIf="loading" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading payments...</p>
+          </div>
+
+          <div *ngIf="!loading && payments.length === 0" class="text-center py-4">
+            <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No Payments Found</h5>
+            <p class="text-muted">No payment records available.</p>
+          </div>
+
+          <div *ngIf="!loading && payments.length > 0" class="table-responsive">
+            <table class="table table-striped table-hover">
+              <thead class="table-dark">
+                <tr>
+                  <th>Date</th>
+                  <th>Bill Number</th>
+                  <th>Client</th>
+                  <th>Amount</th>
+                  <th>Method</th>
+                  <th>Reference</th>
+                  <th>Recorded By</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let payment of payments">
+                  <td>{{ formatDate(payment.paymentDate) }}</td>
+                  <td>
+                    <span class="badge bg-info">{{ payment.billNumber }}</span>
+                  </td>
+                  <td>{{ payment.clientName }}</td>
+                  <td>
+                    <strong class="text-success">{{ formatCurrency(payment.amount) }}</strong>
+                  </td>
+                  <td>
+                    <span class="badge" 
+                          [ngClass]="{
+                            'bg-success': payment.paymentMethod === 'Mpesa',
+                            'bg-primary': payment.paymentMethod === 'Cash',
+                            'bg-info': payment.paymentMethod === 'Bank',
+                            'bg-warning': payment.paymentMethod === 'Card'
+                          }">
+                      {{ payment.paymentMethod }}
+                    </span>
+                  </td>
+                  <td>{{ payment.reference || '-' }}</td>
+                  <td>{{ payment.recordedByUsername }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

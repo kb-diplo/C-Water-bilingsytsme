@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { MeterReadingCreateDto, MeterReadingResponseDto } from '../models/api.models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ReadingService {
-  private apiUrl = 'http://localhost:5000/api/readings';
+  private apiUrl = `${environment.apiUrl}/readings`;
 
   constructor(private http: HttpClient) {}
 
