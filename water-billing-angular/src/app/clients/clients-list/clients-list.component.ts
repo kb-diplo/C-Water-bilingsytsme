@@ -338,7 +338,7 @@ export class ClientsListComponent implements OnInit {
       cancelButtonText: 'Cancel'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.clientService.deleteClient(client.username || client.email).subscribe({
+        this.clientService.deleteClient(client.id).subscribe({
           next: () => {
             this.clients = this.clients.filter(c => c.id !== client.id);
             this.filteredClients = this.filteredClients.filter(c => c.id !== client.id);

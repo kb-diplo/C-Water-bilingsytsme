@@ -50,8 +50,8 @@ export class ClientService {
   }
 
   // Delete client (Admin only)
-  deleteClient(identifier: string | number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${identifier}`);
+  deleteClient(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`);
   }
 
   // Get client details with readings and bills (Admin/MeterReader only)

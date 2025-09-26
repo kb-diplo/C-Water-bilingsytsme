@@ -11,6 +11,7 @@ namespace MyApi.Models
         public string Role { get; set; } = "Client";   // Admin | MeterReader | Client
         public bool IsBootstrap { get; set; } = false; // true for the seeded admin
         public bool IsActive { get; set; } = true;     // Account active status
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow; // Account creation date
         public string? ResetToken { get; set; }        // Password reset token
         public DateTime? ResetTokenExpiry { get; set; } // Token expiration time
 

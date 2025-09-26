@@ -298,23 +298,26 @@ namespace MyApi.Controllers
         /// <summary>
         /// Delete client
         /// </summary>
-        [HttpDelete("{username}")]
+        [HttpDelete("{id:int}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteClient(string username)
+        public async Task<IActionResult> DeleteClient(int id)
         {
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Username != null && u.Username.ToLower() == username.ToLower() && u.Role == "Customer");
-            
-            if (user == null)
-                return NotFound($"Customer user '{username}' not found");
-
             var client = await _context.Clients
-                .FirstOrDefaultAsync(c => c.CreatedByUserId == user.Id && c.IsActive);
+                .Include(c => c.CreatedBy)
+                .FirstOrDefaultAsync(c => c.Id == id && c.IsActive);
                 
             if (client == null)
-                return NotFound($"Client details for user '{username}' not found");
+                return NotFound($"Client with ID {id} not found");
 
-            client.IsActive = false; // Soft delete
+            // Soft delete the client
+            client.IsActive = false;
+            
+            // Also deactivate the associated user account
+            if (client.CreatedBy != null)
+            {
+                client.CreatedBy.IsActive = false;
+            }
+            
             await _context.SaveChangesAsync();
             return Ok(new { Message = "Client deactivated successfully" });
         }
