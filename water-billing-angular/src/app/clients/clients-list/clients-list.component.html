@@ -89,6 +89,12 @@
                           title="View Details">
                     <i class="fas fa-eye"></i>
                   </button>
+                  <button class="btn btn-success btn-sm" 
+                          (click)="addReading(client)"
+                          title="Add Reading"
+                          *ngIf="isAdmin() || isMeterReader()">
+                    <i class="fas fa-tachometer-alt"></i>
+                  </button>
                   <button class="btn btn-danger btn-sm" 
                           (click)="deleteClient(client)"
                           title="Delete Client">
@@ -227,3 +233,52 @@
 
 <!-- Modal backdrop -->
 <div class="modal-backdrop fade" [class.show]="showAddModal" *ngIf="showAddModal"></div>
+
+<!-- Add Reading Modal -->
+<div class="modal fade" [class.show]="showReadingModal" [style.display]="showReadingModal ? 'block' : 'none'" 
+     tabindex="-1" role="dialog" *ngIf="showReadingModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">Add Meter Reading</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeReadingModal()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="selectedClient" class="mb-3">
+          <h6>Client Information:</h6>
+          <p><strong>Name:</strong> {{ selectedClient.fullName }}</p>
+          <p><strong>Meter Number:</strong> {{ selectedClient.meterNumber }}</p>
+          <p><strong>Location:</strong> {{ selectedClient.location }}</p>
+        </div>
+        
+        <form [formGroup]="readingForm" (ngSubmit)="onSubmitReading()">
+          <div class="form-group">
+            <label for="currentReading">Current Reading (m³) *</label>
+            <input type="number" 
+                   formControlName="currentReading" 
+                   class="form-control"
+                   [class.is-invalid]="readingForm.get('currentReading')?.invalid && readingForm.get('currentReading')?.touched"
+                   placeholder="Enter current meter reading" 
+                   step="0.01">
+            <div class="invalid-feedback" *ngIf="readingForm.get('currentReading')?.invalid && readingForm.get('currentReading')?.touched">
+              <div *ngIf="readingForm.get('currentReading')?.errors?.['required']">Current reading is required</div>
+              <div *ngIf="readingForm.get('currentReading')?.errors?.['min']">Reading must be positive</div>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeReadingModal()">Cancel</button>
+            <button type="submit" class="btn btn-success" [disabled]="readingForm.invalid">
+              <i class="fas fa-tachometer-alt me-1"></i> Add Reading
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reading Modal backdrop -->
+<div class="modal-backdrop fade" [class.show]="showReadingModal" *ngIf="showReadingModal"></div>

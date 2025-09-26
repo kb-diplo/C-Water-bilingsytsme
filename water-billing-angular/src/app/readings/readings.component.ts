@@ -1,22 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../core/services/auth.service';
+import { ReadingService } from '../core/services/reading.service';
+import { ClientService } from '../core/services/client.service';
+import { MeterReadingCreateDto, MeterReadingResponseDto, ClientDto } from '../core/models/api.models';
 import Swal from 'sweetalert2';
-
-interface MeterReading {
-  id: number;
-  clientId: number;
-  clientName: string;
-  meterNumber: string;
-  previousReading: number;
-  currentReading: number;
-  consumption: number;
-  readingDate: string;
-  readBy: string;
-  status: string;
-}
 
 @Component({
   selector: 'app-readings',
@@ -26,43 +15,54 @@ interface MeterReading {
   styleUrls: ['./readings.component.scss']
 })
 export class ReadingsComponent implements OnInit {
-  private apiUrl = 'http://localhost:5000/api';
-  readings: MeterReading[] = [];
-  filteredReadings: MeterReading[] = [];
+  readings: MeterReadingResponseDto[] = [];
+  filteredReadings: MeterReadingResponseDto[] = [];
+  clients: ClientDto[] = [];
   searchTerm = '';
   loading = true;
   showAddModal = false;
   readingForm: FormGroup;
 
   constructor(
-    private http: HttpClient,
+    private readingService: ReadingService,
+    private clientService: ClientService,
     private authService: AuthService,
     private formBuilder: FormBuilder
   ) {
     this.readingForm = this.formBuilder.group({
       clientId: ['', Validators.required],
-      currentReading: ['', [Validators.required, Validators.min(0)]],
-      readingDate: ['', Validators.required],
-      notes: ['']
+      currentReading: ['', [Validators.required, Validators.min(0)]]
     });
   }
 
   ngOnInit(): void {
     this.loadReadings();
+    this.loadClients();
   }
 
   loadReadings(): void {
     this.loading = true;
-    this.http.get<MeterReading[]>(`${this.apiUrl}/readings`).subscribe({
-      next: (readings: MeterReading[]) => {
+    this.readingService.getAllReadings().subscribe({
+      next: (readings) => {
         this.readings = readings;
         this.filteredReadings = readings;
         this.loading = false;
       },
-      error: (error: any) => {
+      error: (error) => {
         console.error('Error loading readings:', error);
         this.loading = false;
         Swal.fire('Error', 'Failed to load meter readings', 'error');
+      }
+    });
+  }
+
+  loadClients(): void {
+    this.clientService.getClients().subscribe({
+      next: (clients) => {
+        this.clients = clients;
+      },
+      error: (error) => {
+        console.error('Error loading clients:', error);
       }
     });
   }
@@ -76,16 +76,13 @@ export class ReadingsComponent implements OnInit {
     this.filteredReadings = this.readings.filter(reading =>
       reading.clientName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
       reading.meterNumber.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-      reading.readBy.toLowerCase().includes(this.searchTerm.toLowerCase())
+      reading.recordedByUsername.toLowerCase().includes(this.searchTerm.toLowerCase())
     );
   }
 
   openAddModal(): void {
     this.showAddModal = true;
     this.readingForm.reset();
-    this.readingForm.patchValue({
-      readingDate: new Date().toISOString().split('T')[0]
-    });
   }
 
   closeAddModal(): void {
@@ -99,15 +96,19 @@ export class ReadingsComponent implements OnInit {
       return;
     }
 
-    const readingData = this.readingForm.value;
-    this.http.post<MeterReading>(`${this.apiUrl}/readings`, readingData).subscribe({
-      next: (reading: MeterReading) => {
+    const readingData: MeterReadingCreateDto = {
+      clientId: parseInt(this.readingForm.value.clientId),
+      currentReading: parseFloat(this.readingForm.value.currentReading)
+    };
+
+    this.readingService.addReading(readingData).subscribe({
+      next: (reading) => {
         this.readings.unshift(reading);
         this.filteredReadings = this.readings;
         this.closeAddModal();
         Swal.fire('Success', 'Meter reading added successfully', 'success');
       },
-      error: (error: any) => {
+      error: (error) => {
         console.error('Error adding reading:', error);
         const errorMessage = error.error?.message || 'Failed to add meter reading';
         Swal.fire('Error', errorMessage, 'error');

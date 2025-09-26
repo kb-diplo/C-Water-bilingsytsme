@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { ClientService, Client, ClientCreateRequest } from '../../core/services/client.service';
+import { ReadingService } from '../../core/services/reading.service';
 import { AuthService } from '../../core/services/auth.service';
+import { MeterReadingCreateDto } from '../../core/models/api.models';
 import Swal from 'sweetalert2';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 
@@ -20,9 +22,12 @@ export class ClientsListComponent implements OnInit {
   searchTerm = '';
   loading = true;
   showAddModal = false;
+  showReadingModal = false;
   isEditMode = false;
   editingClientId: number | null = null;
+  selectedClient: Client | null = null;
   clientForm: FormGroup;
+  readingForm: FormGroup;
   
   // Pagination
   currentPage = 1;
@@ -34,6 +39,7 @@ export class ClientsListComponent implements OnInit {
 
   constructor(
     private clientService: ClientService,
+    private readingService: ReadingService,
     private authService: AuthService,
     private formBuilder: FormBuilder
   ) {
@@ -48,6 +54,10 @@ export class ClientsListComponent implements OnInit {
       status: ['Connected', Validators.required],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required]
+    });
+
+    this.readingForm = this.formBuilder.group({
+      currentReading: ['', [Validators.required, Validators.min(0)]]
     });
 
     // Setup debounced search
@@ -395,5 +405,48 @@ export class ClientsListComponent implements OnInit {
       pages.push(i);
     }
     return pages;
+  }
+
+  addReading(client: Client): void {
+    this.selectedClient = client;
+    this.showReadingModal = true;
+    this.readingForm.reset();
+  }
+
+  closeReadingModal(): void {
+    this.showReadingModal = false;
+    this.selectedClient = null;
+    this.readingForm.reset();
+  }
+
+  onSubmitReading(): void {
+    if (this.readingForm.invalid || !this.selectedClient) {
+      this.markReadingFormTouched();
+      return;
+    }
+
+    const readingData: MeterReadingCreateDto = {
+      clientId: this.selectedClient.id,
+      currentReading: parseFloat(this.readingForm.value.currentReading)
+    };
+
+    this.readingService.addReading(readingData).subscribe({
+      next: (reading) => {
+        this.closeReadingModal();
+        Swal.fire('Success', `Meter reading added successfully for ${this.selectedClient?.fullName}`, 'success');
+      },
+      error: (error) => {
+        console.error('Error adding reading:', error);
+        const errorMessage = error.error?.message || 'Failed to add meter reading';
+        Swal.fire('Error', errorMessage, 'error');
+      }
+    });
+  }
+
+  private markReadingFormTouched(): void {
+    Object.keys(this.readingForm.controls).forEach(key => {
+      const control = this.readingForm.get(key);
+      control?.markAsTouched();
+    });
   }
 }

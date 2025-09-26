@@ -54,7 +54,7 @@
               <th>Current Reading</th>
               <th>Consumption</th>
               <th>Reading Date</th>
-              <th>Read By</th>
+              <th>Recorded By</th>
               <th>Status</th>
               <th *ngIf="isAdmin()">Actions</th>
             </tr>
@@ -66,9 +66,9 @@
               <td>{{ reading.meterNumber }}</td>
               <td>{{ reading.previousReading | number:'1.2-2' }} m³</td>
               <td>{{ reading.currentReading | number:'1.2-2' }} m³</td>
-              <td class="font-weight-bold text-primary">{{ reading.consumption | number:'1.2-2' }} m³</td>
+              <td class="font-weight-bold text-primary">{{ reading.unitsUsed | number:'1.2-2' }} m³</td>
               <td>{{ reading.readingDate | date:'MMM d, y' }}</td>
-              <td>{{ reading.readBy }}</td>
+              <td>{{ reading.recordedByUsername }}</td>
               <td>
                 <span class="badge" 
                       [ngClass]="{
@@ -118,7 +118,9 @@
                 <select formControlName="clientId" class="form-control" 
                         [class.is-invalid]="f['clientId'].invalid && f['clientId'].touched">
                   <option value="">Select Client</option>
-                  <!-- Add client options here -->
+                  <option *ngFor="let client of clients" [value]="client.id">
+                    {{ client.fullName }} - {{ client.meterNumber }}
+                  </option>
                 </select>
                 <div class="invalid-feedback" *ngIf="f['clientId'].invalid && f['clientId'].touched">
                   Client is required
@@ -139,25 +141,6 @@
             </div>
           </div>
           
-          <div class="row">
-            <div class="col-md-6">
-              <div class="form-group mb-3">
-                <label for="readingDate">Reading Date</label>
-                <input type="date" formControlName="readingDate" class="form-control"
-                       [class.is-invalid]="f['readingDate'].invalid && f['readingDate'].touched">
-                <div class="invalid-feedback" *ngIf="f['readingDate'].invalid && f['readingDate'].touched">
-                  Reading date is required
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="form-group mb-3">
-                <label for="notes">Notes (Optional)</label>
-                <textarea formControlName="notes" class="form-control" rows="3"
-                          placeholder="Any additional notes..."></textarea>
-              </div>
-            </div>
-          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" (click)="closeAddModal()">Cancel</button>
