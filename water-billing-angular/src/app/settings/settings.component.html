@@ -1,0 +1,138 @@
+<div class="container-fluid">
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">System Settings</h1>
+  </div>
+
+  <div *ngIf="!isAdmin()" class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle"></i>
+    You don't have permission to access system settings.
+  </div>
+
+  <div *ngIf="isAdmin()">
+    <!-- Billing Configuration -->
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+          <i class="fas fa-cog me-2"></i>Billing Configuration
+        </h6>
+      </div>
+      <div class="card-body">
+        <p class="mb-4 text-muted">Configure water billing rates and penalties for the system.</p>
+
+        <div *ngIf="loading" class="text-center py-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+        </div>
+
+        <form *ngIf="!loading" [formGroup]="settingsForm" (ngSubmit)="onSubmit()">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group mb-4">
+                <label for="ratePerUnit" class="form-label">
+                  <strong>Amount per Unit (KSh/m³)</strong>
+                </label>
+                <input type="number" 
+                       id="ratePerUnit"
+                       formControlName="ratePerUnit" 
+                       class="form-control form-control-lg"
+                       [class.is-invalid]="f['ratePerUnit'].invalid && f['ratePerUnit'].touched"
+                       placeholder="Enter tariff rate per cubic meter" 
+                       step="0.01" 
+                       min="0">
+                <div class="invalid-feedback" *ngIf="f['ratePerUnit'].invalid && f['ratePerUnit'].touched">
+                  <div *ngIf="f['ratePerUnit'].errors?.['required']">Tariff rate is required</div>
+                  <div *ngIf="f['ratePerUnit'].errors?.['min']">Rate must be positive</div>
+                </div>
+                <small class="form-text text-muted">The cost charged per cubic meter of water consumed</small>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="form-group mb-4">
+                <label for="penaltyRate" class="form-label">
+                  <strong>Penalty Rate (%)</strong>
+                </label>
+                <input type="number" 
+                       id="penaltyRate"
+                       formControlName="penaltyRate" 
+                       class="form-control form-control-lg"
+                       [class.is-invalid]="f['penaltyRate'].invalid && f['penaltyRate'].touched"
+                       placeholder="Enter penalty percentage" 
+                       step="0.1" 
+                       min="0" 
+                       max="100">
+                <div class="invalid-feedback" *ngIf="f['penaltyRate'].invalid && f['penaltyRate'].touched">
+                  <div *ngIf="f['penaltyRate'].errors?.['required']">Penalty rate is required</div>
+                  <div *ngIf="f['penaltyRate'].errors?.['min']">Rate must be positive</div>
+                  <div *ngIf="f['penaltyRate'].errors?.['max']">Rate cannot exceed 100%</div>
+                </div>
+                <small class="form-text text-muted">Penalty percentage applied to overdue bills</small>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-12">
+              <div class="d-flex gap-2">
+                <button type="submit" 
+                        class="btn btn-primary btn-lg" 
+                        [disabled]="saving || settingsForm.invalid">
+                  <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
+                  <i *ngIf="!saving" class="fas fa-save me-2"></i>
+                  {{ saving ? 'Saving...' : 'Save Settings' }}
+                </button>
+                <button type="button" 
+                        class="btn btn-outline-secondary btn-lg" 
+                        (click)="resetForm()" 
+                        [disabled]="saving">
+                  <i class="fas fa-undo me-2"></i>Reset
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Current Settings Display -->
+    <div class="card shadow" *ngIf="currentSettings && !loading">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+          <i class="fas fa-info-circle me-2"></i>Current Configuration
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="text-center">
+              <div class="text-primary">
+                <i class="fas fa-tint fa-2x mb-2"></i>
+              </div>
+              <h5 class="font-weight-bold">KSh {{ currentSettings.ratePerUnit || 0 }}</h5>
+              <p class="text-muted mb-0">Per Unit Rate</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-center">
+              <div class="text-warning">
+                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+              </div>
+              <h5 class="font-weight-bold">{{ currentSettings.penaltyRate || 0 }}%</h5>
+              <p class="text-muted mb-0">Penalty Rate</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-center">
+              <div class="text-info">
+                <i class="fas fa-clock fa-2x mb-2"></i>
+              </div>
+              <h5 class="font-weight-bold">{{ currentSettings.lastUpdated | date:'MMM d, y' }}</h5>
+              <p class="text-muted mb-0">Last Updated</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
