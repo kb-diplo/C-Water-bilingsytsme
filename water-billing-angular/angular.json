@@ -60,6 +60,7 @@
                 }
               ],
               "outputHashing": "all",
+              "baseHref": "/",
               "allowedCommonJsDependencies": [
                 "sweetalert2",
                 "html2canvas",
