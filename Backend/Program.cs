@@ -19,9 +19,31 @@ public partial class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // EF Core + SQL Server - Water Billing System
-        builder.Services.AddDbContext<WaterBillingDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+        // Configure Kestrel for Render deployment
+        var port = Environment.GetEnvironmentVariable("PORT");
+        if (!string.IsNullOrEmpty(port))
+        {
+            builder.WebHost.ConfigureKestrel(options =>
+            {
+                options.ListenAnyIP(int.Parse(port));
+            });
+        }
+
+        // EF Core - Water Billing System (Support both SQL Server and PostgreSQL)
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        
+        if (connectionString?.Contains("postgres") == true || connectionString?.Contains("postgresql") == true)
+        {
+            // Use PostgreSQL for production (Render)
+            builder.Services.AddDbContext<WaterBillingDbContext>(options =>
+                options.UseNpgsql(connectionString));
+        }
+        else
+        {
+            // Use SQL Server for local development
+            builder.Services.AddDbContext<WaterBillingDbContext>(options =>
+                options.UseSqlServer(connectionString));
+        }
             
         // Register PasswordHasher
         builder.Services.AddScoped<IPasswordHasher<Users>, PasswordHasher<Users>>();
@@ -51,10 +73,17 @@ public partial class Program
         {
             options.AddPolicy("AllowAngularApp", policy =>
             {
-                policy.WithOrigins("http://localhost:4200", "http://localhost:4201", "http://localhost:4202")
+                policy.WithOrigins(
+                        "http://localhost:4200", 
+                        "http://localhost:4201", 
+                        "http://localhost:4202",
+                        "https://*.netlify.app",
+                        "https://*.netlify.com"
+                    )
                       .AllowAnyHeader()
                       .AllowAnyMethod()
-                      .AllowCredentials();
+                      .AllowCredentials()
+                      .SetIsOriginAllowedToAllowWildcardSubdomains();
             });
         });
 
@@ -279,6 +308,9 @@ public partial class Program
         app.UseAuthorization();
 
         app.MapControllers();
+
+        // Add health check endpoint for Render
+        app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
         app.Run();
     }
