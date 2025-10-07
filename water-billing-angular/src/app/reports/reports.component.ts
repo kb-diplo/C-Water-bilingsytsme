@@ -2,10 +2,22 @@ import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Chart, registerables } from 'chart.js';
+import { environment } from '../../environments/environment';
 
 Chart.register(...registerables);
 
 interface ReportData {
+  period?: {
+    fromDate?: Date;
+    toDate?: Date;
+  };
+  totalBilled?: number;
+  totalCollected?: number;
+  collectionRate?: number;
+  outstanding?: number;
+  totalBills?: number;
+  paidBills?: number;
+  overdueBills?: number;
   totalRevenue: number;
   outstandingPayments: number;
   totalConsumption: number;
@@ -25,7 +37,7 @@ interface ReportData {
   styleUrls: ['./reports.component.scss']
 })
 export class ReportsComponent implements OnInit, AfterViewInit {
-  private apiUrl = 'http://localhost:5000/api';
+  private apiUrl = environment.apiUrl;
   reportData: ReportData = {
     totalRevenue: 0,
     outstandingPayments: 0,
@@ -52,14 +64,42 @@ export class ReportsComponent implements OnInit, AfterViewInit {
   }
 
   loadReportData(): void {
-    this.http.get<ReportData>(`${this.apiUrl}/reports/financial`).subscribe({
+    this.http.get<any>(`${this.apiUrl}/reports/financial`).subscribe({
       next: (data) => {
-        this.reportData = data;
+        console.log('Report data received from backend:', data);
+        console.log('Data type:', typeof data);
+        console.log('Data keys:', Object.keys(data));
+        
+        // Map the response data to our interface
+        this.reportData = {
+          period: data.period,
+          totalBilled: data.totalBilled || 0,
+          totalCollected: data.totalCollected || 0,
+          collectionRate: data.collectionRate || 0,
+          outstanding: data.outstanding || 0,
+          totalBills: data.totalBills || 0,
+          paidBills: data.paidBills || 0,
+          overdueBills: data.overdueBills || 0,
+          totalRevenue: data.totalRevenue || 0,
+          outstandingPayments: data.outstandingPayments || 0,
+          totalConsumption: data.totalConsumption || 0,
+          paidBillsCount: data.paidBillsCount || 0,
+          pendingBillsCount: data.pendingBillsCount || 0,
+          overdueBillsCount: data.overdueBillsCount || 0,
+          disconnectedClients: data.disconnectedClients || 0,
+          monthlyRevenueData: data.monthlyRevenueData || [],
+          monthlyConsumptionData: data.monthlyConsumptionData || []
+        };
+        
+        console.log('Processed report data:', this.reportData);
+        console.log('Total Revenue value:', this.reportData.totalRevenue);
         this.loading = false;
         this.initializeCharts();
       },
       error: (error) => {
         console.error('Error loading report data:', error);
+        console.error('Error status:', error.status);
+        console.error('Error details:', error.error);
         this.loading = false;
       }
     });
@@ -172,6 +212,35 @@ export class ReportsComponent implements OnInit, AfterViewInit {
   }
 
   downloadPDF(): void {
-    window.open(`${this.apiUrl}/reports/financial?export=pdf`, '_blank');
+    console.log('Downloading PDF report...');
+    console.log('API URL:', this.apiUrl);
+    
+    // Get the HTML report and open it in a new window for printing as PDF
+    this.http.get(`${this.apiUrl}/reports/financial?export=pdf`, { responseType: 'text' }).subscribe({
+      next: (htmlContent) => {
+        console.log('PDF content received, length:', htmlContent.length);
+        
+        // Open in new window for printing
+        const printWindow = window.open('', '_blank', 'width=1200,height=800');
+        if (printWindow) {
+          printWindow.document.write(htmlContent);
+          printWindow.document.close();
+          printWindow.focus();
+          
+          // Automatically trigger print dialog after content loads
+          setTimeout(() => {
+            printWindow.print();
+          }, 1000);
+        }
+        
+        console.log('PDF report opened for printing');
+      },
+      error: (error) => {
+        console.error('Error downloading PDF:', error);
+        console.error('Error details:', error.error);
+        console.error('Error status:', error.status);
+        alert(`Error downloading PDF report: ${error.status} - ${error.message}`);
+      }
+    });
   }
 }

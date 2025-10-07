@@ -1,79 +1,196 @@
 <div class="container-fluid">
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">User Management</h1>
-    <button class="btn btn-primary btn-sm shadow-sm" (click)="openCreateUserModal()">
-      <i class="fas fa-plus fa-sm text-white-50"></i> Create User
-    </button>
+    <div class="d-flex gap-2">
+      <button class="btn btn-success btn-sm shadow-sm" (click)="downloadAllUsers()">
+        <i class="fas fa-download fa-sm text-white-50"></i> Download All Users
+      </button>
+      <button class="btn btn-primary btn-sm shadow-sm" (click)="openCreateUserModal()">
+        <i class="fas fa-plus fa-sm text-white-50"></i> Create User
+      </button>
+    </div>
   </div>
 
-  <div class="card shadow mb-4">
-    <div class="card-header py-3">
-      <h6 class="m-0 font-weight-bold text-primary">System Users</h6>
+  <!-- Filters Section -->
+  <div class="card shadow mb-3">
+    <div class="card-header py-2">
+      <h6 class="m-0 font-weight-bold text-primary">Filters & Search</h6>
+    </div>
+    <div class="card-body py-3">
+      <div class="row">
+        <div class="col-md-3">
+          <label for="roleFilter" class="form-label">Filter by Role</label>
+          <select class="form-control" id="roleFilter" [(ngModel)]="selectedRole" (change)="applyFilters()">
+            <option value="">All Users</option>
+            <option value="Admin">Admin</option>
+            <option value="MeterReader">Meter Reader</option>
+            <option value="Client">Client</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="statusFilter" class="form-label">Filter by Status</label>
+          <select class="form-control" id="statusFilter" [(ngModel)]="selectedStatus" (change)="applyFilters()">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="searchTerm" class="form-label">Search All Columns</label>
+          <div class="input-group">
+            <input 
+              type="text" 
+              class="form-control" 
+              id="searchTerm"
+              placeholder="Search by ID, username, email, role..." 
+              [(ngModel)]="searchTerm"
+              (input)="onSearch()">
+            <div class="input-group-append">
+              <span class="input-group-text">
+                <i class="fas fa-search"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">&nbsp;</label>
+          <button class="btn btn-secondary btn-block" (click)="clearFilters()">
+            <i class="fas fa-times mr-1"></i>Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="sr-only">Loading...</span>
+    </div>
+    <p class="mt-2 text-muted">Loading users...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && filteredUsers.length === 0" class="text-center py-5">
+    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+    <h5 class="text-muted">No Users Found</h5>
+    <p class="text-muted">No users match your current filters</p>
+  </div>
+
+  <!-- Unified Users Table -->
+  <div *ngIf="!loading && filteredUsers.length > 0" class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+      <h6 class="m-0 font-weight-bold text-primary">
+        Users ({{ filteredUsers.length }})
+        <span *ngIf="selectedRole || selectedStatus || searchTerm" class="badge badge-info ml-2">
+          Filtered
+        </span>
+      </h6>
+      <button class="btn btn-success btn-sm" (click)="downloadFilteredUsers()">
+        <i class="fas fa-download"></i> Download Current View
+      </button>
     </div>
     <div class="card-body">
-      <!-- Loading State -->
-      <div *ngIf="loading" class="text-center py-4">
-        <div class="spinner-border text-primary" role="status">
-          <span class="sr-only">Loading...</span>
-        </div>
-        <p class="mt-2 text-muted">Loading users...</p>
-      </div>
-
-      <!-- Empty State -->
-      <div *ngIf="!loading && users.length === 0" class="text-center py-5">
-        <i class="fas fa-users fa-3x text-muted mb-3"></i>
-        <h5 class="text-muted">No Users Found</h5>
-        <p class="text-muted">No users available in the system</p>
-      </div>
-      
-      <!-- Users Table -->
-      <div *ngIf="!loading && users.length > 0" class="table-responsive">
-        <table class="table table-bordered" width="100%" cellspacing="0">
-          <thead>
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+          <thead class="table-light">
             <tr>
-              <th>ID</th>
-              <th>Username</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th style="width: 60px;">ID</th>
+              <th style="width: 150px;">Username</th>
+              <th style="width: 200px;">Email</th>
+              <th style="width: 100px;">Role</th>
+              <th style="width: 100px;">Status</th>
+              <th style="width: 150px;">Created Date</th>
+              <th style="width: 100px;">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let user of users; trackBy: trackByUserId">
-              <td>{{ user.id }}</td>
-              <td>{{ user.username }}</td>
-              <td>
-                <span class="badge" 
-                      [class.badge-success]="user.role === 'Admin'"
-                      [class.badge-info]="user.role === 'MeterReader'"
-                      [class.badge-warning]="user.role === 'Client'"
-                      [class.badge-secondary]="!user.role">
-                  {{ user.role || 'No Role' }}
+            <tr *ngFor="let user of paginatedUsers; trackBy: trackByUserId">
+              <td>{{ getUserId(user) }}</td>
+              <td><strong>{{ getUserUsername(user) }}</strong></td>
+              <td>{{ getUserEmail(user) }}</td>
+              <td class="text-center">
+                <span class="badge font-weight-bold" 
+                      [ngClass]="{
+                        'badge-danger': getUserRole(user) === 'Admin',
+                        'badge-info': getUserRole(user) === 'MeterReader',
+                        'badge-success': getUserRole(user) === 'Client'
+                      }">
+                  {{ getUserRole(user) }}
                 </span>
               </td>
-              <td>
-                <span class="badge" 
-                      [class.badge-success]="user.isActive"
-                      [class.badge-danger]="!user.isActive">
-                  {{ user.isActive ? 'Active' : 'Inactive' }}
+              <td class="text-center">
+                <span class="badge font-weight-bold" [ngClass]="getUserIsActive(user) ? 'badge-success' : 'badge-danger'">
+                  {{ getUserIsActive(user) ? 'Active' : 'Inactive' }}
                 </span>
               </td>
-              <td>
+              <td><small class="text-muted">{{ getUserCreatedDate(user) }}</small></td>
+              <td class="text-center">
+                <button class="btn btn-info btn-sm mr-2" 
+                        (click)="openEditModal(user)"
+                        title="Edit user">
+                  <i class="fas fa-edit"></i>
+                </button>
                 <button class="btn btn-danger btn-sm" 
-                        (click)="deleteUser(user.username)"
-                        [disabled]="user.isBootstrap"
-                        title="{{ user.isBootstrap ? 'Cannot delete bootstrap user' : 'Delete user' }}">
-                  <i class="fas fa-trash"></i> Delete
+                        (click)="deleteUser(getUserUsername(user))"
+                        [disabled]="getUserIsBootstrap(user)"
+                        title="{{ getUserIsBootstrap(user) ? 'Cannot delete bootstrap user' : 'Delete user' }}">
+                  <i class="fas fa-trash"></i>
                 </button>
               </td>
             </tr>
           </tbody>
         </table>
-        
+      </div>
+      
+      <!-- Pagination Controls -->
+      <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="totalPages > 1">
+        <div class="pagination-info">
+          <small class="text-muted">
+            Showing {{ getStartIndex() + 1 }} to {{ getEndIndex() }} of {{ filteredUsers.length }} users
+          </small>
+        </div>
+        <nav aria-label="User pagination">
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" [class.disabled]="currentPage === 1">
+              <button class="page-link" (click)="goToPage(1)" [disabled]="currentPage === 1">
+                <i class="fas fa-angle-double-left"></i>
+              </button>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage === 1">
+              <button class="page-link" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">
+                <i class="fas fa-angle-left"></i>
+              </button>
+            </li>
+            <li class="page-item" *ngFor="let page of getVisiblePages()" [class.active]="page === currentPage">
+              <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+              <button class="page-link" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">
+                <i class="fas fa-angle-right"></i>
+              </button>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+              <button class="page-link" (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages">
+                <i class="fas fa-angle-double-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+        <div class="page-size-selector">
+          <select class="form-control form-control-sm" [(ngModel)]="pageSize" (change)="onPageSizeChange()" style="width: auto;">
+            <option [value]="5">5 per page</option>
+            <option [value]="10">10 per page</option>
+            <option [value]="25">25 per page</option>
+            <option [value]="50">50 per page</option>
+            <option [value]="100">100 per page</option>
+          </select>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
 
 <!-- Create User Modal -->
 <div class="modal fade" [class.show]="showCreateModal" [style.display]="showCreateModal ? 'block' : 'none'" 
@@ -130,6 +247,83 @@
           <i class="fas fa-user-plus mr-1"></i> Create User
         </button>
         <button type="button" class="btn btn-secondary" (click)="closeCreateModal()">
+          <i class="fas fa-times mr-1"></i> Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" [class.show]="showEditModal" [style.display]="showEditModal ? 'block' : 'none'" 
+     tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title">Edit User</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeEditModal()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form #editUserForm="ngForm" (ngSubmit)="updateUser()">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label for="editUsername" class="form-label">Username *</label>
+                <input type="text" class="form-control" id="editUsername" 
+                       [(ngModel)]="editUser.username" name="editUsername" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label for="editEmail" class="form-label">Email *</label>
+                <input type="email" class="form-control" id="editEmail" 
+                       [(ngModel)]="editUser.email" name="editEmail" required>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label for="editRole" class="form-label">Role *</label>
+                <select class="form-control" id="editRole" 
+                        [(ngModel)]="editUser.role" name="editRole" required>
+                  <option value="MeterReader">Meter Reader</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Client">Client</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label for="editStatus" class="form-label">Status *</label>
+                <select class="form-control" id="editStatus" 
+                        [(ngModel)]="editUser.isActive" name="editStatus" required>
+                  <option [value]="true">Active</option>
+                  <option [value]="false">Inactive</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <div class="form-group mb-3">
+                <label for="editPassword" class="form-label">New Password</label>
+                <input type="password" class="form-control" id="editPassword" 
+                       [(ngModel)]="editUser.password" name="editPassword" 
+                       placeholder="Leave blank to keep current password">
+                <small class="text-muted">Leave blank to keep the current password. Minimum 6 characters if changing.</small>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-info" (click)="updateUser()">
+          <i class="fas fa-save mr-1"></i> Update User
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="closeEditModal()">
           <i class="fas fa-times mr-1"></i> Cancel
         </button>
       </div>

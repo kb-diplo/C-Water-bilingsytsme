@@ -33,6 +33,7 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Auto-redirect if already logged in
     if (this.authService.isAuthenticated()) {
       this.authService.redirectToDashboard();
     }
@@ -49,38 +50,59 @@ export class LoginComponent implements OnInit {
     this.authService.login(this.loginForm.value).subscribe({
       next: (response) => {
         this.loading = false;
+
+        // Debug logging for client redirect issue
+        if (!environment.production) {
+          console.log('🔑 Login successful:', {
+            response: response,
+            username: response.username,
+            role: response.role,
+            timestamp: new Date().toISOString()
+          });
+        }
+
         Swal.fire({
           icon: 'success',
           title: 'Login Successful',
           text: `Welcome back, ${response.username}!`,
-          timer: 2000,
+          timer: 1500,
           showConfirmButton: false
         });
+
+        // Centralized dashboard redirect (Admin, MeterReader, Client)
+        if (!environment.production) {
+          console.log('🔄 About to call redirectToDashboard() for user:', {
+            username: response.username,
+            role: response.role,
+            hasToken: !!response.token,
+            currentUser: this.authService.getCurrentUser()
+          });
+        }
         
-        // Use the centralized dashboard routing
-        this.authService.redirectToDashboard();
+        // Small delay to ensure user is fully set before redirect
+        setTimeout(() => {
+          this.authService.redirectToDashboard();
+        }, 50);
       },
       error: (error) => {
         this.loading = false;
-        // Log error for debugging (only in development)
+
         if (!environment.production) {
           console.error('Login error details:', error);
         }
-        
-        // Always show user-friendly message, never mention server details
+
         let errorMessage = 'Login failed. Please check your username and password and try again.';
-        
-        // Only differentiate for actual authentication errors
+
         if (error.status === 401) {
           errorMessage = 'Invalid username or password. Please try again.';
         } else if (error.status === 403) {
-          errorMessage = 'Access denied. Please contact support if this continues.';
+          errorMessage = 'Access denied. Please contact support.';
         } else {
-          // For all other errors (network, server, etc.) - generic message
-          errorMessage = 'Login failed. Please try again in a moment.';
+          errorMessage = 'Unable to login right now. Please try again later.';
         }
-        
+
         this.error = errorMessage;
+
         Swal.fire({
           icon: 'error',
           title: 'Login Failed',

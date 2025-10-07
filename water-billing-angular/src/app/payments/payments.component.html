@@ -15,176 +15,24 @@
     </div>
   </div>
 
-  <!-- Alert Messages -->
-  <div class="row" *ngIf="error || success">
-    <div class="col-12">
-      <div class="alert alert-danger alert-dismissible fade show" *ngIf="error">
-        <i class="fas fa-exclamation-triangle me-2"></i>
-        {{ error }}
-        <button type="button" class="btn-close" (click)="error = ''"></button>
-      </div>
-      <div class="alert alert-success alert-dismissible fade show" *ngIf="success">
-        <i class="fas fa-check-circle me-2"></i>
-        {{ success }}
-        <button type="button" class="btn-close" (click)="success = ''"></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Payment Forms (Admin and Client) -->
-  <div class="row mb-4" *ngIf="isAdmin || isClient">
-    <!-- Manual Payment Form (Admin) -->
-    <div class="col-md-6" *ngIf="isAdmin">
-      <div class="card">
-        <div class="card-header bg-primary text-white">
-          <h5 class="card-title mb-0">
-            <i class="fas fa-cash-register me-2"></i>
-            Record Manual Payment
-          </h5>
-        </div>
-        <div class="card-body">
-          <form (ngSubmit)="recordManualPayment()" #manualForm="ngForm">
-            <div class="mb-3">
-              <label for="billSelect" class="form-label">Select Bill *</label>
-              <select 
-                id="billSelect" 
-                class="form-select" 
-                [(ngModel)]="manualPayment.billId" 
-                name="billId" 
-                required>
-                <option value="0">Select a bill...</option>
-                <option *ngFor="let bill of bills" [value]="bill.id">
-                  {{ getBillDisplay(bill) }}
-                </option>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label for="paymentMethod" class="form-label">Payment Method *</label>
-              <select 
-                id="paymentMethod" 
-                class="form-select" 
-                [(ngModel)]="manualPayment.paymentMethod" 
-                name="paymentMethod" 
-                required>
-                <option *ngFor="let method of paymentMethods" [value]="method">
-                  {{ method }}
-                </option>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label for="amount" class="form-label">Amount (KSh) *</label>
-              <input 
-                type="number" 
-                id="amount" 
-                class="form-control" 
-                [(ngModel)]="manualPayment.amount" 
-                name="amount" 
-                min="1" 
-                step="0.01" 
-                required>
-            </div>
-
-            <div class="mb-3">
-              <label for="reference" class="form-label">Reference/Receipt Number</label>
-              <input 
-                type="text" 
-                id="reference" 
-                class="form-control" 
-                [(ngModel)]="manualPayment.reference" 
-                name="reference" 
-                placeholder="Optional reference number">
-            </div>
-
-            <button 
-              type="submit" 
-              class="btn btn-primary" 
-              [disabled]="loading || !manualForm.valid">
-              <i class="fas fa-save me-2"></i>
-              <span *ngIf="loading">Recording...</span>
-              <span *ngIf="!loading">Record Payment</span>
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- Mpesa Payment Form (Client) -->
-    <div class="col-md-6" *ngIf="isClient">
-      <div class="card">
-        <div class="card-header bg-success text-white">
-          <h5 class="card-title mb-0">
-            <i class="fas fa-mobile-alt me-2"></i>
-            Pay via M-Pesa
-          </h5>
-        </div>
-        <div class="card-body">
-          <form (ngSubmit)="initiateMpesaPayment()" #mpesaForm="ngForm">
-            <div class="mb-3">
-              <label for="mpesaBillSelect" class="form-label">Select Bill *</label>
-              <select 
-                id="mpesaBillSelect" 
-                class="form-select" 
-                [(ngModel)]="mpesaPayment.billId" 
-                name="mpesaBillId" 
-                required>
-                <option value="0">Select a bill...</option>
-                <option *ngFor="let bill of bills" [value]="bill.id">
-                  {{ getBillDisplay(bill) }}
-                </option>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label for="phoneNumber" class="form-label">Phone Number *</label>
-              <input 
-                type="tel" 
-                id="phoneNumber" 
-                class="form-control" 
-                [(ngModel)]="mpesaPayment.phoneNumber" 
-                name="phoneNumber" 
-                placeholder="0712345678" 
-                required>
-              <div class="form-text">Enter your M-Pesa registered phone number</div>
-            </div>
-
-            <div class="mb-3">
-              <label for="mpesaAmount" class="form-label">Amount (KSh) *</label>
-              <input 
-                type="number" 
-                id="mpesaAmount" 
-                class="form-control" 
-                [(ngModel)]="mpesaPayment.amount" 
-                name="mpesaAmount" 
-                min="1" 
-                step="0.01" 
-                required>
-            </div>
-
-            <button 
-              type="submit" 
-              class="btn btn-success" 
-              [disabled]="loading || !mpesaForm.valid">
-              <i class="fas fa-mobile-alt me-2"></i>
-              <span *ngIf="loading">Processing...</span>
-              <span *ngIf="!loading">Pay with M-Pesa</span>
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Payment History -->
   <div class="row">
     <div class="col-12">
       <div class="card">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="card-title mb-0">
             <i class="fas fa-history me-2"></i>
             Payment History
           </h5>
+          <button 
+            class="btn btn-danger btn-sm" 
+            (click)="downloadPaymentsPDF()"
+            *ngIf="!loading && payments.length > 0"
+            [disabled]="loading">
+            <i class="fas fa-file-pdf me-2"></i>
+            Download PDF
+          </button>
         </div>
         <div class="card-body">
           <div *ngIf="loading" class="text-center py-4">

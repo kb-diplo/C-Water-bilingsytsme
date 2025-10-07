@@ -1,54 +1,26 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { PaymentService } from '../core/services/payment.service';
-import { MpesaService, MpesaStkPushRequest } from '../core/services/mpesa.service';
-import { BillService } from '../core/services/bill.service';
 import { AuthService } from '../core/services/auth.service';
-import { PaymentCreateDto, PaymentResponseDto, BillResponseDto } from '../core/models/api.models';
+import { PaymentResponseDto } from '../core/models/api.models';
 
 @Component({
   selector: 'app-payments',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './payments.component.html',
   styleUrl: './payments.component.scss'
 })
 export class PaymentsComponent implements OnInit {
   payments: PaymentResponseDto[] = [];
-  bills: BillResponseDto[] = [];
   loading = false;
-  error = '';
-  success = '';
-
-  // Manual payment form
-  manualPayment: PaymentCreateDto = {
-    billId: 0,
-    amount: 0,
-    paymentMethod: 'Cash',
-    reference: ''
-  };
-
-  // Mpesa payment form
-  mpesaPayment: MpesaStkPushRequest = {
-    billId: 0,
-    phoneNumber: '',
-    amount: 0
-  };
-
-  // Payment methods for dropdown
-  paymentMethods = ['Cash', 'Bank', 'Mpesa', 'Card'];
-
-  // Current user role
   userRole = '';
   isAdmin = false;
   isClient = false;
 
   constructor(
     private paymentService: PaymentService,
-    private mpesaService: MpesaService,
-    private billService: BillService,
     private authService: AuthService
   ) {}
 
@@ -62,169 +34,37 @@ export class PaymentsComponent implements OnInit {
 
   loadData(): void {
     this.loading = true;
-    this.error = '';
 
     if (this.isAdmin) {
-      // Admin can see all payments and bills
+      // Admin can see all payments
       this.paymentService.getAllPayments().subscribe({
         next: (payments) => {
           this.payments = payments;
           this.loading = false;
         },
         error: (error) => {
-          this.error = 'Failed to load payments';
+          console.error('Failed to load payments', error);
           this.loading = false;
         }
       });
-
-      this.billService.getAllBills().subscribe({
-        next: (bills) => {
-          this.bills = bills.filter(b => b.status === 'Unpaid');
-        },
-        error: (error) => {
-          console.error('Failed to load bills', error);
-        }
-      });
     } else if (this.isClient) {
-      // Client can see their own payments and bills
+      // Client can see their own payments
       const userId = this.authService.getUserId();
       if (userId) {
-        this.billService.getClientBills(userId).subscribe({
-          next: (bills) => {
-            this.bills = bills.filter(b => b.status === 'Unpaid');
-            this.loading = false;
-          },
-          error: (error) => {
-            this.error = 'Failed to load your bills';
-            this.loading = false;
-          }
-        });
-
         this.paymentService.getClientPayments(userId).subscribe({
           next: (payments) => {
             this.payments = payments;
+            this.loading = false;
           },
           error: (error) => {
             console.error('Failed to load payments', error);
+            this.loading = false;
           }
         });
       }
     }
   }
 
-  recordManualPayment(): void {
-    if (!this.manualPayment.billId || !this.manualPayment.amount) {
-      this.error = 'Please select a bill and enter payment amount';
-      return;
-    }
-
-    this.loading = true;
-    this.error = '';
-    this.success = '';
-
-    this.paymentService.recordPayment(this.manualPayment).subscribe({
-      next: (response) => {
-        this.success = 'Payment recorded successfully!';
-        this.resetManualPaymentForm();
-        this.loadData();
-      },
-      error: (error) => {
-        this.error = error.error?.message || 'Failed to record payment';
-        this.loading = false;
-      }
-    });
-  }
-
-  initiateMpesaPayment(): void {
-    if (!this.mpesaPayment.billId || !this.mpesaPayment.amount || !this.mpesaPayment.phoneNumber) {
-      this.error = 'Please fill in all Mpesa payment fields';
-      return;
-    }
-
-    if (!this.mpesaService.isValidPhoneNumber(this.mpesaPayment.phoneNumber)) {
-      this.error = 'Please enter a valid phone number (e.g., 0712345678)';
-      return;
-    }
-
-    this.loading = true;
-    this.error = '';
-    this.success = '';
-
-    // Format phone number
-    this.mpesaPayment.phoneNumber = this.mpesaService.formatPhoneNumber(this.mpesaPayment.phoneNumber);
-
-    this.mpesaService.initiateStkPush(this.mpesaPayment).subscribe({
-      next: (response) => {
-        if (response.responseCode === '0') {
-          this.success = response.customerMessage || 'Payment request sent to your phone. Please enter your M-Pesa PIN.';
-          this.resetMpesaPaymentForm();
-          
-          // Poll for transaction status
-          this.pollTransactionStatus(response.checkoutRequestID);
-        } else {
-          this.error = response.responseDescription || 'Failed to initiate M-Pesa payment';
-        }
-        this.loading = false;
-      },
-      error: (error) => {
-        this.error = error.error?.message || 'Failed to initiate M-Pesa payment';
-        this.loading = false;
-      }
-    });
-  }
-
-  private pollTransactionStatus(checkoutRequestId: string): void {
-    // Poll every 5 seconds for up to 2 minutes
-    let attempts = 0;
-    const maxAttempts = 24; // 2 minutes / 5 seconds
-
-    const poll = setInterval(() => {
-      attempts++;
-      
-      this.mpesaService.getTransactionStatus(checkoutRequestId).subscribe({
-        next: (status) => {
-          if (status.status === 'Success') {
-            clearInterval(poll);
-            this.success = 'Payment completed successfully!';
-            this.loadData();
-          } else if (status.status === 'Failed' || status.status === 'Cancelled') {
-            clearInterval(poll);
-            this.error = this.mpesaService.getStatusMessage(status.status);
-          } else if (attempts >= maxAttempts) {
-            clearInterval(poll);
-            this.error = 'Payment status check timed out. Please check your payment history.';
-          }
-        },
-        error: (error) => {
-          if (attempts >= maxAttempts) {
-            clearInterval(poll);
-            this.error = 'Payment status check failed. Please check your payment history.';
-          }
-        }
-      });
-    }, 5000);
-  }
-
-  resetManualPaymentForm(): void {
-    this.manualPayment = {
-      billId: 0,
-      amount: 0,
-      paymentMethod: 'Cash',
-      reference: ''
-    };
-  }
-
-  resetMpesaPaymentForm(): void {
-    this.mpesaPayment = {
-      billId: 0,
-      phoneNumber: '',
-      amount: 0
-    };
-  }
-
-  getBillDisplay(bill: BillResponseDto): string {
-    return `${bill.billNumber} - ${bill.clientName} (KSh ${bill.totalAmount})`;
-  }
 
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-KE', {
@@ -236,5 +76,216 @@ export class PaymentsComponent implements OnInit {
   formatDate(date: string | Date): string {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     return dateObj.toLocaleDateString('en-KE');
+  }
+
+  downloadPaymentsPDF(): void {
+    if (this.payments.length === 0) {
+      return;
+    }
+
+    // Calculate total payments
+    const totalAmount = this.payments.reduce((sum, payment) => sum + payment.amount, 0);
+
+    // Generate HTML content for PDF
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Payment History Report</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            color: #333;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 20px;
+          }
+          .header h1 {
+            color: #007bff;
+            margin: 0;
+            font-size: 28px;
+          }
+          .header p {
+            margin: 5px 0;
+            color: #666;
+          }
+          .info-section {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+          }
+          .info-item {
+            font-size: 14px;
+          }
+          .info-item strong {
+            color: #007bff;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+          }
+          th {
+            background-color: #007bff;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+          }
+          td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+          }
+          tr:nth-child(even) {
+            background-color: #f8f9fa;
+          }
+          tr:hover {
+            background-color: #e9ecef;
+          }
+          .amount {
+            color: #28a745;
+            font-weight: bold;
+          }
+          .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+          }
+          .badge-mpesa { background-color: #28a745; color: white; }
+          .badge-cash { background-color: #007bff; color: white; }
+          .badge-bank { background-color: #17a2b8; color: white; }
+          .badge-card { background-color: #ffc107; color: #333; }
+          .summary {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+          }
+          .summary h3 {
+            margin: 0 0 15px 0;
+            color: #007bff;
+          }
+          .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 16px;
+          }
+          .summary-item.total {
+            font-size: 20px;
+            font-weight: bold;
+            color: #28a745;
+            border-top: 2px solid #007bff;
+            padding-top: 10px;
+            margin-top: 15px;
+          }
+          .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>💧 DENKAM WATERS COMPANY</h1>
+          <p>Payment History Report</p>
+        </div>
+
+        <div class="info-section">
+          <div class="info-item">
+            <strong>Report Generated:</strong> ${new Date().toLocaleString('en-KE')}
+          </div>
+          <div class="info-item">
+            <strong>Total Records:</strong> ${this.payments.length}
+          </div>
+          <div class="info-item">
+            <strong>Generated By:</strong> ${this.authService.getCurrentUser()?.username || 'System'}
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Bill Number</th>
+              <th>Client</th>
+              <th>Amount</th>
+              <th>Method</th>
+              <th>Reference</th>
+              <th>Recorded By</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${this.payments.map(payment => `
+              <tr>
+                <td>${this.formatDate(payment.paymentDate)}</td>
+                <td>${payment.billNumber}</td>
+                <td>${payment.clientName}</td>
+                <td class="amount">KSh ${payment.amount.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td>
+                  <span class="badge badge-${payment.paymentMethod.toLowerCase()}">
+                    ${payment.paymentMethod}
+                  </span>
+                </td>
+                <td>${payment.reference || '-'}</td>
+                <td>${payment.recordedByUsername}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="summary">
+          <h3>Summary</h3>
+          <div class="summary-item">
+            <span>Total Payments:</span>
+            <span>${this.payments.length} transactions</span>
+          </div>
+          <div class="summary-item">
+            <span>Payment Methods:</span>
+            <span>${this.getPaymentMethodsSummary()}</span>
+          </div>
+          <div class="summary-item total">
+            <span>Total Amount Collected:</span>
+            <span>KSh ${totalAmount.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>This is a computer-generated report from Water Billing Management System</p>
+          <p>© ${new Date().getFullYear()} Denkam Waters Company. All rights reserved.</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Create blob and download
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Payment_History_${new Date().toISOString().split('T')[0]}.html`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  private getPaymentMethodsSummary(): string {
+    const methods = this.payments.reduce((acc, payment) => {
+      acc[payment.paymentMethod] = (acc[payment.paymentMethod] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(methods)
+      .map(([method, count]) => `${method}(${count})`)
+      .join(', ');
   }
 }
