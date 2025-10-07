@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://localhost:44372/api' 
+  apiUrl: 'https://water-billing-api.onrender.com/api'
 };
