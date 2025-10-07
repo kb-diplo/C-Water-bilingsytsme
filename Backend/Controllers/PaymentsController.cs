@@ -11,10 +11,12 @@ namespace MyApi.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class PaymentsController(WaterBillingDbContext context, IMpesaService mpesaService) : ControllerBase
+    public class PaymentsController(WaterBillingDbContext context, IMpesaService mpesaService, IReceiptService receiptService, IEmailService emailService) : ControllerBase
     {
         private readonly WaterBillingDbContext _context = context;
         private readonly IMpesaService _mpesaService = mpesaService;
+        private readonly IReceiptService _receiptService = receiptService;
+        private readonly IEmailService _emailService = emailService;
 
         /// <summary>
         /// Record payment with validation
@@ -36,7 +38,7 @@ namespace MyApi.Controllers
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
             // Role-based access control
-            if (userRole == "Client")
+            if (userRole == "Client" || userRole == "Customer")
             {
                 var clientRecord = await _context.Clients
                     .FirstOrDefaultAsync(c => c.CreatedByUserId == userId && c.Id == bill.ClientId);
@@ -58,7 +60,7 @@ namespace MyApi.Controllers
                 BillId = dto.BillId,
                 Amount = dto.Amount,
                 PaymentMethod = dto.PaymentMethod,
-                Reference = dto.Reference,
+                Reference = dto.Reference ?? string.Empty,
                 RecordedByUserId = userId
             };
 
@@ -87,9 +89,46 @@ namespace MyApi.Controllers
                 Amount = payment.Amount,
                 PaymentDate = payment.PaymentDate,
                 PaymentMethod = payment.PaymentMethod,
-                Reference = payment.Reference,
+                Reference = payment.Reference ?? string.Empty,
                 RecordedByUsername = user?.Username ?? "Unknown"
             };
+
+            // Send payment confirmation email if client has email
+            if (!string.IsNullOrEmpty(bill.Client.Email))
+            {
+                try
+                {
+                    // Create updated bill DTO with current payment info
+                    var updatedBillDto = new BillResponseDto
+                    {
+                        Id = bill.Id,
+                        ClientId = bill.ClientId,
+                        ClientName = bill.Client.FullName,
+                        BillNumber = bill.BillNumber,
+                        UnitsUsed = bill.UnitsUsed,
+                        RatePerUnit = bill.RatePerUnit,
+                        Amount = bill.Amount,
+                        PenaltyAmount = bill.PenaltyAmount,
+                        TotalAmount = bill.TotalAmount,
+                        BillDate = bill.BillDate,
+                        DueDate = bill.DueDate,
+                        Status = bill.Status,
+                        AmountPaid = totalPaid,
+                        Balance = bill.TotalAmount - totalPaid
+                    };
+
+                    await _emailService.SendPaymentConfirmationEmailAsync(
+                        bill.Client.Email,
+                        bill.Client.FullName,
+                        response,
+                        updatedBillDto);
+                }
+                catch (Exception ex)
+                {
+                    // Log email error but don't fail the payment
+                    Console.WriteLine($"Failed to send payment confirmation email: {ex.Message}");
+                }
+            }
 
             return CreatedAtAction(nameof(GetPayments), response);
         }
@@ -151,7 +190,7 @@ namespace MyApi.Controllers
             if (client == null) return NotFound("Client not found");
 
             // Role-based access control
-            if (userRole == "Client")
+            if (userRole == "Client" || userRole == "Customer")
             {
                 var clientRecord = await _context.Clients
                     .FirstOrDefaultAsync(c => c.CreatedByUserId == userId && c.Id == clientId);
@@ -203,7 +242,7 @@ namespace MyApi.Controllers
             if (bill == null) return NotFound("Bill not found");
 
             // Clients can only pay their own bills
-            if (userRole == "Client")
+            if (userRole == "Client" || userRole == "Customer")
             {
                 var clientRecord = await _context.Clients
                     .FirstOrDefaultAsync(c => c.CreatedByUserId == userId && c.Id == bill.ClientId);
@@ -265,7 +304,7 @@ namespace MyApi.Controllers
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
             // Clients can only view their own transactions
-            if (userRole == "Client")
+            if (userRole == "Client" || userRole == "Customer")
             {
                 var clientRecord = await _context.Clients
                     .FirstOrDefaultAsync(c => c.CreatedByUserId == userId && c.Id == transaction.Bill.ClientId);
@@ -286,6 +325,81 @@ namespace MyApi.Controllers
                 transaction.CompletedAt,
                 transaction.ErrorMessage
             });
+        }
+
+        /// <summary>
+        /// Download payment receipt
+        /// </summary>
+        [HttpGet("{paymentId}/receipt")]
+        public async Task<IActionResult> DownloadPaymentReceipt(int paymentId)
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+                // Verify payment exists and user has access
+                var payment = await _context.Payments
+                    .Include(p => p.Bill)
+                    .ThenInclude(b => b.Client)
+                    .FirstOrDefaultAsync(p => p.Id == paymentId);
+
+                if (payment == null) return NotFound("Payment not found");
+
+                // Role-based access control
+                if (userRole == "Client" || userRole == "Customer")
+                {
+                    var clientRecord = await _context.Clients
+                        .FirstOrDefaultAsync(c => c.CreatedByUserId == userId && c.Id == payment.Bill.ClientId);
+                    if (clientRecord == null) return Forbid("Access denied");
+                }
+
+                var receiptBytes = await _receiptService.GeneratePaymentReceiptAsync(paymentId);
+                var fileName = $"Payment_Receipt_{payment.Bill.BillNumber}_{payment.Id}.html";
+
+                return File(receiptBytes, "text/html", fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error generating receipt: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Download bill receipt
+        /// </summary>
+        [HttpGet("bill/{billId}/receipt")]
+        public async Task<IActionResult> DownloadBillReceipt(int billId)
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+                // Verify bill exists and user has access
+                var bill = await _context.Bills
+                    .Include(b => b.Client)
+                    .FirstOrDefaultAsync(b => b.Id == billId);
+
+                if (bill == null) return NotFound("Bill not found");
+
+                // Role-based access control
+                if (userRole == "Client" || userRole == "Customer")
+                {
+                    var clientRecord = await _context.Clients
+                        .FirstOrDefaultAsync(c => c.CreatedByUserId == userId && c.Id == bill.ClientId);
+                    if (clientRecord == null) return Forbid("Access denied");
+                }
+
+                var receiptBytes = await _receiptService.GenerateBillReceiptAsync(billId);
+                var fileName = $"Bill_{bill.BillNumber}.html";
+
+                return File(receiptBytes, "text/html", fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error generating bill: {ex.Message}");
+            }
         }
     }
 }

@@ -35,22 +35,62 @@ namespace MyApi.Controllers
                 })
                 .ToListAsync();
 
-            var result = clientUsers.Select(cu => new {
-                Id = cu.ClientDetails?.Id ?? 0,
-                Username = cu.Username,
-                FirstName = cu.ClientDetails?.FirstName ?? cu.Username,
-                MiddleName = cu.ClientDetails?.MiddleName,
-                LastName = cu.ClientDetails?.LastName ?? "",
-                FullName = cu.ClientDetails?.FullName ?? cu.Username,
-                Email = cu.ClientDetails?.Email ?? "",
-                Phone = cu.ClientDetails?.Phone ?? "",
-                MeterNumber = cu.ClientDetails?.MeterNumber ?? "",
-                Location = cu.ClientDetails?.Location ?? "",
-                ConnectionStatus = cu.ClientDetails?.ConnectionStatus ?? "Pending",
-                HasFullDetails = cu.ClientDetails != null,
-                CreatedByUserId = cu.UserId,
-                CreatedDate = cu.ClientDetails?.CreatedDate ?? DateTime.UtcNow
-            }).OrderBy(c => c.FullName).ToList();
+            // Filter out users without valid client details to avoid ID = 0
+            var result = clientUsers
+                .Where(cu => cu.ClientDetails != null) // Only include users with client details
+                .Select(cu => new {
+                    Id = cu.ClientDetails!.Id, // Safe to use ! since we filtered null values
+                    Username = cu.Username,
+                    FirstName = cu.ClientDetails.FirstName,
+                    MiddleName = cu.ClientDetails.MiddleName,
+                    LastName = cu.ClientDetails.LastName,
+                    FullName = cu.ClientDetails.FullName,
+                    Email = cu.ClientDetails.Email,
+                    Phone = cu.ClientDetails.Phone,
+                    MeterNumber = cu.ClientDetails.MeterNumber,
+                    Location = cu.ClientDetails.Location,
+                    ConnectionStatus = cu.ClientDetails.ConnectionStatus,
+                    HasFullDetails = true,
+                    CreatedByUserId = cu.UserId,
+                    CreatedDate = cu.ClientDetails.CreatedDate,
+                    IsActive = cu.ClientDetails.IsActive
+                }).OrderBy(c => c.FullName).ToList();
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Get current client's information - for client dashboard
+        /// </summary>
+        [HttpGet("my-info")]
+        [Authorize(Roles = "Client,Customer")]
+        public async Task<ActionResult<object>> GetMyClientInfo()
+        {
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+
+            var client = await _context.Clients
+                .Include(c => c.CreatedBy)
+                .FirstOrDefaultAsync(c => c.CreatedByUserId == currentUserId && c.IsActive);
+
+            if (client == null)
+                return NotFound("Client information not found. Please contact administrator.");
+
+            var result = new {
+                Id = client.Id,
+                Username = client.CreatedBy?.Username,
+                FirstName = client.FirstName,
+                MiddleName = client.MiddleName,
+                LastName = client.LastName,
+                FullName = client.FullName,
+                Email = client.Email,
+                Phone = client.Phone,
+                MeterNumber = client.MeterNumber,
+                Location = client.Location,
+                ConnectionStatus = client.ConnectionStatus,
+                CreatedByUserId = client.CreatedByUserId,
+                CreatedDate = client.CreatedDate,
+                IsActive = client.IsActive
+            };
 
             return Ok(result);
         }
@@ -63,14 +103,14 @@ namespace MyApi.Controllers
         {
             var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
             var currentUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
-            
+
             var client = await _context.Clients
                 .Include(c => c.CreatedBy)
                 .FirstOrDefaultAsync(c => c.Id == id && c.IsActive);
-                
+
             if (client == null)
                 return NotFound($"Client with ID {id} not found");
-                
+
             // Clients can only view their own data
             if (currentUserRole == "Client" && client.CreatedByUserId != currentUserId)
                 return Forbid("You can only view your own client information");
@@ -91,7 +131,7 @@ namespace MyApi.Controllers
                 CreatedDate = client.CreatedDate,
                 IsActive = client.IsActive
             };
-                
+
             return Ok(result);
         }
 
@@ -113,6 +153,15 @@ namespace MyApi.Controllers
                         .FirstOrDefaultAsync(c => c.MeterNumber.ToLower() == dto.MeterNumber.ToLower() && c.IsActive);
                     if (existingClient != null)
                         return BadRequest($"Meter number '{dto.MeterNumber}' already exists");
+                }
+
+                // Check if username already exists
+                if (!string.IsNullOrEmpty(dto.Username))
+                {
+                    var existingUsername = await _context.Users
+                        .FirstOrDefaultAsync(u => u.Username.ToLower() == dto.Username.ToLower());
+                    if (existingUsername != null)
+                        return BadRequest($"Username '{dto.Username}' already exists");
                 }
 
                 // Check if email already exists

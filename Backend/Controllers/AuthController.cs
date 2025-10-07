@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -119,7 +120,7 @@ namespace MyApi.Controllers
                 if (string.IsNullOrWhiteSpace(dto.Username) || string.IsNullOrWhiteSpace(dto.Password))
                 {
                     _logger.LogWarning("Login attempt with empty username or password");
-                    return BadRequest("Username and password are required.");
+                    return Unauthorized("Username and password are required.");
                 }
 
                 // Check database connection
@@ -154,14 +155,24 @@ namespace MyApi.Controllers
                 
                 var token = GenerateJwtToken(user);
                 
-                // Get dashboard data based on role
-                object? dashboardData = user.Role switch
+                // Get dashboard data based on role - ADD SPECIFIC ERROR LOGGING HERE
+                object? dashboardData = null;
+                try 
                 {
-                    "Admin" => await GetAdminDashboard(),
-                    "MeterReader" => await GetMeterReaderDashboard(),
-                    "Client" => await GetClientDashboard(user.Id),
-                    _ => null
-                };
+                    dashboardData = user.Role switch
+                    {
+                        "Admin" => await GetAdminDashboard(),
+                        "MeterReader" => await GetMeterReaderDashboard(),
+                        "Client" => await GetClientDashboard(user.Id),
+                        _ => null
+                    };
+                }
+                catch (Exception dashEx)
+                {
+                    _logger.LogError(dashEx, "DASHBOARD ERROR for user {Username} with role {Role}: {Message}", 
+                        user.Username, user.Role, dashEx.Message);
+                    // Continue without dashboard data - don't fail the login
+                }
                 
                 _logger.LogInformation("Login successful for user: {Username} with role: {Role}", user.Username, user.Role);
                 
@@ -171,12 +182,13 @@ namespace MyApi.Controllers
                     user.Role)
                 {
                     Token = token,
+                    Email = user.Email,
                     DashboardData = dashboardData
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during login attempt for username: {Username}. Error: {ErrorMessage}", dto.Username, ex.Message);
+                _logger.LogError(ex, "CRITICAL LOGIN ERROR for username: {Username}. Error: {ErrorMessage}", dto.Username, ex.Message);
                 return StatusCode(500, "An error occurred during login. Please try again later.");
             }
         }
@@ -307,16 +319,22 @@ namespace MyApi.Controllers
                 var users = await _context.Users
                     .AsNoTracking()
                     .OrderBy(u => u.Username)
-                    .Select(u => new UserDto(
-                        u.Id,
-                        u.Username ?? "N/A",
-                        u.Role ?? "No Role",
-                        u.IsBootstrap,
-                        u.IsActive))
                     .ToListAsync();
 
-                _logger.LogInformation("Successfully retrieved {Count} users", users.Count);
-                return Ok(users);
+                // Map to anonymous objects with camelCase properties
+                var userDtos = users.Select(u => new
+                {
+                    id = u.Id,
+                    username = u.Username ?? "N/A",
+                    email = u.Email ?? "No Email",
+                    role = u.Role ?? "No Role",
+                    isBootstrap = u.IsBootstrap,
+                    isActive = u.IsActive,
+                    createdDate = u.CreatedDate
+                }).ToList();
+
+                _logger.LogInformation("Successfully retrieved {Count} users", userDtos.Count);
+                return Ok(userDtos);
             }
             catch (Exception ex)
             {
@@ -452,7 +470,12 @@ namespace MyApi.Controllers
         // Dashboard methods 
         private async Task<object> GetAdminDashboard()
         {
-            var totalCustomers = await _context.Clients.CountAsync(c => c.IsActive);
+            // Count clients using same logic as ClientsController to ensure consistency
+            var totalCustomers = await _context.Users
+                .Where(u => u.Role == "Client" && u.IsActive)
+                .Where(u => _context.Clients.Any(c => c.CreatedByUserId == u.Id && c.IsActive))
+                .CountAsync();
+                
             var totalBills = await _context.Bills.CountAsync();
             var totalRevenue = await _context.Payments.SumAsync(p => (decimal?)p.Amount) ?? 0;
             var unpaidBills = await _context.Bills.CountAsync(b => b.Status != "Paid");
@@ -494,7 +517,12 @@ namespace MyApi.Controllers
         {
             var totalReadings = await _context.MeterReadings.CountAsync();
             var todayReadings = await _context.MeterReadings.CountAsync(r => r.ReadingDate.Date == DateTime.Today);
-            var totalCustomers = await _context.Clients.CountAsync(c => c.IsActive);
+            
+            // Count clients using same logic as ClientsController to ensure consistency
+            var totalCustomers = await _context.Users
+                .Where(u => u.Role == "Client" && u.IsActive)
+                .Where(u => _context.Clients.Any(c => c.CreatedByUserId == u.Id && c.IsActive))
+                .CountAsync();
 
             return new MeterReaderDashboardStats(totalReadings, todayReadings, totalCustomers);
         }
@@ -522,6 +550,162 @@ namespace MyApi.Controllers
                 .FirstOrDefaultAsync();
 
             return new CustomerDashboardStats(currentBills.Count, totalOwed, lastPayment);
+        }
+
+        // GET PROFILE
+        [HttpGet("profile")]
+        [Authorize]
+        public async Task<IActionResult> GetProfile()
+        {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+                return Unauthorized();
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == username);
+
+            if (user == null)
+                return NotFound("User not found");
+
+            return Ok(new
+            {
+                id = user.Id,
+                username = user.Username,
+                email = user.Email,
+                firstName = user.FirstName,
+                lastName = user.LastName,
+                phone = user.Phone,
+                role = user.Role
+            });
+        }
+
+        // UPDATE PROFILE
+        [HttpPut("profile")]
+        [Authorize]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
+        {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+                return Unauthorized();
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == username);
+
+            if (user == null)
+                return NotFound("User not found");
+
+            // Update fields
+            if (!string.IsNullOrEmpty(dto.Email))
+                user.Email = dto.Email;
+            
+            if (!string.IsNullOrEmpty(dto.FirstName))
+                user.FirstName = dto.FirstName;
+            
+            if (!string.IsNullOrEmpty(dto.LastName))
+                user.LastName = dto.LastName;
+            
+            if (!string.IsNullOrEmpty(dto.Phone))
+                user.Phone = dto.Phone;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Profile updated successfully" });
+        }
+
+        // CHANGE PASSWORD
+        [HttpPut("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+        {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+                return Unauthorized();
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == username);
+
+            if (user == null)
+                return NotFound("User not found");
+
+            // Verify current password
+            var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, dto.CurrentPassword);
+            if (result == PasswordVerificationResult.Failed)
+                return BadRequest("Current password is incorrect");
+
+            // Hash and update new password
+            user.PasswordHash = _passwordHasher.HashPassword(user, dto.NewPassword);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Password changed successfully" });
+        }
+
+        // UPDATE USER (Admin only) - Fixed version
+        [HttpPut("users/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] JsonElement requestData)
+        {
+            try
+            {
+                Console.WriteLine($"UpdateUser endpoint reached for user ID: {id}");
+                Console.WriteLine($"Request data: {System.Text.Json.JsonSerializer.Serialize(requestData)}");
+                
+                var user = await _context.Users.FindAsync(id);
+                if (user == null)
+                {
+                    Console.WriteLine($"User with ID {id} not found");
+                    return NotFound("User not found");
+                }
+
+                Console.WriteLine($"Found user: {user.Username}");
+
+                // Parse the JsonElement directly
+                
+                if (requestData.TryGetProperty("Username", out var usernameElement))
+                {
+                    user.Username = usernameElement.GetString() ?? user.Username;
+                    Console.WriteLine($"Updated username to: {user.Username}");
+                }
+                
+                if (requestData.TryGetProperty("Email", out var emailElement))
+                {
+                    user.Email = emailElement.GetString() ?? user.Email;
+                    Console.WriteLine($"Updated email to: {user.Email}");
+                }
+                
+                if (requestData.TryGetProperty("Role", out var roleElement))
+                {
+                    user.Role = roleElement.GetString() ?? user.Role;
+                    Console.WriteLine($"Updated role to: {user.Role}");
+                }
+                
+                if (requestData.TryGetProperty("IsActive", out var isActiveElement))
+                {
+                    user.IsActive = isActiveElement.GetBoolean();
+                    Console.WriteLine($"Updated isActive to: {user.IsActive}");
+                }
+
+                // Update password if provided
+                if (requestData.TryGetProperty("Password", out var passwordElement))
+                {
+                    var password = passwordElement.GetString();
+                    if (!string.IsNullOrEmpty(password))
+                    {
+                        Console.WriteLine("Updating password for user");
+                        user.PasswordHash = _passwordHasher.HashPassword(user, password);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                Console.WriteLine("User updated successfully in database");
+
+                return Ok(new { message = "User updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating user: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return BadRequest($"Error updating user: {ex.Message}");
+            }
         }
     }
 }

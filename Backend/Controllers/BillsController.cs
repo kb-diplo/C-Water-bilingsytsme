@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyApi.Data;
 using MyApi.Models;
+using MyApi.Services;
 using System.Security.Claims;
 
 namespace MyApi.Controllers
@@ -10,9 +11,10 @@ namespace MyApi.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class BillsController(WaterBillingDbContext context) : ControllerBase
+    public class BillsController(WaterBillingDbContext context, IEmailService emailService) : ControllerBase
     {
         private readonly WaterBillingDbContext _context = context;
+        private readonly IEmailService _emailService = emailService;
 
         /// <summary>
         /// Get all bills with pagination
@@ -27,6 +29,7 @@ namespace MyApi.Controllers
             var query = _context.Bills
                 .Include(b => b.Client)
                 .Include(b => b.Payments)
+                .Where(b => b.Status != "Deleted") // Exclude deleted bills
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(status))
@@ -74,7 +77,7 @@ namespace MyApi.Controllers
             if (client == null) return NotFound("Client not found");
 
             // If client role, ensure they can only see their own bills
-            if (userRole == "Client")
+            if (userRole == "Client" || userRole == "Customer")
             {
                 var clientRecord = await _context.Clients
                     .FirstOrDefaultAsync(c => c.CreatedByUserId == userId && c.Id == clientId);
@@ -84,7 +87,7 @@ namespace MyApi.Controllers
             var bills = await _context.Bills
                 .Include(b => b.Client)
                 .Include(b => b.Payments)
-                .Where(b => b.ClientId == clientId)
+                .Where(b => b.ClientId == clientId && b.Status != "Deleted") // Exclude deleted bills
                 .OrderByDescending(b => b.BillDate)
                 .Select(b => new BillResponseDto
                 {
@@ -168,6 +171,120 @@ namespace MyApi.Controllers
             };
 
             return Ok(response);
+        }
+
+        /// <summary>
+        /// Send bill reminder email to client
+        /// </summary>
+        [HttpPost("{id}/remind")]
+        [Authorize(Roles = "Admin,MeterReader")]
+        public async Task<IActionResult> SendBillReminder(int id)
+        {
+            try
+            {
+                var bill = await _context.Bills
+                    .Include(b => b.Client)
+                    .FirstOrDefaultAsync(b => b.Id == id);
+
+                if (bill == null)
+                    return NotFound("Bill not found");
+
+                if (bill.Status == "Paid")
+                    return BadRequest("Cannot send reminder for paid bills");
+
+                if (string.IsNullOrEmpty(bill.Client.Email))
+                    return BadRequest("Client email not found");
+
+                // Create BillResponseDto for email
+                var billDto = new BillResponseDto
+                {
+                    Id = bill.Id,
+                    ClientId = bill.ClientId,
+                    ClientName = bill.Client.FullName,
+                    BillNumber = bill.BillNumber,
+                    UnitsUsed = bill.UnitsUsed,
+                    RatePerUnit = bill.RatePerUnit,
+                    Amount = bill.Amount,
+                    PenaltyAmount = bill.PenaltyAmount,
+                    TotalAmount = bill.TotalAmount,
+                    BillDate = bill.BillDate,
+                    DueDate = bill.DueDate,
+                    Status = bill.Status,
+                    AmountPaid = bill.Payments?.Sum(p => p.Amount) ?? 0,
+                    Balance = bill.TotalAmount - (bill.Payments?.Sum(p => p.Amount) ?? 0)
+                };
+
+                var emailSent = await _emailService.SendBillReminderEmailAsync(
+                    bill.Client.Email, 
+                    bill.Client.FullName, 
+                    billDto);
+
+                if (emailSent)
+                {
+                    return Ok(new { message = "Bill reminder sent successfully", email = bill.Client.Email });
+                }
+                else
+                {
+                    return StatusCode(500, "Failed to send bill reminder email");
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error sending bill reminder: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Delete a bill (Admin only)
+        /// </summary>
+        [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteBill(int id)
+        {
+            try
+            {
+                Console.WriteLine($"[DELETE BILL] Attempting to delete bill with ID: {id}");
+                
+                var bill = await _context.Bills
+                    .Include(b => b.Payments)
+                    .FirstOrDefaultAsync(b => b.Id == id);
+                    
+                if (bill == null)
+                {
+                    Console.WriteLine($"[DELETE BILL] Bill with ID {id} not found");
+                    return NotFound(new { Message = $"Bill with ID {id} not found" });
+                }
+
+                Console.WriteLine($"[DELETE BILL] Found bill: {bill.BillNumber}, Status: {bill.Status}, Payments: {bill.Payments?.Count ?? 0}");
+
+                // Check if bill has payments
+                if (bill.Payments != null && bill.Payments.Any())
+                {
+                    Console.WriteLine($"[DELETE BILL] Cannot delete bill {bill.BillNumber} - has {bill.Payments.Count} payments");
+                    return BadRequest(new { Message = "Cannot delete bill with existing payments. Please delete payments first or contact system administrator." });
+                }
+
+                // Soft delete - set status to "Deleted" instead of removing from database
+                var oldStatus = bill.Status;
+                bill.Status = "Deleted";
+                
+                await _context.SaveChangesAsync();
+                
+                Console.WriteLine($"[DELETE BILL] Successfully deleted bill {bill.BillNumber} (changed status from {oldStatus} to Deleted)");
+                
+                return Ok(new { 
+                    Message = "Bill deleted successfully", 
+                    BillId = id,
+                    BillNumber = bill.BillNumber,
+                    PreviousStatus = oldStatus
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DELETE BILL] Error deleting bill {id}: {ex.Message}");
+                Console.WriteLine($"[DELETE BILL] Stack trace: {ex.StackTrace}");
+                return StatusCode(500, new { Message = $"Error deleting bill: {ex.Message}" });
+            }
         }
 
 
