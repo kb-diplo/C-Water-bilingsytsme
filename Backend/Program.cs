@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using MyApi.Data;
 using MyApi.Models;
 using MyApi.Services;
@@ -42,6 +43,9 @@ public partial class Program
         // Register Mpesa Service
         builder.Services.AddHttpClient<IMpesaService, MpesaService>();
 
+        // Register Receipt Service
+        builder.Services.AddScoped<IReceiptService, ReceiptService>();
+
         // Add CORS
         builder.Services.AddCors(options =>
         {
@@ -55,7 +59,12 @@ public partial class Program
         });
 
         // Add controllers and API explorer
-        builder.Services.AddControllers();
+        builder.Services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+            });
         builder.Services.AddEndpointsApiExplorer();
         
         // Configure Swagger
@@ -223,9 +232,10 @@ public partial class Program
                 var context = services.GetRequiredService<WaterBillingDbContext>();
                 await context.Database.MigrateAsync();
                 
-                // Seed the admin user
+                // Seed the admin user and test clients
                 var seeder = services.GetRequiredService<DatabaseSeeder>();
                 await seeder.SeedAdminUserAsync();
+                await seeder.SeedTestClientsAsync();
             }
             catch (Exception ex)
             {
