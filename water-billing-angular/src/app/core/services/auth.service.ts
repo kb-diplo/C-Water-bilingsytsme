@@ -45,6 +45,10 @@ export class AuthService {
     return this.http.post<UserResponse>(`${this.apiUrl}/auth/login`, credentials)
       .pipe(
         tap(response => {
+          if (!environment.production) {
+            console.log('🔐 AuthService.login() response:', response);
+          }
+
           if (response.token) {
             this.setToken(response.token);
             const user: User = {
@@ -53,14 +57,23 @@ export class AuthService {
               role: response.role,
               email: response.email
             };
+
+            if (!environment.production) {
+              console.log('👤 Creating user object:', user);
+            }
+
             this.setCurrentUser(user);
+
+            if (!environment.production) {
+              console.log('✅ User set in AuthService, current user:', this.getCurrentUser());
+            }
           }
         }),
         catchError(error => {
           // Only log in development mode
           if (!environment.production) {
-            console.error('Login error:', error);
-            console.error('Error details:', {
+            console.error('❌ Login error:', error);
+            console.error('❌ Error details:', {
               status: error.status,
               statusText: error.statusText,
               url: error.url,
@@ -91,12 +104,8 @@ export class AuthService {
     sessionStorage.clear(); // Clear any session data
     this.currentUserSubject.next(null);
     
-    // Navigate to login page
-    this.router.navigate(['/login'], { replaceUrl: true }).then(() => {
-      // Optional: Only reload if there are cached issues
-      // For now, let's not force reload to provide smoother UX
-      console.log('Logout successful - redirected to login');
-    });
+    // Navigate to login page immediately
+    this.router.navigate(['/login'], { replaceUrl: true });
   }
 
   getToken(): string | null {
@@ -108,12 +117,28 @@ export class AuthService {
   }
 
   getCurrentUser(): User | null {
-    return this.currentUserSubject.value;
+    const user = this.currentUserSubject.value;
+    if (!environment.production && user) {
+      // Only log occasionally to avoid spam
+      if (Math.random() < 0.1) {
+        console.log('👤 AuthService.getCurrentUser() called:', user);
+      }
+    }
+    return user;
   }
 
   setCurrentUser(user: User): void {
+    if (!environment.production) {
+      console.log('💾 AuthService.setCurrentUser() called with:', user);
+    }
+
     localStorage.setItem('currentUser', JSON.stringify(user));
     this.currentUserSubject.next(user);
+
+    if (!environment.production) {
+      console.log('💾 AuthService.setCurrentUser() - stored in localStorage and updated subject');
+      console.log('💾 Current user after setting:', this.getCurrentUser());
+    }
   }
 
   isAuthenticated(): boolean {
@@ -140,7 +165,8 @@ export class AuthService {
 
   isClient(): boolean {
     const user = this.getCurrentUser();
-    return user?.role === 'Client';
+    const role = user?.role?.toLowerCase();
+    return role === 'client' || role === 'customer';
   }
 
   private loadUserFromStorage(): void {
@@ -192,22 +218,83 @@ export class AuthService {
 
   getDashboardRoute(): string {
     const user = this.getCurrentUser();
-    if (!user) return '/login';
+    if (!user) {
+      if (!environment.production) {
+        console.warn('⚠️ No user found in getDashboardRoute()');
+      }
+      return '/login';
+    }
+
+    if (!environment.production) {
+      console.log('🎯 AuthService.getDashboardRoute() called for user:', {
+        username: user.username,
+        role: user.role,
+        userId: user.id
+      });
+    }
+
+    // Normalize role to handle both "Client" and "Customer"
+    const normalizedRole = user.role?.toLowerCase();
     
-    switch (user.role) {
-      case 'Admin':
+    switch (normalizedRole) {
+      case 'admin':
         return '/dashboard/admin';
-      case 'MeterReader':
+      case 'meterreader':
         return '/dashboard/meter-reader';
-      case 'Client':
+      case 'client':
+      case 'customer': // Handle both Client and Customer roles
         return '/dashboard/client';
       default:
+        if (!environment.production) {
+          console.warn('⚠️ Unknown role in getDashboardRoute():', user.role);
+        }
         return '/dashboard';
     }
   }
 
   redirectToDashboard(): void {
+    const user = this.getCurrentUser();
+    
+    if (!user) {
+      if (!environment.production) {
+        console.error('🚨 redirectToDashboard() called but no user found!');
+      }
+      this.router.navigate(['/login']);
+      return;
+    }
+
     const dashboardRoute = this.getDashboardRoute();
-    this.router.navigate([dashboardRoute]);
+
+    // Debug logging for client dashboard issue
+    if (!environment.production) {
+      console.log('🔄 AuthService.redirectToDashboard() called:', {
+        user: user,
+        userRole: user?.role,
+        dashboardRoute: dashboardRoute,
+        isAuthenticated: this.isAuthenticated(),
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Add a small delay to ensure user data is fully set
+    setTimeout(() => {
+      const currentUser = this.getCurrentUser();
+      const finalRoute = this.getDashboardRoute();
+      
+      if (!environment.production) {
+        console.log('🚀 AuthService.redirectToDashboard() executing navigation:', {
+          currentUser: currentUser,
+          dashboardRoute: finalRoute,
+          routerUrl: this.router.url
+        });
+      }
+
+      if (currentUser) {
+        this.router.navigate([finalRoute], { replaceUrl: true });
+      } else {
+        console.error('🚨 User lost during redirect delay!');
+        this.router.navigate(['/login']);
+      }
+    }, 100);
   }
 }

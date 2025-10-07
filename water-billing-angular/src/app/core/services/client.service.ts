@@ -14,16 +14,16 @@ export interface ClientSearchParams {
 // Re-export types for backward compatibility
 export type Client = ClientDto;
 export interface ClientCreateRequest {
-  username: string;
-  firstName: string;
-  middleName?: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  meterNumber: string;
-  location: string;
-  connectionStatus?: string;
-  password: string;
+  Username: string;
+  FirstName: string;
+  MiddleName?: string;
+  LastName: string;
+  Email: string;
+  Phone: string;
+  MeterNumber: string;
+  Location: string;
+  ConnectionStatus?: string;
+  Password: string;
 }
 
 @Injectable({

@@ -25,9 +25,11 @@ export interface UserResponse {
 export interface UserDto {
   id: number;
   username: string;
+  email: string;
   role: string;
   isBootstrap: boolean;
   isActive: boolean;
+  createdDate: Date;
 }
 
 // Client DTOs
@@ -53,14 +55,14 @@ export interface ClientDto {
 }
 
 export interface ClientUpdateDto {
-  firstName?: string;
-  middleName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  meterNumber?: string;
-  location?: string;
-  connectionStatus?: string;
+  FirstName?: string;
+  MiddleName?: string;
+  LastName?: string;
+  Email?: string;
+  Phone?: string;
+  MeterNumber?: string;
+  Location?: string;
+  ConnectionStatus?: string;
 }
 
 // Bill DTOs
@@ -79,6 +81,10 @@ export interface BillResponseDto {
   status: string;
   amountPaid: number;
   balance: number;
+}
+
+export interface BillDetailResponseDto extends BillResponseDto {
+  payments: PaymentResponseDto[];
 }
 
 // Payment DTOs
@@ -105,6 +111,8 @@ export interface PaymentResponseDto {
 export interface MeterReadingCreateDto {
   clientId: number;
   currentReading: number;
+  notes?: string;
+  overrideMonthlyRestriction?: boolean;
 }
 
 export interface MeterReadingResponseDto {
