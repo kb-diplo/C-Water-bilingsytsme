@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: water-billing-api
+    env: docker
+    dockerfilePath: ./Backend/Dockerfile
+    dockerContext: ./Backend
+    region: oregon
+    plan: free
+    buildCommand: ""
+    startCommand: ""
+    healthCheckPath: /api/health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://0.0.0.0:$PORT
+      - key: Jwt__Issuer
+        value: MyApi
+      - key: Jwt__Audience
+        value: MyApiUsers
+      - key: Jwt__ExpireMinutes
+        value: "30"
+      - key: BootstrapAdmin__Username
+        value: admin
+      # Add your actual secrets via Render dashboard, not here
+      
+  - type: pgsql
+    name: water-billing-db
+    databaseName: water_billing
+    user: water_billing_user
+    region: oregon
+    plan: free
