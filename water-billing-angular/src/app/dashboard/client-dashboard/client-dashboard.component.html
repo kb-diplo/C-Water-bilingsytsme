@@ -3,128 +3,212 @@
     <h1 class="h3 mb-0 text-gray-800">My Dashboard</h1>
   </div>
 
-  <div class="row">
-    <div class="col-xl-3 col-md-6 mb-4">
-      <div class="card border-left-warning shadow h-100 py-2">
-        <div class="card-body">
-          <div class="row no-gutters align-items-center">
-            <div class="col mr-2">
-              <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                Unpaid Bills
-              </div>
-              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.unpaidBills }}</div>
-            </div>
-            <div class="col-auto">
-              <i class="fas fa-file-invoice fa-2x text-gray-300"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 mb-4">
-      <div class="card border-left-danger shadow h-100 py-2">
-        <div class="card-body">
-          <div class="row no-gutters align-items-center">
-            <div class="col mr-2">
-              <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                Total Owed
-              </div>
-              <div class="h5 mb-0 font-weight-bold text-gray-800">KSh {{ stats.totalOwed | number:'1.2-2' }}</div>
-            </div>
-            <div class="col-auto">
-              <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 mb-4">
-      <div class="card border-left-success shadow h-100 py-2">
-        <div class="card-body">
-          <div class="row no-gutters align-items-center">
-            <div class="col mr-2">
-              <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                Paid This Year
-              </div>
-              <div class="h5 mb-0 font-weight-bold text-gray-800">KSh {{ stats.totalPaidThisYear | number:'1.2-2' }}</div>
-            </div>
-            <div class="col-auto">
-              <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 mb-4">
-      <div class="card border-left-info shadow h-100 py-2">
-        <div class="card-body">
-          <div class="row no-gutters align-items-center">
-            <div class="col mr-2">
-              <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                Payment Count
-              </div>
-              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.paymentCount }}</div>
-            </div>
-            <div class="col-auto">
-              <i class="fas fa-credit-card fa-2x text-gray-300"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p class="mt-3">Loading your dashboard...</p>
+  </div>
+  
+  <div *ngIf="!loading && !stats" class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle mr-2"></i>No stats data available. Please refresh the page.
+    <button class="btn btn-sm btn-primary ml-2" (click)="loadDashboardData()">Retry</button>
   </div>
 
-  <div class="row">
-    <div class="col-lg-12">
-      <div class="card shadow mb-4">
-        <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+  <!-- Dashboard Content -->
+  <div *ngIf="!loading && stats">
+    <div class="row">
+      <!-- Unpaid Bills -->
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                  Unpaid Bills
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.unpaidBills }}</div>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-file-invoice fa-2x text-gray-300"></i>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="card-body">
-          <div class="row">
-            <div class="col-md-3 mb-3">
-              <a href="/bills" class="btn btn-primary btn-block">
-                <i class="fas fa-file-invoice mr-2"></i>View My Bills
-              </a>
+      </div>
+
+      <!-- Total Owed -->
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                  Total Owed
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                  KSh {{ stats.totalOwed | number:'1.2-2' }}
+                </div>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+              </div>
             </div>
-            <div class="col-md-3 mb-3">
-              <a href="/payments" class="btn btn-success btn-block">
-                <i class="fas fa-credit-card mr-2"></i>Make Payment
-              </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paid This Year -->
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                  Paid This Year
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                  KSh {{ stats.totalPaidThisYear | number:'1.2-2' }}
+                </div>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+              </div>
             </div>
-            <div class="col-md-3 mb-3">
-              <a href="/reports" class="btn btn-info btn-block">
-                <i class="fas fa-chart-bar mr-2"></i>Download Reports
-              </a>
-            </div>
-            <div class="col-md-3 mb-3">
-              <a href="/contact" class="btn btn-warning btn-block">
-                <i class="fas fa-phone mr-2"></i>Contact Support
-              </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Count -->
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                  Payment Count
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.paymentCount }}</div>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-credit-card fa-2x text-gray-300"></i>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="row">
-    <div class="col-lg-12">
-      <div class="card shadow mb-4">
-        <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">Account Information</h6>
+    <!-- Quick Actions -->
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card shadow mb-4">
+          <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-3 mb-3">
+                <button class="btn btn-primary btn-block" (click)="navigateToMyBills()">
+                  <i class="fas fa-file-invoice mr-2"></i>View My Bills
+                </button>
+              </div>
+              <div class="col-md-3 mb-3">
+                <button class="btn btn-success btn-block" (click)="scrollToPayment()" *ngIf="stats.unpaidBills > 0; else noPaymentNeeded">
+                  <i class="fas fa-credit-card mr-2"></i>Make Payment
+                  <small class="d-block">{{ stats.unpaidBills }} unpaid bills</small>
+                </button>
+                <ng-template #noPaymentNeeded>
+                  <button class="btn btn-success btn-block" disabled>
+                    <i class="fas fa-check-circle mr-2"></i>No Payment Needed
+                  </button>
+                </ng-template>
+              </div>
+              <div class="col-md-3 mb-3">
+                <button class="btn btn-warning btn-block" (click)="contactSupport()">
+                  <i class="fas fa-phone mr-2"></i>Contact Support
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="card-body">
-          <p class="text-muted">
-            <i class="fas fa-info-circle"></i> 
-            For any billing inquiries or to update your account information, please contact our office during business hours.
-          </p>
-          <p class="text-muted">
-            <strong>Office Hours:</strong> Monday - Friday, 8:00 AM - 5:00 PM
-          </p>
+      </div>
+    </div>
+
+    <!-- Quick Payment Section -->
+    <div class="row" *ngIf="stats.unpaidBills > 0" id="paymentSection">
+      <div class="col-lg-12">
+        <div class="card shadow mb-4 border-left-warning">
+          <div class="card-header py-3 bg-warning text-white">
+            <h6 class="m-0 font-weight-bold">
+              <i class="fas fa-exclamation-triangle mr-2"></i>
+              Quick Payment - You have {{ stats.unpaidBills }} unpaid bill(s)
+            </h6>
+          </div>
+          <div class="card-body">
+            <!-- Payment Options Info -->
+            <div class="alert alert-info mb-4">
+              <h6 class="font-weight-bold mb-2">
+                <i class="fas fa-info-circle mr-2"></i>Payment Options
+              </h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <p class="mb-2"><strong>Option 1: STK Push (Below)</strong></p>
+                  <p class="text-muted small mb-0">Enter your phone number and amount, then approve the M-Pesa prompt on your phone.</p>
+                </div>
+                <div class="col-md-6">
+                  <p class="mb-2"><strong>Option 2: M-Pesa Paybill</strong></p>
+                  <ul class="list-unstyled text-muted small mb-0">
+                    <li><i class="fas fa-check-circle text-success mr-1"></i> Paybill: <strong>247247</strong></li>
+                    <li><i class="fas fa-check-circle text-success mr-1"></i> Account: <strong>0757128505</strong></li>
+                    <li><i class="fas fa-check-circle text-success mr-1"></i> Amount: Your bill amount</li>
+                  </ul>
+                </div>
+              </div>
+            <!-- STK Push Form -->
+            <h6 class="font-weight-bold mb-3">Option 1: Pay via STK Push</h6>
+            <form [formGroup]="paymentForm" (ngSubmit)="initiateSTKPush()">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group mb-3">
+                    <label for="phoneNumber">M-Pesa Phone Number *</label>
+                    <input type="tel" id="phoneNumber" formControlName="phoneNumber"
+                           class="form-control" placeholder="254708374149" maxlength="12">
+                    <small class="form-text text-muted">Format: 254XXXXXXXXX</small>
+                  </div>
+                </div>
+                <!-- Amount -->
+                <div class="col-md-6">
+                  <div class="form-group mb-3">
+                    <label for="amount">Amount (KSh) *</label>
+                    <input type="number" id="amount" formControlName="amount"
+                           class="form-control" [max]="stats.totalOwed" min="1">
+                    <small class="form-text text-muted">Max: KSh {{ stats.totalOwed | number:'1.2-2' }}</small>
+                  </div>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-success btn-lg"
+                      [disabled]="paymentForm.invalid || paymentLoading">
+                <i class="fas fa-mobile-alt mr-2"></i>
+                <span *ngIf="paymentLoading" class="spinner-border spinner-border-sm mr-2"></span>
+                {{ paymentLoading ? 'Processing...' : 'Pay with M-Pesa STK Push' }}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Info -->
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card shadow mb-4">
+          <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Account Information</h6>
+          </div>
+          <div class="card-body">
+            <p class="text-muted"><i class="fas fa-info-circle"></i> For any billing inquiries, contact us during business hours.</p>
+            <p class="text-muted"><strong>Office Hours:</strong> Mon - Fri, 8:00 AM - 5:00 PM</p>
+          </div>
         </div>
       </div>
     </div>

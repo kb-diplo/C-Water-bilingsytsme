@@ -50,24 +50,40 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Redirect to role-specific dashboard
+    // Add debugging to see what's happening
     const user = this.authService.getCurrentUser();
+    console.log('Main dashboard component initialized:', {
+      user: user,
+      userRole: user?.role,
+      timestamp: new Date().toISOString()
+    });
+
+    // Redirect to role-specific dashboard
     if (user) {
+      const dashboardRoute = this.authService.getDashboardRoute();
+      console.log('Redirecting from main dashboard to:', dashboardRoute);
+
       switch (user.role) {
         case 'Admin':
+          console.log('Redirecting Admin to /dashboard/admin');
           this.router.navigate(['/dashboard/admin']);
           return;
         case 'MeterReader':
+          console.log('Redirecting MeterReader to /dashboard/meter-reader');
           this.router.navigate(['/dashboard/meter-reader']);
           return;
         case 'Client':
+          console.log('Redirecting Client to /dashboard/client');
           this.router.navigate(['/dashboard/client']);
           return;
         default:
+          console.error('Unknown role in main dashboard:', user.role);
           this.authService.logout();
           return;
       }
     }
+
+    console.log('No user found, loading default dashboard data');
     this.loadDashboardData();
   }
 
