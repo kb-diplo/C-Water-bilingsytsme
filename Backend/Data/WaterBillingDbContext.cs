@@ -42,6 +42,7 @@ namespace MyApi.Data
                 entity.Property(e => e.CurrentReading).HasPrecision(10, 2);
                 entity.Property(e => e.PreviousReading).HasPrecision(10, 2);
                 entity.Property(e => e.UnitsUsed).HasPrecision(10, 2);
+                entity.Property(e => e.BillingPeriod).HasMaxLength(7); // YYYY-MM format
             });
 
             // Bill configuration
@@ -58,6 +59,8 @@ namespace MyApi.Data
                 entity.Property(e => e.Amount).HasPrecision(10, 2);
                 entity.Property(e => e.PenaltyAmount).HasPrecision(10, 2);
                 entity.Property(e => e.TotalAmount).HasPrecision(10, 2);
+                entity.Property(e => e.BillingPeriod).HasMaxLength(7); // YYYY-MM format
+                // Note: MeterReadingId foreign key will be added later when data is migrated
             });
 
             // Payment configuration

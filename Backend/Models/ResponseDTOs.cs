@@ -16,6 +16,10 @@ namespace MyApi.Models
         public DateTime ReadingDate { get; set; }
         public string Status { get; set; } = string.Empty;
         public string RecordedByUsername { get; set; } = string.Empty;
+        public string BillingPeriod { get; set; } = string.Empty; // Format: YYYY-MM
+        public int? GeneratedBillId { get; set; }
+        public string? GeneratedBillNumber { get; set; }
+        public decimal BillAmount { get; set; }
     }
 
     public class ClientResponseDto
@@ -92,6 +96,9 @@ namespace MyApi.Models
         public decimal CurrentReading { get; set; }
         
         public string? Notes { get; set; }
+        
+        // Admin override for monthly restriction (Admin only)
+        public bool OverrideMonthlyRestriction { get; set; } = false;
     }
 
     public class ClientUpdateDto
@@ -168,6 +175,32 @@ namespace MyApi.Models
         public int TotalBills { get; set; }
         public int PaidBills { get; set; }
         public int OverdueBills { get; set; }
+        
+        // Additional properties for frontend compatibility
+        public decimal TotalRevenue { get; set; }
+        public decimal OutstandingPayments { get; set; }
+        public decimal TotalConsumption { get; set; }
+        public int PaidBillsCount { get; set; }
+        public int PendingBillsCount { get; set; }
+        public int OverdueBillsCount { get; set; }
+        public int DisconnectedClients { get; set; }
+        public List<MonthlyRevenueData> MonthlyRevenueData { get; set; } = new();
+        public List<MonthlyConsumptionData> MonthlyConsumptionData { get; set; } = new();
+    }
+
+    public class MonthlyRevenueData
+    {
+        public string Month { get; set; } = string.Empty;
+        public decimal Total { get; set; }
+    }
+
+    public class MonthlyConsumptionData
+    {
+        public string Month { get; set; } = string.Empty;
+        public decimal Paid { get; set; }
+        public decimal Pending { get; set; }
+        public decimal Overdue { get; set; }
+        public decimal Total { get; set; }
     }
 
     public class CustomerReportDto

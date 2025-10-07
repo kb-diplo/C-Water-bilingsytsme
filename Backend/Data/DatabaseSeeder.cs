@@ -51,5 +51,60 @@ namespace MyApi.Data
                 Console.WriteLine("Admin user already exists");
             }
         }
+
+        public async Task SeedTestClientsAsync()
+        {
+            // Check if test clients already exist
+            if (await _context.Clients.AnyAsync(c => c.Email.Contains("testclient")))
+            {
+                return; // Test clients already exist
+            }
+
+            var testClients = new[]
+            {
+                new { FirstName = "John", LastName = "Doe", Email = "testclient1@example.com", Phone = "254712345001", MeterNumber = "MTR001", Location = "Nairobi CBD" },
+                new { FirstName = "Jane", LastName = "Smith", Email = "testclient2@example.com", Phone = "254712345002", MeterNumber = "MTR002", Location = "Westlands" },
+                new { FirstName = "Michael", LastName = "Johnson", Email = "testclient3@example.com", Phone = "254712345003", MeterNumber = "MTR003", Location = "Karen" },
+                new { FirstName = "Sarah", LastName = "Williams", Email = "testclient4@example.com", Phone = "254712345004", MeterNumber = "MTR004", Location = "Kilimani" },
+                new { FirstName = "David", LastName = "Brown", Email = "testclient5@example.com", Phone = "254712345005", MeterNumber = "MTR005", Location = "Parklands" }
+            };
+
+            foreach (var clientData in testClients)
+            {
+                // Create user account first
+                var user = new Users
+                {
+                    Username = clientData.FirstName.ToLower() + clientData.LastName.ToLower(),
+                    Email = clientData.Email,
+                    Role = "Client",
+                    IsActive = true,
+                    PasswordHash = _passwordHasher.HashPassword(null!, "password"),
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync(); // Save to get user ID
+
+                // Create client record
+                var client = new Client
+                {
+                    FirstName = clientData.FirstName,
+                    LastName = clientData.LastName,
+                    Email = clientData.Email,
+                    Phone = clientData.Phone,
+                    MeterNumber = clientData.MeterNumber,
+                    Location = clientData.Location,
+                    ConnectionStatus = "Connected",
+                    CreatedByUserId = user.Id,
+                    CreatedDate = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                _context.Clients.Add(client);
+            }
+
+            await _context.SaveChangesAsync();
+            Console.WriteLine("✅ Test clients created successfully!");
+        }
     }
 }

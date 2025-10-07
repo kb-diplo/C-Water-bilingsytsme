@@ -51,6 +51,7 @@ namespace MyApi.Models
         public DateTime ReadingDate { get; set; } = DateTime.UtcNow;
         public int RecordedByUserId { get; set; }
         public string Status { get; set; } = "Pending"; // Pending, Approved
+        public string BillingPeriod { get; set; } = string.Empty; // Format: YYYY-MM
         
         // Navigation property
         [JsonIgnore]
@@ -67,6 +68,9 @@ namespace MyApi.Models
         public int ClientId { get; set; }
         [JsonIgnore]
         public Client Client { get; set; } = null!;
+        public int? MeterReadingId { get; set; } // Link to the meter reading that generated this bill
+        [JsonIgnore]
+        public MeterReading? MeterReading { get; set; } // Navigation property
         public string BillNumber { get; set; } = string.Empty;
         public decimal UnitsUsed { get; set; }
         public decimal RatePerUnit { get; set; }
@@ -77,6 +81,7 @@ namespace MyApi.Models
         public DateTime DueDate { get; set; }
         public string Status { get; set; } = "Unpaid"; // Unpaid, Paid, Overdue
         public int CreatedByUserId { get; set; }
+        public string BillingPeriod { get; set; } = string.Empty; // Format: YYYY-MM
         
         // Navigation properties
         [JsonIgnore]

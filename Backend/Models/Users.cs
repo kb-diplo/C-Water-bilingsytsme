@@ -14,6 +14,9 @@ namespace MyApi.Models
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow; // Account creation date
         public string? ResetToken { get; set; }        // Password reset token
         public DateTime? ResetTokenExpiry { get; set; } // Token expiration time
+        public string? FirstName { get; set; }         // User's first name
+        public string? LastName { get; set; }          // User's last name
+        public string? Phone { get; set; }             // User's phone number
 
         // Navigation properties
         [InverseProperty("CreatedBy")]

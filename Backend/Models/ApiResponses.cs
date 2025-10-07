@@ -3,6 +3,7 @@ namespace MyApi.Models;
 public record UserResponse(string Message, string Username, string Role)
 {
     public string? Token { get; init; }
+    public string? Email { get; init; }
     public object? DashboardData { get; init; }
 }
 
