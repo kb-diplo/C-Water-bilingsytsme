@@ -32,47 +32,8 @@ export class LayoutComponent implements OnInit {
   }
 
   logout(): void {
-    const userName = this.getUserDisplayName();
-    const userRole = this.currentUser?.role || 'User';
-    
-    Swal.fire({
-      title: 'Ready to Leave?',
-      html: `
-        <div class="text-center">
-          <p class="mb-2">You are currently logged in as:</p>
-          <p class="mb-3"><strong>${userName}</strong> (${userRole})</p>
-          <p>Select "Logout" below if you are ready to end your current session.</p>
-        </div>
-      `,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#dc3545',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: '<i class="fas fa-sign-out-alt"></i> Logout',
-      cancelButtonText: '<i class="fas fa-times"></i> Cancel',
-      reverseButtons: true,
-      focusCancel: true
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Show loading state
-        Swal.fire({
-          title: 'Logging out...',
-          text: 'Please wait while we securely end your session.',
-          icon: 'info',
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          showConfirmButton: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
-        });
-        
-        // Perform logout after a brief delay to show the loading state
-        setTimeout(() => {
-          this.authService.logout();
-        }, 1000);
-      }
-    });
+    // Simple, instant logout - no confirmation needed
+    this.authService.logout();
   }
 
   isAdmin(): boolean {

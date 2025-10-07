@@ -54,6 +54,13 @@
       </li>
 
       <li class="nav-item">
+        <a class="nav-link" routerLink="/readings" routerLinkActive="active">
+          <i class="fas fa-fw fa-tachometer-alt"></i>
+          <span>Meter Readings</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
         <a class="nav-link" routerLink="/users" routerLinkActive="active">
           <i class="fas fa-fw fa-user-cog"></i>
           <span>Users</span>
@@ -92,14 +99,7 @@
       <li class="nav-item">
         <a class="nav-link" routerLink="/readings" routerLinkActive="active">
           <i class="fas fa-fw fa-tachometer-alt"></i>
-          <span>Meter Readings</span>
-        </a>
-      </li>
-      
-      <li class="nav-item">
-        <a class="nav-link" routerLink="/bills/ongoing" routerLinkActive="active">
-          <i class="fas fa-fw fa-file-invoice-dollar"></i>
-          <span>Bills</span>
+          <span>Readings</span>
         </a>
       </li>
     </div>
@@ -123,12 +123,7 @@
         </div>
       </li>
 
-      <li class="nav-item">
-        <a class="nav-link" routerLink="/reports" routerLinkActive="active">
-          <i class="fas fa-fw fa-chart-bar"></i>
-          <span>My Reports</span>
-        </a>
-      </li>
+      
     </div>
 
     <!-- Divider -->
@@ -186,7 +181,7 @@
                 </li>
                 <li><hr class="dropdown-divider"></li>
                 <li *ngIf="!isMeterReader()">
-                  <a class="dropdown-item" routerLink="/home">
+                  <a class="dropdown-item" routerLink="/profile">
                     <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
                     Profile
                   </a>

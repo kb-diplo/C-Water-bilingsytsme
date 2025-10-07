@@ -32,20 +32,8 @@ export class LayoutComponent implements OnInit {
   }
 
   logout(): void {
-    Swal.fire({
-      title: 'Ready to Leave?',
-      text: 'Select "Logout" below if you are ready to end your current session.',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Logout',
-      cancelButtonText: 'Cancel'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.authService.logout();
-      }
-    });
+    // Simple, instant logout - no confirmation needed
+    this.authService.logout();
   }
 
   isAdmin(): boolean {

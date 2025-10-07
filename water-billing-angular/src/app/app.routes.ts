@@ -36,11 +36,17 @@ export const routes: Routes = [
       {
         path: 'dashboard/client',
         loadComponent: () => import('./dashboard/client-dashboard/client-dashboard.component').then(m => m.ClientDashboardComponent),
-        data: { roles: ['Client'] }
+        data: { roles: ['Client', 'Customer'] }
       },
       {
         path: 'clients',
-        loadComponent: () => import('./clients/clients-list/clients-list.component').then(m => m.ClientsListComponent)
+        loadComponent: () => import('./clients/clients-list/clients-list.component').then(m => m.ClientsListComponent),
+        data: { roles: ['Admin', 'MeterReader'] }
+      },
+      {
+        path: 'readings',
+        loadComponent: () => import('./readings/readings-list/readings-list.component').then(m => m.ReadingsListComponent),
+        data: { roles: ['Admin', 'MeterReader'] }
       },
       {
         path: 'bills',
@@ -75,6 +81,10 @@ export const routes: Routes = [
         path: 'users',
         loadComponent: () => import('./users/users.component').then(m => m.UsersComponent),
         data: { roles: ['Admin'] }
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./profile/profile.component').then(m => m.ProfileComponent)
       }
     ]
   },
