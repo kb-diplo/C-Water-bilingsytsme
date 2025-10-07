@@ -1,5 +1,5 @@
 [build]
-  publish = "dist/water-billing-angular"
+  publish = "dist/water-billing-angular/browser"
   command = "npm run build"
 
 [[redirects]]
