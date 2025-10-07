@@ -1,12 +1,15 @@
 <div class="container-fluid">
-  <div class="mb-4">
-    <h1 class="h3 mb-0 text-primary font-weight-bolder">{{ getDisplayTitle() }}</h1>
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">{{ getDisplayTitle() }}</h1>
+    <button class="btn btn-success btn-sm shadow-sm" (click)="downloadBills()" *ngIf="filteredBills.length > 0">
+      <i class="fas fa-download fa-sm text-white-50"></i> Download Bills
+    </button>
   </div>
 
   <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
       <h6 class="m-0 font-weight-bold text-primary">
-        {{ isClient() ? 'My Current Bills' : 'Bills Data Table' }}
+        {{ isClient() ? 'My Bills' : 'Bills Data Table' }} ({{ filteredBills.length }})
       </h6>
       <div class="col-md-4">
         <div class="input-group">
@@ -46,14 +49,15 @@
           <thead class="table-light">
             <tr>
               <th *ngIf="!isClient()">Client Name</th>
-              <th>Billing Period</th>
-              <th>Consumption (m³)</th>
+              <th>Bill Number</th>
+              <th>Units Used (m³)</th>
               <th>Amount (KSh)</th>
               <th>Due Date</th>
               <th>Penalty</th>
-              <th>Total Payable</th>
+              <th>Total Amount</th>
+              <th>Balance</th>
               <th>Status</th>
-              <th *ngIf="isAdmin()">Actions</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -61,36 +65,69 @@
               <td *ngIf="!isClient()" class="font-weight-bold text-dark">
                 {{ bill.clientName }}
               </td>
-              <td>{{ bill.billingPeriod || '-' }}</td>
-              <td>{{ bill.consumption | number:'1.2-2' }} m³</td>
-              <td>KSh {{ bill.amount | number:'1.2-2' }}</td>
-              <td>{{ bill.dueDate ? (bill.dueDate | date:'MMM d, y') : '-' }}</td>
-              <td>KSh {{ bill.penalty | number:'1.2-2' }}</td>
-              <td class="font-weight-bold text-primary">KSh {{ bill.totalPayable | number:'1.2-2' }}</td>
+              <td>{{ bill.billNumber }}</td>
+              <td>{{ bill.unitsUsed | number:'1.2-2' }} m³</td>
+              <td>{{ formatCurrency(bill.amount) }}</td>
+              <td>{{ formatDate(bill.dueDate) }}</td>
+              <td>{{ formatCurrency(bill.penaltyAmount) }}</td>
+              <td class="font-weight-bold text-primary">{{ formatCurrency(bill.totalAmount) }}</td>
+              <td class="font-weight-bold" [class.text-success]="bill.balance <= 0" [class.text-danger]="bill.balance > 0">
+                {{ formatCurrency(bill.balance) }}
+              </td>
               <td>
                 <span class="badge" [ngClass]="getBadgeClass(bill.status)">
-                  {{ bill.status || 'Pending' }}
+                  {{ bill.status }}
                 </span>
+                <span *ngIf="isOverdue(bill)" class="badge badge-danger ml-1">OVERDUE</span>
               </td>
-              <td class="text-center" *ngIf="isAdmin()">
+              <td class="text-center">
                 <div class="btn-group" role="group">
                   <button 
+                    *ngIf="!isClient() && bill.status !== 'Paid'"
                     class="btn btn-sm btn-info" 
-                    (click)="sendReminder(bill)"
-                    title="Send Reminder">
+                    (click)="sendBillReminder(bill)"
+                    title="Send Email Reminder">
                     <i class="fas fa-envelope"></i>
                   </button>
+                  <!-- Admin/MeterReader: Record Payment -->
                   <button 
-                    class="btn btn-sm btn-primary" 
-                    (click)="editBill(bill)"
-                    title="Edit Bill">
-                    <i class="fas fa-edit"></i>
+                    *ngIf="bill.balance > 0 && !isClient()"
+                    class="btn btn-sm btn-success" 
+                    (click)="payBill(bill)"
+                    title="Record Payment">
+                    <i class="fas fa-credit-card"></i>
+                    <span class="d-none d-md-inline ml-1">Record</span>
+                  </button>
+                  <!-- Client: STK Push Payment -->
+                  <button 
+                    *ngIf="bill.balance > 0 && isClient()"
+                    class="btn btn-sm btn-success" 
+                    (click)="initiateClientSTKPush(bill)"
+                    title="Pay via M-Pesa STK Push">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span class="d-none d-md-inline ml-1">Pay STK</span>
                   </button>
                   <button 
-                    class="btn btn-sm btn-danger" 
+                    class="btn btn-sm btn-secondary" 
+                    (click)="downloadBillReceipt(bill)"
+                    title="Download Bill Receipt">
+                    <i class="fas fa-file-download"></i>
+                    <span class="d-none d-lg-inline ml-1">Bill</span>
+                  </button>
+                  <button 
+                    *ngIf="bill.balance < bill.totalAmount"
+                    class="btn btn-sm btn-primary" 
+                    (click)="viewBillPayments(bill)"
+                    title="View Payments & Download Receipts">
+                    <i class="fas fa-receipt"></i>
+                    <span class="d-none d-lg-inline ml-1">Payments</span>
+                  </button>
+                  <button 
+                    *ngIf="isAdmin()"
+                    class="btn btn-sm btn-danger ml-1" 
                     (click)="deleteBill(bill)"
                     title="Delete Bill">
-                    <i class="fas fa-trash-alt"></i>
+                    <i class="fas fa-trash"></i>
                   </button>
                 </div>
               </td>
@@ -120,6 +157,147 @@
         <p class="text-muted">
           <i class="fas fa-info-circle"></i> Please contact the office for payment instructions.
         </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal fade" [class.show]="showPaymentModal" [style.display]="showPaymentModal ? 'block' : 'none'" 
+     tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">Record Payment</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closePaymentModal()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" *ngIf="selectedBill">
+        <div class="row mb-3">
+          <div class="col-12">
+            <div class="card bg-light">
+              <div class="card-body">
+                <h6 class="card-title">Bill Information</h6>
+                <div class="row">
+                  <div class="col-md-6">
+                    <p><strong>Bill Number:</strong> {{ selectedBill.billNumber }}</p>
+                    <p><strong>Client:</strong> {{ selectedBill.clientName }}</p>
+                  </div>
+                  <div class="col-md-6">
+                    <p><strong>Total Amount:</strong> {{ formatCurrency(selectedBill.totalAmount) }}</p>
+                    <p><strong>Outstanding Balance:</strong> 
+                      <span class="text-danger font-weight-bold">{{ formatCurrency(selectedBill.balance) }}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <form [formGroup]="paymentForm" (ngSubmit)="submitPayment()">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label for="amount" class="form-label">Payment Amount *</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="amount" 
+                  formControlName="amount"
+                  [max]="selectedBill.balance"
+                  step="0.01"
+                  placeholder="Enter payment amount">
+                <div *ngIf="paymentForm.get('amount')?.invalid && paymentForm.get('amount')?.touched" class="text-danger">
+                  <small>Please enter a valid amount</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label for="paymentMethod" class="form-label">Payment Method *</label>
+                <select class="form-control" id="paymentMethod" formControlName="paymentMethod">
+                  <option value="Cash">Cash</option>
+                  <option value="Bank">Bank Transfer</option>
+                  <option value="Mobile">Mobile Money</option>
+                  <option value="Mpesa">M-Pesa (Manual)</option>
+                  <option value="Card">Card Payment</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <div class="form-group mb-3">
+                <label for="reference" class="form-label">Reference Number (Optional)</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="reference" 
+                  formControlName="reference"
+                  placeholder="Transaction reference, receipt number, etc.">
+              </div>
+            </div>
+          </div>
+        </form>
+        
+        <!-- STK Push Section for Admin -->
+        <div *ngIf="isAdmin()" class="mt-4 pt-3 border-top">
+          <h6 class="text-primary mb-3">
+            <i class="fas fa-mobile-alt mr-2"></i>
+            Alternative: Send STK Push to Client
+          </h6>
+          <div class="alert alert-info">
+            <small>
+              <i class="fas fa-info-circle mr-1"></i>
+              Send an M-Pesa STK push request directly to the client's phone for this bill.
+            </small>
+          </div>
+          <div class="row">
+            <div class="col-md-8">
+              <div class="form-group">
+                <label for="stkPhone" class="form-label">Client Phone Number</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="stkPhone"
+                  [(ngModel)]="stkPhoneNumber"
+                  placeholder="254XXXXXXXXX"
+                  pattern="254[0-9]{9}">
+                <small class="text-muted">Format: 254XXXXXXXXX</small>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-label">&nbsp;</label>
+                <button 
+                  type="button" 
+                  class="btn btn-warning btn-block"
+                  (click)="sendSTKPush()"
+                  [disabled]="!isValidPhoneNumber(stkPhoneNumber) || stkLoading">
+                  <span *ngIf="stkLoading" class="spinner-border spinner-border-sm mr-2" role="status"></span>
+                  <i class="fas fa-paper-plane mr-1" *ngIf="!stkLoading"></i>
+                  {{ stkLoading ? 'Sending...' : 'Send STK Push' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button 
+          type="button" 
+          class="btn btn-success" 
+          (click)="submitPayment()"
+          [disabled]="paymentForm.invalid || paymentLoading">
+          <span *ngIf="paymentLoading" class="spinner-border spinner-border-sm mr-2" role="status"></span>
+          <i class="fas fa-credit-card mr-1" *ngIf="!paymentLoading"></i>
+          {{ paymentLoading ? 'Processing...' : 'Record Payment' }}
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="closePaymentModal()">
+          <i class="fas fa-times mr-1"></i> Cancel
+        </button>
       </div>
     </div>
   </div>

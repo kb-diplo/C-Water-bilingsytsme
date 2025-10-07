@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ClientService, Client, ClientCreateRequest } from '../../core/services/client.service';
 import { ReadingService } from '../../core/services/reading.service';
 import { AuthService } from '../../core/services/auth.service';
-import { MeterReadingCreateDto } from '../../core/models/api.models';
+import { MeterReadingCreateDto, ClientUpdateDto } from '../../core/models/api.models';
 import Swal from 'sweetalert2';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 
@@ -27,6 +27,8 @@ export class ClientsListComponent implements OnInit {
   editingClientId: number | null = null;
   selectedClient: Client | null = null;
   readingLoading = false;
+  previousReading: number | null = null;
+  previousReadingDate: Date | null = null;
   clientForm: FormGroup;
   readingForm: FormGroup;
   
@@ -45,6 +47,7 @@ export class ClientsListComponent implements OnInit {
     private formBuilder: FormBuilder
   ) {
     this.clientForm = this.formBuilder.group({
+      username: ['', Validators.required],
       meterNumber: ['', Validators.required],
       firstName: ['', Validators.required],
       middleName: [''],
@@ -81,15 +84,43 @@ export class ClientsListComponent implements OnInit {
       limit: this.itemsPerPage
     }).subscribe({
       next: (clients) => {
-        this.clients = clients;
-        this.filteredClients = clients;
-        this.totalItems = clients.length;
+        console.log('Clients response:', clients);
+        // Filter out any clients with invalid IDs
+        const validClients = clients.filter(client => client.id && client.id > 0);
+        this.clients = validClients;
+        this.filteredClients = validClients;
+        this.totalItems = validClients.length;
         this.loading = false;
+        
+        if (validClients.length !== clients.length) {
+          console.warn('Filtered out clients with invalid IDs:', clients.length - validClients.length);
+        }
       },
       error: (error) => {
         console.error('Error loading clients:', error);
+        console.error('Error details:', {
+          status: error.status,
+          statusText: error.statusText,
+          error: error.error,
+          message: error.message
+        });
+        
+        this.clients = [];
+        this.filteredClients = [];
+        this.totalItems = 0;
         this.loading = false;
-        Swal.fire('Error', 'Failed to load clients', 'error');
+        
+        // Show appropriate error message
+        let errorMessage = 'Failed to load clients';
+        if (error.status === 401 || error.status === 403) {
+          errorMessage = 'You do not have permission to view clients';
+        } else if (error.status === 500) {
+          errorMessage = 'Server error. Please try again later.';
+        } else if (error.error?.message) {
+          errorMessage = error.error.message;
+        }
+        
+        Swal.fire('Error', errorMessage, 'error');
       }
     });
   }
@@ -104,23 +135,15 @@ export class ClientsListComponent implements OnInit {
       return;
     }
 
-    this.loading = true;
-    this.clientService.searchClients(searchTerm).subscribe({
-      next: (clients) => {
-        this.filteredClients = clients;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error searching clients:', error);
-        this.filteredClients = this.clients.filter(client =>
-          this.getFullName(client).toLowerCase().includes(searchTerm.toLowerCase()) ||
-          client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          client.meterNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (client.contactNumber || client.phone || '').includes(searchTerm)
-        );
-        this.loading = false;
-      }
-    });
+    // Perform client-side filtering for instant results
+    const term = searchTerm.toLowerCase();
+    this.filteredClients = this.clients.filter(client =>
+      this.getFullName(client).toLowerCase().includes(term) ||
+      client.email.toLowerCase().includes(term) ||
+      client.meterNumber.toLowerCase().includes(term) ||
+      (client.contactNumber || client.phone || '').toLowerCase().includes(term) ||
+      (client.location || client.address || '').toLowerCase().includes(term)
+    );
   }
 
   openAddModal(): void {
@@ -147,7 +170,7 @@ export class ClientsListComponent implements OnInit {
   onSubmit(): void {
     // For edit mode, only validate required fields (not password fields)
     if (this.isEditMode) {
-      const requiredFields = ['meterNumber', 'firstName', 'lastName', 'email', 'contactNumber', 'address', 'status'];
+      const requiredFields = ['username', 'meterNumber', 'firstName', 'lastName', 'email', 'contactNumber', 'address', 'status'];
       let isValid = true;
       
       for (const field of requiredFields) {
@@ -186,18 +209,22 @@ export class ClientsListComponent implements OnInit {
   }
 
   private createClient(formData: any): void {
+    console.log('Creating client with form data:', formData);
+    
     const clientData: ClientCreateRequest = {
-      username: formData.email, // Use email as username
-      firstName: formData.firstName,
-      middleName: formData.middleName || '',
-      lastName: formData.lastName,
-      email: formData.email,
-      phone: formData.contactNumber,
-      meterNumber: formData.meterNumber,
-      location: formData.address,
-      connectionStatus: formData.status || 'Connected',
-      password: formData.password
+      Username: formData.username,
+      FirstName: formData.firstName,
+      MiddleName: formData.middleName || '',
+      LastName: formData.lastName,
+      Email: formData.email,
+      Phone: formData.contactNumber,
+      MeterNumber: formData.meterNumber,
+      Location: formData.address,
+      ConnectionStatus: formData.status || 'Connected',
+      Password: formData.password
     };
+    
+    console.log('Sending client data to backend:', clientData);
 
     this.clientService.createClient(clientData).subscribe({
       next: (client) => {
@@ -217,15 +244,15 @@ export class ClientsListComponent implements OnInit {
     if (!this.editingClientId) return;
 
     // Send all fields - backend will handle partial updates
-    const clientData = {
-      firstName: formData.firstName,
-      middleName: formData.middleName,
-      lastName: formData.lastName,
-      email: formData.email,
-      phone: formData.contactNumber,
-      meterNumber: formData.meterNumber,
-      location: formData.address,
-      connectionStatus: formData.status
+    const clientData: ClientUpdateDto = {
+      FirstName: formData.firstName,
+      MiddleName: formData.middleName,
+      LastName: formData.lastName,
+      Email: formData.email,
+      Phone: formData.contactNumber,
+      MeterNumber: formData.meterNumber,
+      Location: formData.address,
+      ConnectionStatus: formData.status
     };
 
     this.clientService.updateClient(this.editingClientId, clientData).subscribe({
@@ -339,6 +366,13 @@ export class ClientsListComponent implements OnInit {
   }
 
   deleteClient(client: Client): void {
+    // Check if client has valid ID
+    if (!client.id || client.id === 0) {
+      console.error('Invalid client ID for deletion:', client);
+      Swal.fire('Error', 'Cannot delete client: Invalid client ID', 'error');
+      return;
+    }
+
     Swal.fire({
       title: 'Delete Client',
       text: `Are you sure you want to delete ${this.getFullName(client)}?`,
@@ -349,15 +383,44 @@ export class ClientsListComponent implements OnInit {
       cancelButtonText: 'Cancel'
     }).then((result) => {
       if (result.isConfirmed) {
+        console.log('Deleting client with ID:', client.id);
         this.clientService.deleteClient(client.id).subscribe({
-          next: () => {
+          next: (response) => {
+            console.log('Client delete response:', response);
+            
+            // Remove client from local arrays since backend does soft delete
             this.clients = this.clients.filter(c => c.id !== client.id);
             this.filteredClients = this.filteredClients.filter(c => c.id !== client.id);
-            Swal.fire('Deleted', 'Client has been deleted', 'success');
+            
+            // Update pagination if needed
+            this.totalItems = this.filteredClients.length;
+            if (this.currentPage > this.totalPages && this.totalPages > 0) {
+              this.currentPage = this.totalPages;
+            }
+            
+            Swal.fire('Deleted', 'Client has been deactivated successfully', 'success');
           },
           error: (error) => {
             console.error('Error deleting client:', error);
-            Swal.fire('Error', 'Failed to delete client', 'error');
+            console.error('Error details:', {
+              status: error.status,
+              statusText: error.statusText,
+              error: error.error,
+              message: error.message
+            });
+            
+            let errorMessage = 'Failed to delete client';
+            if (error.status === 404) {
+              errorMessage = 'Client not found or already deleted';
+            } else if (error.status === 403) {
+              errorMessage = 'You do not have permission to delete this client';
+            } else if (error.error?.message) {
+              errorMessage = error.error.message;
+            } else if (error.message) {
+              errorMessage = error.message;
+            }
+            
+            Swal.fire('Error', errorMessage, 'error');
           }
         });
       }
@@ -412,11 +475,54 @@ export class ClientsListComponent implements OnInit {
     this.selectedClient = client;
     this.showReadingModal = true;
     this.readingForm.reset();
+    this.loadPreviousReading(client.id);
+  }
+
+  private loadPreviousReading(clientId: number): void {
+    // Reset previous reading data
+    this.previousReading = null;
+    this.previousReadingDate = null;
+
+    // Fetch the latest reading for this client
+    this.readingService.getClientReadings(clientId).subscribe({
+      next: (readings) => {
+        if (readings && readings.length > 0) {
+          // Get the most recent reading
+          const latestReading = readings[0]; // Assuming readings are sorted by date desc
+          this.previousReading = latestReading.currentReading;
+          this.previousReadingDate = latestReading.readingDate;
+          
+          // Update form validation to require reading greater than previous
+          this.readingForm.get('currentReading')?.setValidators([
+            Validators.required,
+            Validators.min(this.previousReading + 0.01)
+          ]);
+        } else {
+          // No previous readings - first reading for this client
+          this.readingForm.get('currentReading')?.setValidators([
+            Validators.required,
+            Validators.min(0.01)
+          ]);
+        }
+        this.readingForm.get('currentReading')?.updateValueAndValidity();
+      },
+      error: (error) => {
+        console.error('Error loading previous reading:', error);
+        // Set default validation if we can't load previous reading
+        this.readingForm.get('currentReading')?.setValidators([
+          Validators.required,
+          Validators.min(0.01)
+        ]);
+        this.readingForm.get('currentReading')?.updateValueAndValidity();
+      }
+    });
   }
 
   closeReadingModal(): void {
     this.showReadingModal = false;
     this.selectedClient = null;
+    this.previousReading = null;
+    this.previousReadingDate = null;
     this.readingForm.reset();
   }
 
@@ -454,18 +560,75 @@ export class ClientsListComponent implements OnInit {
     };
 
     console.log('Submitting reading data:', readingData);
+    console.log('Selected client:', this.selectedClient);
+    console.log('Form value:', this.readingForm.value);
 
     this.readingService.addReading(readingData).subscribe({
       next: (reading) => {
-        console.log('Reading added successfully:', reading);
+        console.log('Reading added successfully with override:', reading);
         this.readingLoading = false;
         this.closeReadingModal();
-        Swal.fire('Success', `Meter reading added successfully for ${this.selectedClient?.fullName}`, 'success');
+        Swal.fire('Success', `Meter reading added successfully with override for ${this.selectedClient?.fullName}`, 'success');
       },
       error: (error) => {
-        console.error('Error adding reading:', error);
+        console.error('Full error object:', error);
+        console.error('Error status:', error.status);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error.error);
+        
         this.readingLoading = false;
-        const errorMessage = error.error?.message || error.message || 'Failed to add meter reading';
+        
+        // More detailed error message
+        let errorMessage = 'Failed to add meter reading with override';
+        if (error.error) {
+          if (typeof error.error === 'string') {
+            errorMessage = error.error;
+          } else if (error.error.message) {
+            errorMessage = error.error.message;
+          } else if (error.error.errors) {
+            // Handle validation errors
+            const validationErrors = Object.values(error.error.errors).flat();
+            errorMessage = validationErrors.join(', ');
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        Swal.fire('Error', errorMessage, 'error');
+      }
+    });
+  }
+
+  addReadingWithOverride(): void {
+    const currentReadingValue = this.readingForm.value.currentReading;
+    this.readingLoading = true;
+    
+    const readingData: MeterReadingCreateDto = {
+      clientId: this.selectedClient?.id || 0,
+      currentReading: parseFloat(currentReadingValue),
+      overrideMonthlyRestriction: true
+    };
+
+    console.log('Submitting reading data with override:', readingData);
+
+    this.readingService.addReading(readingData).subscribe({
+      next: (reading) => {
+        console.log('Reading added successfully with override:', reading);
+        this.readingLoading = false;
+        this.closeReadingModal();
+        Swal.fire('Success', `Meter reading added successfully with admin override for ${this.selectedClient?.fullName}`, 'success');
+      },
+      error: (error) => {
+        console.error('Error adding reading with override:', error);
+        this.readingLoading = false;
+        
+        let errorMessage = 'Failed to add meter reading with override';
+        if (error.error && typeof error.error === 'string') {
+          errorMessage = error.error;
+        } else if (error.error?.message) {
+          errorMessage = error.error.message;
+        }
+        
         Swal.fire('Error', errorMessage, 'error');
       }
     });
