@@ -1,6 +1,6 @@
 [build]
   publish = "dist/water-billing-angular"
-  command = "npm run build"
+  command = "npm run build -- --configuration=production"
 
 [[redirects]]
   from = "/*"
@@ -9,3 +9,4 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  CI = "false"
