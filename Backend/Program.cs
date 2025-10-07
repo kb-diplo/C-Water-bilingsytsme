@@ -30,21 +30,80 @@ public partial class Program
         }
 
         // EF Core - Water Billing System (Support both SQL Server and PostgreSQL)
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-                            ?? Environment.GetEnvironmentVariable("DATABASE_URL")
-                            ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+        ConfigureDatabase(builder);
         
-        if (connectionString?.Contains("postgres") == true || connectionString?.Contains("postgresql") == true)
+        // Helper method to configure database based on environment
+        static void ConfigureDatabase(WebApplicationBuilder builder)
         {
-            // Use PostgreSQL for production (Render)
-            builder.Services.AddDbContext<WaterBillingDbContext>(options =>
-                options.UseNpgsql(connectionString));
+            var isProduction = builder.Environment.IsProduction();
+            var renderDatabaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+            var configConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            
+            Console.WriteLine($"Environment: {(isProduction ? "Production" : "Development")}");
+            Console.WriteLine($"DATABASE_URL exists: {!string.IsNullOrEmpty(renderDatabaseUrl)}");
+            Console.WriteLine($"Config connection string exists: {!string.IsNullOrEmpty(configConnectionString)}");
+            
+            if (isProduction && !string.IsNullOrEmpty(renderDatabaseUrl))
+            {
+                // Production: Use PostgreSQL from Render DATABASE_URL
+                var npgsqlConnectionString = ConvertRenderPostgresUrl(renderDatabaseUrl);
+                Console.WriteLine("Using PostgreSQL for production");
+                
+                builder.Services.AddDbContext<WaterBillingDbContext>(options =>
+                    options.UseNpgsql(npgsqlConnectionString, npgsqlOptions =>
+                    {
+                        npgsqlOptions.EnableRetryOnFailure(
+                            maxRetryCount: 3,
+                            maxRetryDelay: TimeSpan.FromSeconds(5),
+                            errorCodesToAdd: null);
+                    }));
+            }
+            else if (!string.IsNullOrEmpty(configConnectionString))
+            {
+                // Development: Use SQL Server from appsettings.json
+                Console.WriteLine("Using SQL Server for development");
+                
+                builder.Services.AddDbContext<WaterBillingDbContext>(options =>
+                    options.UseSqlServer(configConnectionString, sqlOptions =>
+                    {
+                        sqlOptions.EnableRetryOnFailure(
+                            maxRetryCount: 3,
+                            maxRetryDelay: TimeSpan.FromSeconds(5),
+                            errorNumbersToAdd: null);
+                    }));
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    "No database connection string found. " +
+                    "Please configure DATABASE_URL environment variable for production " +
+                    "or DefaultConnection in appsettings.json for development.");
+            }
         }
-        else
+        
+        // Convert Render PostgreSQL URL to standard connection string format
+        static string ConvertRenderPostgresUrl(string databaseUrl)
         {
-            // Use SQL Server for local development
-            builder.Services.AddDbContext<WaterBillingDbContext>(options =>
-                options.UseSqlServer(connectionString));
+            try
+            {
+                var uri = new Uri(databaseUrl);
+                var host = uri.Host;
+                var port = uri.Port;
+                var database = uri.AbsolutePath.TrimStart('/');
+                var username = uri.UserInfo.Split(':')[0];
+                var password = uri.UserInfo.Split(':')[1];
+                
+                var connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;";
+                
+                Console.WriteLine($"Converted connection string: Host={host};Port={port};Database={database};Username={username};Password=***;SSL Mode=Require;Trust Server Certificate=true;");
+                
+                return connectionString;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error parsing DATABASE_URL: {ex.Message}");
+                throw new InvalidOperationException($"Invalid DATABASE_URL format: {databaseUrl}", ex);
+            }
         }
             
         // Register PasswordHasher
@@ -301,7 +360,11 @@ public partial class Program
             c.DisplayOperationId();
         });
 
-        app.UseHttpsRedirection();
+        // Only use HTTPS redirection in development (Render handles HTTPS termination)
+        if (!app.Environment.IsProduction())
+        {
+            app.UseHttpsRedirection();
+        }
         
         // Use CORS
         app.UseCors("AllowAngularApp");
@@ -311,8 +374,17 @@ public partial class Program
 
         app.MapControllers();
 
-        // Add health check endpoint for Render
-        app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+        // Add health check endpoint for Render (no authentication required)
+        app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
+           .AllowAnonymous();
+           
+        // Add root endpoint for basic connectivity test (no authentication required)
+        app.MapGet("/", () => Results.Ok(new { 
+            message = "Water Billing System API", 
+            version = "1.0", 
+            status = "running",
+            timestamp = DateTime.UtcNow 
+        })).AllowAnonymous();
 
         app.Run();
     }
