@@ -60,6 +60,9 @@ namespace MyApi.Services
         {
             try
             {
+                _logger.LogInformation("Initiating STK Push for BillId: {BillId}, Phone: {Phone}, Amount: {Amount}", 
+                    request.BillId, request.PhoneNumber, request.Amount);
+
                 // Get bill details
                 var bill = await _context.Bills
                     .Include(b => b.Client)
@@ -67,6 +70,7 @@ namespace MyApi.Services
 
                 if (bill == null)
                 {
+                    _logger.LogError("Bill not found for BillId: {BillId}", request.BillId);
                     return new MpesaStkPushResponse
                     {
                         ResponseCode = "1",
@@ -87,9 +91,11 @@ namespace MyApi.Services
                 }
 
                 // Get access token
+                _logger.LogInformation("Getting M-Pesa access token...");
                 var accessToken = await GetAccessTokenAsync();
                 if (string.IsNullOrEmpty(accessToken))
                 {
+                    _logger.LogError("Failed to get M-Pesa access token");
                     return new MpesaStkPushResponse
                     {
                         ResponseCode = "1",
@@ -97,6 +103,7 @@ namespace MyApi.Services
                         CustomerMessage = "Unable to process payment at this time. Please try again."
                     };
                 }
+                _logger.LogInformation("M-Pesa access token obtained successfully");
 
                 // Generate timestamp and password
                 var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
@@ -125,10 +132,16 @@ namespace MyApi.Services
                 var json = JsonSerializer.Serialize(stkRequest);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
+                _logger.LogInformation("Sending STK Push request to: {Url}", $"{_mpesaSettings.BaseUrl}/mpesa/stkpush/v1/processrequest");
+                _logger.LogInformation("STK Push request data: {RequestData}", json);
+
                 var response = await _httpClient.PostAsync(
                     $"{_mpesaSettings.BaseUrl}/mpesa/stkpush/v1/processrequest", content);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("STK Push response status: {StatusCode}, content: {ResponseContent}", 
+                    response.StatusCode, responseContent);
+
                 var stkResponse = JsonSerializer.Deserialize<MpesaStkPushResponse>(responseContent) 
                     ?? new MpesaStkPushResponse();
 
