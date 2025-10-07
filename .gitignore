@@ -12,6 +12,11 @@ Backend/appsettings.Production.json
 !**/appsettings.example.json
 !**/appsettings.template.json
 
+# Local credentials backup (NEVER COMMIT)
+LOCAL_CREDENTIALS_BACKUP.txt
+**/credentials.txt
+**/secrets.txt
+
 # Environment files
 **/.env
 **/.env.local
