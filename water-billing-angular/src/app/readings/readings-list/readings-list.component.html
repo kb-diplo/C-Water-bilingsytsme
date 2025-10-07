@@ -1,0 +1,246 @@
+<div class="container-fluid">
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1 class="h3 mb-0 text-gray-800">Meter Readings</h1>
+      <p class="text-muted mb-0">All meter readings recorded by meter readers</p>
+    </div>
+    <button class="btn btn-success btn-sm shadow-sm" (click)="downloadReadings()">
+      <i class="fas fa-download fa-sm text-white-50"></i> Download Readings
+    </button>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="card shadow mb-3">
+    <div class="card-header py-2">
+      <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
+    </div>
+    <div class="card-body py-3">
+      <div class="row">
+        <div class="col-md-3">
+          <label for="yearFilter" class="form-label">Year</label>
+          <select class="form-control" id="yearFilter" [(ngModel)]="selectedYear" (change)="applyFilters()">
+            <option value="">All Years</option>
+            <option *ngFor="let year of availableYears" [value]="year">{{ year }}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="monthFilter" class="form-label">Month</label>
+          <select class="form-control" id="monthFilter" [(ngModel)]="selectedMonth" (change)="applyFilters()">
+            <option value="">All Months</option>
+            <option value="01">January</option>
+            <option value="02">February</option>
+            <option value="03">March</option>
+            <option value="04">April</option>
+            <option value="05">May</option>
+            <option value="06">June</option>
+            <option value="07">July</option>
+            <option value="08">August</option>
+            <option value="09">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="searchTerm" class="form-label">Search All Columns</label>
+          <div class="input-group">
+            <input
+              type="text"
+              class="form-control"
+              id="searchTerm"
+              placeholder="Search by client, meter #, recorded by..."
+              [(ngModel)]="searchTerm"
+              (input)="onSearch()">
+            <div class="input-group-append">
+              <span class="input-group-text">
+                <i class="fas fa-search"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label for="statusFilter" class="form-label">Filter by Status</label>
+          <select class="form-control" id="statusFilter" [(ngModel)]="selectedStatus" (change)="applyFilters()">
+            <option value="">All Status</option>
+            <option value="Approved">✅ Approved</option>
+            <option value="Pending">⏳ Pending</option>
+            <option value="Rejected">❌ Rejected</option>
+            <option value="Active">🟢 Active</option>
+            <option value="Completed">✅ Completed</option>
+            <option value="Processing">⚙️ Processing</option>
+            <option value="Review">👀 Review</option>
+            <option value="Failed">❌ Failed</option>
+            <option value="Error">⚠️ Error</option>
+            <option value="Draft">📝 Draft</option>
+            <option value="New">🆕 New</option>
+            <option value="Verified">🛡️ Verified</option>
+            <option value="Confirmed">✔️ Confirmed</option>
+            <option value="Cancelled">🚫 Cancelled</option>
+            <option value="Inactive">⚫ Inactive</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">&nbsp;</label>
+          <button class="btn btn-secondary btn-block" (click)="clearFilters()">
+            <i class="fas fa-times mr-1"></i>Clear
+          </button>
+        </div>
+      </div>
+      <!-- Advanced Date Filters Row -->
+      <div class="row mt-3">
+        <div class="col-md-3">
+          <label for="startDate" class="form-label">From Date</label>
+          <input type="date" class="form-control" id="startDate" 
+                 [(ngModel)]="startDate" (change)="applyFilters()">
+        </div>
+        <div class="col-md-3">
+          <label for="endDate" class="form-label">To Date</label>
+          <input type="date" class="form-control" id="endDate" 
+                 [(ngModel)]="endDate" (change)="applyFilters()">
+        </div>
+        <div class="col-md-3">
+          <label for="recordedByFilter" class="form-label">Recorded By</label>
+          <select class="form-control" id="recordedByFilter" [(ngModel)]="selectedRecordedBy" (change)="applyFilters()">
+            <option value="">All Users</option>
+            <option *ngFor="let user of availableRecorders" [value]="user">{{ user }}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="billStatusFilter" class="form-label">Bill Status</label>
+          <select class="form-control" id="billStatusFilter" [(ngModel)]="selectedBillStatus" (change)="applyFilters()">
+            <option value="">All</option>
+            <option value="with-bill">With Bill</option>
+            <option value="no-bill">No Bill</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+      <h6 class="m-0 font-weight-bold text-primary">
+        Meter Readings ({{ filteredReadings.length }})
+        <span *ngIf="selectedYear || selectedMonth" class="badge badge-info ml-2">
+          Filtered: {{ getFilterDescription() }}
+        </span>
+      </h6>
+    </div>
+    <div class="card-body">
+      <!-- Loading State -->
+      <div *ngIf="loading" class="text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading readings...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!loading && filteredReadings.length === 0" class="text-center py-5">
+        <i class="fas fa-tachometer-alt fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">No Readings Found</h5>
+        <p class="text-muted">No meter readings available</p>
+      </div>
+
+      <!-- Readings Table -->
+      <div class="table-responsive" *ngIf="!loading && filteredReadings.length > 0" style="min-height: 400px;">
+        <table class="table table-bordered table-hover table-striped" style="min-width: 1200px;" cellspacing="0">
+          <thead class="table-light">
+            <tr>
+              <th style="min-width: 120px;">Date</th>
+              <th style="min-width: 100px;">Billing Period</th>
+              <th style="min-width: 150px;">Client</th>
+              <th style="min-width: 100px;">Meter #</th>
+              <th style="min-width: 120px;">Previous Reading</th>
+              <th style="min-width: 120px;">Current Reading</th>
+              <th style="min-width: 100px;">Units Used</th>
+              <th style="min-width: 130px;">Generated Bill</th>
+              <th style="min-width: 130px;">Recorded By</th>
+              <th style="min-width: 90px;">Status</th>
+              <th *ngIf="isAdmin()" style="min-width: 100px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let reading of filteredReadings">
+              <td>
+                <div class="font-weight-bold text-dark">{{ formatDate(reading.readingDate) }}</div>
+                <small class="text-muted">{{ formatDateTime(reading.readingDate) }}</small>
+              </td>
+              <td>
+                <span class="badge badge-info font-weight-bold">{{ reading.billingPeriod || 'N/A' }}</span>
+              </td>
+              <td>
+                <div class="font-weight-bold text-dark">{{ reading.clientName }}</div>
+                <small class="text-muted">ID: {{ reading.clientId }}</small>
+              </td>
+              <td>
+                <span class="badge badge-light font-weight-bold">{{ reading.meterNumber || 'N/A' }}</span>
+              </td>
+              <td class="text-center">
+                <span class="font-weight-medium text-dark">{{ (reading.previousReading || 0) | number:'1.2-2' }}</span>
+              </td>
+              <td class="text-center">
+                <span class="font-weight-bold text-primary">{{ (reading.currentReading || 0) | number:'1.2-2' }}</span>
+              </td>
+              <td class="text-center">
+                <span class="badge badge-success font-weight-bold">{{ (reading.unitsUsed || 0) | number:'1.2-2' }} m³</span>
+              </td>
+              <td class="text-center">
+                <div *ngIf="reading.generatedBillId; else noBill">
+                  <div class="font-weight-bold text-success">{{ reading.generatedBillNumber }}</div>
+                  <small class="text-muted">KSh {{ reading.billAmount | number:'1.2-2' }}</small>
+                </div>
+                <ng-template #noBill>
+                  <span class="text-muted">No Bill</span>
+                  <small class="text-muted d-block">Zero usage</small>
+                </ng-template>
+              </td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-user-tie text-info mr-2"></i>
+                  <span class="font-weight-bold text-dark">{{ reading.recordedByUsername || 'N/A' }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="badge font-weight-bold" 
+                      [class.badge-success]="reading.status === 'Approved' || reading.status === 'Active' || reading.status === 'Completed'"
+                      [class.badge-warning]="reading.status === 'Pending' || reading.status === 'Processing' || reading.status === 'Review'"
+                      [class.badge-danger]="reading.status === 'Rejected' || reading.status === 'Failed' || reading.status === 'Error'"
+                      [class.badge-info]="reading.status === 'Draft' || reading.status === 'New'"
+                      [class.badge-secondary]="reading.status === 'Cancelled' || reading.status === 'Inactive'"
+                      [class.badge-primary]="reading.status === 'Verified' || reading.status === 'Confirmed'">
+                  <i class="fas fa-check-circle mr-1" *ngIf="reading.status === 'Approved' || reading.status === 'Active' || reading.status === 'Completed'"></i>
+                  <i class="fas fa-clock mr-1" *ngIf="reading.status === 'Pending' || reading.status === 'Processing' || reading.status === 'Review'"></i>
+                  <i class="fas fa-times-circle mr-1" *ngIf="reading.status === 'Rejected' || reading.status === 'Failed' || reading.status === 'Error'"></i>
+                  <i class="fas fa-info-circle mr-1" *ngIf="reading.status === 'Draft' || reading.status === 'New'"></i>
+                  <i class="fas fa-ban mr-1" *ngIf="reading.status === 'Cancelled' || reading.status === 'Inactive'"></i>
+                  <i class="fas fa-shield-alt mr-1" *ngIf="reading.status === 'Verified' || reading.status === 'Confirmed'"></i>
+                  {{ reading.status || 'Unknown' }}
+                </span>
+              </td>
+              <td *ngIf="isAdmin()" class="text-center">
+                <button class="btn btn-danger btn-sm" 
+                        (click)="deleteReading(reading)"
+                        title="Delete Reading">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="text-center py-5" *ngIf="!loading && filteredReadings.length === 0">
+        <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+        <h5 class="text-muted">No readings found</h5>
+        <p class="text-muted">You haven't recorded any meter readings yet</p>
+      </div>
+      
+      <div class="text-center py-4" *ngIf="loading">
+        <div class="spinner-border" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
