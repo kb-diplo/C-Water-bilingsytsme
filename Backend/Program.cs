@@ -30,7 +30,9 @@ public partial class Program
         }
 
         // EF Core - Water Billing System (Support both SQL Server and PostgreSQL)
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+                            ?? Environment.GetEnvironmentVariable("DATABASE_URL")
+                            ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
         
         if (connectionString?.Contains("postgres") == true || connectionString?.Contains("postgresql") == true)
         {
