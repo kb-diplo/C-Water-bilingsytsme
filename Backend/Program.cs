@@ -146,7 +146,10 @@ public partial class Program
                         "http://localhost:4200", 
                         "http://localhost:4201", 
                         "http://localhost:4202",
-                        "https://denkamwaterskenya.netlify.app"
+                        "https://denkamwaterskenya.netlify.app",
+                        "https://denkam-waters.vercel.app",
+                        "https://denkam-waters-frontend.vercel.app",
+                        "https://*.vercel.app"
                     )
                       .AllowAnyHeader()
                       .AllowAnyMethod()
