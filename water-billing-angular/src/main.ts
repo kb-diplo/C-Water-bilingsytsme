@@ -9,6 +9,8 @@ import { routes } from './app/app.routes';
 import { authInterceptor } from './app/core/interceptors/auth.interceptor';
 
 console.log('Starting Angular application...');
+console.log('Environment:', window.location.hostname);
+console.log('Current URL:', window.location.href);
 
 bootstrapApplication(AppComponent, {
   providers: [

@@ -23,7 +23,12 @@ export class HomeComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       const loader = document.getElementById('initial-loader');
       if (loader) {
-        loader.style.display = 'none';
+        loader.style.opacity = '0';
+        loader.style.transition = 'opacity 0.5s ease-out';
+        setTimeout(() => {
+          loader.style.display = 'none';
+          document.body.classList.remove('loading');
+        }, 500);
       }
     }, 100);
   }

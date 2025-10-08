@@ -15,14 +15,14 @@
 </head>
 <body>
   <app-root>
-    <!-- Loading indicator while Angular app loads -->
+    <!-- Professional Loading Screen -->
     <div id="initial-loader" style="
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      height: 100vh;
+      background: linear-gradient(135deg, #0891b2 0%, #164e63 100%);
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -30,28 +30,72 @@
       z-index: 9999;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     ">
-      <div style="text-align: center; color: white;">
-        <i class="fas fa-tint" style="font-size: 4rem; margin-bottom: 20px; animation: pulse 2s infinite;"></i>
-        <h2 style="margin-bottom: 10px; font-weight: 300;">DENKAM WATERS</h2>
-        <p style="margin-bottom: 30px; opacity: 0.8;">Loading Water Billing System...</p>
+      <div style="text-align: center; color: white; max-width: 400px; padding: 20px;">
+        <!-- Logo/Icon -->
         <div style="
-          width: 50px;
-          height: 50px;
-          border: 3px solid rgba(255,255,255,0.3);
-          border-top: 3px solid white;
+          width: 80px;
+          height: 80px;
+          background: rgba(255,255,255,0.1);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 30px;
+          backdrop-filter: blur(10px);
+        ">
+          <i class="fas fa-tint" style="font-size: 2.5rem; color: #06b6d4;"></i>
+        </div>
+        
+        <!-- Company Name -->
+        <h1 style="
+          font-size: 1.8rem;
+          font-weight: 600;
+          margin-bottom: 10px;
+          letter-spacing: 1px;
+        ">DENKAM WATERS</h1>
+        
+        <!-- Subtitle -->
+        <p style="
+          font-size: 1rem;
+          opacity: 0.9;
+          margin-bottom: 40px;
+          font-weight: 300;
+        ">Water Billing Management System</p>
+        
+        <!-- Loading Animation -->
+        <div style="
+          width: 40px;
+          height: 40px;
+          border: 3px solid rgba(255,255,255,0.2);
+          border-top: 3px solid #06b6d4;
           border-radius: 50%;
           animation: spin 1s linear infinite;
+          margin: 0 auto;
         "></div>
+        
+        <!-- Loading Text -->
+        <p style="
+          font-size: 0.9rem;
+          opacity: 0.7;
+          margin-top: 20px;
+          animation: pulse 2s infinite;
+        ">Loading...</p>
       </div>
     </div>
+    
     <style>
       @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
       @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
+      }
+      
+      /* Hide scrollbars during loading */
+      body.loading {
+        overflow: hidden;
       }
     </style>
   </app-root>
@@ -59,16 +103,45 @@
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   
-  <!-- Hide loader once Angular starts -->
+  <!-- Enhanced loader management -->
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      setTimeout(function() {
-        const loader = document.getElementById('initial-loader');
-        if (loader) {
+    // Add loading class to body
+    document.body.classList.add('loading');
+    
+    // Hide loader when Angular app is ready
+    function hideLoader() {
+      const loader = document.getElementById('initial-loader');
+      if (loader) {
+        loader.style.opacity = '0';
+        loader.style.transition = 'opacity 0.5s ease-out';
+        setTimeout(() => {
           loader.style.display = 'none';
+          document.body.classList.remove('loading');
+        }, 500);
+      }
+    }
+    
+    // Listen for Angular app ready
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if Angular has loaded
+      const checkAngular = setInterval(() => {
+        if (document.querySelector('app-home') || 
+            document.querySelector('app-login') || 
+            document.querySelector('app-layout')) {
+          clearInterval(checkAngular);
+          hideLoader();
         }
-      }, 3000); // Hide after 3 seconds max
+      }, 100);
+      
+      // Fallback: hide after 5 seconds max
+      setTimeout(() => {
+        clearInterval(checkAngular);
+        hideLoader();
+      }, 5000);
     });
+    
+    // Also hide on window load
+    window.addEventListener('load', hideLoader);
   </script>
 </body>
 </html>
