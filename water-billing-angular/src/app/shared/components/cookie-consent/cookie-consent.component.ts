@@ -38,33 +38,30 @@ import { FormsModule } from '@angular/forms';
           <div class="modal-header">
             <h5 class="modal-title">Cookie Preferences</h5>
             <button type="button" class="btn-close" (click)="showSettings = false"></button>
-          </div>
           <div class="modal-body">
             <div class="cookie-category mb-4">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
                   <h6>Essential Cookies</h6>
-                  <small class="text-muted">Required for basic site functionality</small>
+                  <small class="text-muted">Authentication tokens, session management, and basic site functionality. These are required for the water billing system to work properly.</small>
                 </div>
                 <input type="checkbox" class="form-check-input" checked disabled>
               </div>
             </div>
-            
             <div class="cookie-category mb-4">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
-                  <h6>Analytics Cookies</h6>
-                  <small class="text-muted">Help us understand how you use our site</small>
+                  <h6>Functional Cookies</h6>
+                  <small class="text-muted">Remember your preferences like dashboard settings, language, and theme choices.</small>
                 </div>
-                <input type="checkbox" class="form-check-input" [(ngModel)]="preferences.analytics">
+                <input type="checkbox" class="form-check-input" [(ngModel)]="preferences.functional">
               </div>
             </div>
-            
             <div class="cookie-category mb-4">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
                   <h6>Performance Cookies</h6>
-                  <small class="text-muted">Improve site performance and user experience</small>
+                  <small class="text-muted">Help us understand how you use the system to improve performance and user experience.</small>
                 </div>
                 <input type="checkbox" class="form-check-input" [(ngModel)]="preferences.performance">
               </div>
@@ -150,19 +147,18 @@ import { FormsModule } from '@angular/forms';
     }
   `]
 })
-export class CookieConsentComponent implements OnInit {
   showBanner = false;
   showSettings = false;
   
   preferences = {
     essential: true,
-    analytics: false,
+    functional: false,
     performance: false
   };
 
   ngOnInit() {
     this.checkCookieConsent();
-  }
+{{ ... }}
 
   private checkCookieConsent() {
     const consent = localStorage.getItem('cookieConsent');
@@ -179,7 +175,7 @@ export class CookieConsentComponent implements OnInit {
   acceptAll() {
     this.preferences = {
       essential: true,
-      analytics: true,
+      functional: true,
       performance: true
     };
     this.saveConsent();
@@ -188,7 +184,7 @@ export class CookieConsentComponent implements OnInit {
   acceptEssential() {
     this.preferences = {
       essential: true,
-      analytics: false,
+      functional: false,
       performance: false
     };
     this.saveConsent();
@@ -197,7 +193,7 @@ export class CookieConsentComponent implements OnInit {
   declineAll() {
     this.preferences = {
       essential: true, // Essential cookies cannot be declined
-      analytics: false,
+      functional: false,
       performance: false
     };
     this.saveConsent();

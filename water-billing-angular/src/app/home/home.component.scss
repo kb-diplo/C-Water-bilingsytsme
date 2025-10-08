@@ -412,8 +412,10 @@
     
     // Mobile spacing
     @media (max-width: 768px) {
-      margin-bottom: 1.5rem;
+      margin-bottom: 2rem; // Increased spacing between boxes
       padding: 1.5rem;
+      margin-left: 0.5rem;
+      margin-right: 0.5rem;
     }
   }
 }
@@ -516,47 +518,29 @@
     color: #cbd5e0;
     line-height: 1.6;
     margin-bottom: 1.5rem;
+    font-family: inherit; // Ensure consistent font
   }
   
   .social-links {
     display: flex;
     gap: 1rem;
     
-    .back-to-top {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      background: var(--primary-blue);
+    .social-link {
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.1);
       color: white;
-      width: 50px;
-      height: 50px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       text-decoration: none;
-      opacity: 0;
-      visibility: hidden;
       transition: all 0.3s ease;
-      z-index: 1050; // Higher z-index to ensure visibility
-      border: 2px solid white; // White border for better visibility
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2);
       
       &:hover {
-        background: #0056b3;
+        background: var(--primary-blue);
+        color: white;
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.3);
-      }
-      
-      &.show {
-        opacity: 1;
-        visibility: visible;
-        text-decoration: none;
-        transition: color 0.3s ease;
-        
-        &:hover {
-          color: var(--primary-blue);
-        }
       }
     }
   }
@@ -723,15 +707,17 @@
   // Footer mobile improvements
   .footer-section {
     text-align: center;
-    padding: 3rem 0 2rem 0 !important; // Reduce footer padding on mobile
+    padding: 2rem 0 1.5rem 0 !important; // Further reduce footer padding on mobile
     
     .footer-brand h4 {
-      font-size: 1.5rem;
+      font-size: 1.3rem;
+      font-family: inherit; // Consistent font
     }
     
     .footer-services li {
       padding-left: 0;
       margin-bottom: 0.3rem; // Reduce spacing between services
+      font-family: inherit; // Consistent font
       
       &:before {
         display: none;
@@ -741,11 +727,23 @@
     .footer-copyright, .footer-developer {
       font-size: 0.8rem;
       text-align: center !important;
+      font-family: inherit; // Consistent font
+    }
+    
+    .footer-description {
+      font-family: inherit; // Consistent font
+      font-size: 0.9rem;
     }
     
     // Reduce spacing between footer sections on mobile
     .col-lg-4 {
-      margin-bottom: 1.5rem !important;
+      margin-bottom: 1.2rem !important;
+    }
+    
+    // Prevent footer from stretching too wide
+    .container {
+      max-width: 100%;
+      padding: 0 1rem;
     }
   }
 }
@@ -760,32 +758,53 @@
 .hero-content, .feature-card { animation: fadeInUp 0.6s ease-out; }
 
 // About Section
-.about-section .mission-vision h3 { color: var(--dark-gray); font-weight: 600; margin-bottom: 1rem; }
-.about-section .mission-vision p { color: var(--text-gray); line-height: 1.6; }
+.about-section .mission-vision h3 { 
+  color: var(--dark-gray); 
+  font-weight: 600; 
+  margin-bottom: 1rem; 
+  font-family: inherit; // Consistent font
+}
+.about-section .mission-vision p { 
+  color: var(--text-gray); 
+  line-height: 1.6; 
+  font-family: inherit; // Consistent font
+}
+
+// About section content consistency
+.about-content {
+  .lead {
+    font-family: inherit; // Consistent font
+    font-weight: 400;
+  }
+  
+  .about-description {
+    font-family: inherit; // Consistent font
+    font-weight: 400;
+  }
+}
 
 // Utility Classes
 .bg-light { background-color: #f8f9fa !important; }
 .text-success { color: #28a745 !important; }
 .lead { font-size: 1.25rem; font-weight: 300; line-height: 1.6; }
 
-// Back to Top Button
+// Back to Top Button - Using same colors as login button
 .back-to-top {
   position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px;
-  background: var(--primary-blue);
-  color: white; border: 2px solid white; border-radius: 50%; font-size: 1.2rem; cursor: pointer;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  color: white; border: none; border-radius: 50%; font-size: 1.2rem; cursor: pointer;
   transition: all 0.3s ease; z-index: 1050; opacity: 0; visibility: hidden;
   transform: translateY(20px); 
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px rgba(8, 145, 178, 0.4);
 
   &.show { opacity: 1; visibility: visible; transform: translateY(0); }
   &:hover { 
-    background: #0056b3;
+    background: linear-gradient(135deg, var(--accent-blue), var(--primary-blue));
     transform: translateY(-3px); 
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 6px 20px rgba(8, 145, 178, 0.6);
   }
   i { 
     font-size: 1rem; 
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
 }
 
