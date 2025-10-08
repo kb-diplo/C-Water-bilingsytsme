@@ -9,6 +9,9 @@ export const AuthGuard: CanActivateFn = (route, state) => {
 
   // Check if user is authenticated
   if (!authService.isAuthenticated()) {
+    if (environment.features.enableLogging) {
+      console.warn('AuthGuard: User not authenticated, redirecting to login');
+    }
     router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
     return false;
   }

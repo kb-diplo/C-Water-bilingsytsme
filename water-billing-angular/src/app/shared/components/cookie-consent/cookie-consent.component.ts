@@ -192,14 +192,14 @@ export class CookieConsentComponent implements OnInit {
   }
 
   private checkCookieConsent() {
-    const consent = localStorage.getItem('cookieConsent');
-    if (!consent) {
+    const consent = localStorage.getItem('cookiesAccepted');
+    if (!consent || consent !== 'true') {
       setTimeout(() => {
         this.showBanner = true;
       }, 1000);
     } else {
-      const savedPreferences = JSON.parse(consent);
-      this.preferences = { ...this.preferences, ...savedPreferences };
+      // If basic consent exists, don't show banner
+      this.showBanner = false;
     }
   }
 
@@ -257,7 +257,10 @@ export class CookieConsentComponent implements OnInit {
   }
 
   private saveConsent() {
-    localStorage.setItem('cookieConsent', JSON.stringify(this.preferences));
+    // Use the same key as CookieService
+    localStorage.setItem('cookiesAccepted', 'true');
+    localStorage.setItem('cookieConsentDate', new Date().toISOString());
+    localStorage.setItem('cookiePreferences', JSON.stringify(this.preferences));
     this.showBanner = false;
     
     // Apply cookie preferences
