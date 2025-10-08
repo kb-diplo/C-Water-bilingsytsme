@@ -15,71 +15,32 @@
 </head>
 <body>
   <app-root>
-    <!-- Professional Loading Screen -->
+    <!-- Simple Loading Screen -->
     <div id="initial-loader" style="
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100vh;
-      background: linear-gradient(135deg, #0891b2 0%, #164e63 100%);
+      background: #0891b2;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       z-index: 9999;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: Arial, sans-serif;
     ">
-      <div style="text-align: center; color: white; max-width: 400px; padding: 20px;">
-        <!-- Logo/Icon -->
+      <div style="text-align: center; color: white;">
+        <h1 style="font-size: 2rem; margin: 0 0 20px 0; font-weight: normal;">DENKAM WATERS</h1>
         <div style="
-          width: 80px;
-          height: 80px;
-          background: rgba(255,255,255,0.1);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 30px;
-          backdrop-filter: blur(10px);
-        ">
-          <i class="fas fa-tint" style="font-size: 2.5rem; color: #0891b2;"></i>
-        </div>
-        
-        <!-- Company Name -->
-        <h1 style="
-          font-size: 1.8rem;
-          font-weight: 600;
-          margin-bottom: 10px;
-          letter-spacing: 1px;
-        ">DENKAM WATERS</h1>
-        
-        <!-- Subtitle -->
-        <p style="
-          font-size: 1rem;
-          opacity: 0.9;
-          margin-bottom: 40px;
-          font-weight: 300;
-        ">Water Billing Management System</p>
-        
-        <!-- Loading Animation -->
-        <div style="
-          width: 40px;
-          height: 40px;
-          border: 3px solid rgba(255,255,255,0.2);
-          border-top: 3px solid #0891b2;
+          width: 30px;
+          height: 30px;
+          border: 3px solid rgba(255,255,255,0.3);
+          border-top: 3px solid white;
           border-radius: 50%;
           animation: spin 1s linear infinite;
           margin: 0 auto;
         "></div>
-        
-        <!-- Loading Text -->
-        <p style="
-          font-size: 0.9rem;
-          opacity: 0.7;
-          margin-top: 20px;
-          animation: pulse 2s infinite;
-        ">Loading...</p>
       </div>
     </div>
     
@@ -88,59 +49,29 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
-      @keyframes pulse {
-        0%, 100% { opacity: 0.7; }
-        50% { opacity: 1; }
-      }
-      
-      /* Hide scrollbars during loading */
-      body.loading {
-        overflow: hidden;
-      }
     </style>
   </app-root>
   
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   
+  <!-- Simple loader management -->
   <script>
-  
-    document.body.classList.add('loading');
-    
-    // Hide loader when Angular app is ready
-    function hideLoader() {
+    // Hide loader when page loads
+    window.addEventListener('load', function() {
       const loader = document.getElementById('initial-loader');
       if (loader) {
-        loader.style.opacity = '0';
-        loader.style.transition = 'opacity 0.5s ease-out';
-        setTimeout(() => {
-          loader.style.display = 'none';
-          document.body.classList.remove('loading');
-        }, 500);
+        loader.style.display = 'none';
       }
-    }
-    
-    // Listen for Angular app ready
-    document.addEventListener('DOMContentLoaded', function() {
-   
-      const checkAngular = setInterval(() => {
-        if (document.querySelector('app-home') || 
-            document.querySelector('app-login') || 
-            document.querySelector('app-layout')) {
-          clearInterval(checkAngular);
-          hideLoader();
-        }
-      }, 100);
-      
-      // Fallback: hide after 5 seconds max
-      setTimeout(() => {
-        clearInterval(checkAngular);
-        hideLoader();
-      }, 5000);
     });
     
-    
-    window.addEventListener('load', hideLoader);
+    // Fallback: hide after 3 seconds
+    setTimeout(function() {
+      const loader = document.getElementById('initial-loader');
+      if (loader) {
+        loader.style.display = 'none';
+      }
+    }, 3000);
   </script>
 </body>
 </html>
