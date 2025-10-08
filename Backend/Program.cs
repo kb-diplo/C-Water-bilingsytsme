@@ -46,9 +46,9 @@ public partial class Program
             if (isProduction && !string.IsNullOrEmpty(renderDatabaseUrl))
             {
                 // Production: Use PostgreSQL from Render DATABASE_URL
-                Console.WriteLine("🔗 Converting Render DATABASE_URL to connection string...");
+                Console.WriteLine("[INFO] Converting Render DATABASE_URL to connection string...");
                 var npgsqlConnectionString = ConvertRenderPostgresUrl(renderDatabaseUrl);
-                Console.WriteLine("✅ Using PostgreSQL for production");
+                Console.WriteLine("[INFO] Using PostgreSQL for production");
                 
                 builder.Services.AddDbContext<WaterBillingDbContext>(options =>
                     options.UseNpgsql(npgsqlConnectionString, npgsqlOptions =>
@@ -97,7 +97,7 @@ public partial class Program
                 
                 var connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;";
                 
-                Console.WriteLine($"✅ Database connection parsed successfully:");
+                Console.WriteLine($"[INFO] Database connection parsed successfully:");
                 Console.WriteLine($"   Host: {host}");
                 Console.WriteLine($"   Port: {port}");
                 Console.WriteLine($"   Database: {database}");
@@ -145,13 +145,11 @@ public partial class Program
                         "http://localhost:4200", 
                         "http://localhost:4201", 
                         "http://localhost:4202",
-                        "https://*.netlify.app",
-                        "https://*.netlify.com"
+                        "https://denkamwaterskenya.netlify.app"
                     )
                       .AllowAnyHeader()
                       .AllowAnyMethod()
-                      .AllowCredentials()
-                      .SetIsOriginAllowedToAllowWildcardSubdomains();
+                      .AllowCredentials();
             });
         });
 
@@ -330,76 +328,95 @@ public partial class Program
             var services = scope.ServiceProvider;
             try
             {
-                Console.WriteLine("🔄 Initializing database...");
+                Console.WriteLine("[INFO] Initializing database...");
                 var context = services.GetRequiredService<WaterBillingDbContext>();
                 
                 // Check if database can be connected to
-                Console.WriteLine("📡 Testing database connection...");
+                Console.WriteLine("[INFO] Testing database connection...");
                 var canConnect = await context.Database.CanConnectAsync();
-                Console.WriteLine($"📡 Database connection: {(canConnect ? "✅ Success" : "❌ Failed")}");
+                Console.WriteLine($"[INFO] Database connection: {(canConnect ? "SUCCESS" : "FAILED")}");
                 
                 if (canConnect)
                 {
-                    Console.WriteLine("🔄 Checking database schema...");
+                    Console.WriteLine("[INFO] Checking database schema...");
                     
                     // Check if database exists and has tables
                     var tablesExist = false;
                     try
                     {
                         tablesExist = await context.Users.AnyAsync();
-                        Console.WriteLine("✅ Database tables exist and accessible");
+                        Console.WriteLine("[INFO] Database tables exist and accessible");
                     }
                     catch (Exception)
                     {
-                        Console.WriteLine("⚠️ Database tables don't exist or not accessible - will create them");
+                        Console.WriteLine("[WARN] Database tables don't exist or not accessible - will create them");
                         tablesExist = false;
                     }
                     
                     if (!tablesExist)
                     {
-                        Console.WriteLine("🏗️ Creating database schema...");
+                        Console.WriteLine("[INFO] Creating database schema...");
                         
                         // First try to ensure database is created
                         await context.Database.EnsureCreatedAsync();
-                        Console.WriteLine("✅ Database structure ensured");
+                        Console.WriteLine("[INFO] Database structure ensured");
                         
                         // Then apply any pending migrations
                         var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
-                        Console.WriteLine($"📋 Pending migrations: {pendingMigrations.Count()}");
+                        Console.WriteLine($"[INFO] Pending migrations: {pendingMigrations.Count()}");
                         
                         if (pendingMigrations.Any())
                         {
-                            Console.WriteLine("🔄 Applying pending migrations...");
+                            Console.WriteLine("[INFO] Applying pending migrations...");
                             foreach (var migration in pendingMigrations)
                             {
                                 Console.WriteLine($"   - {migration}");
                             }
                             await context.Database.MigrateAsync();
-                            Console.WriteLine("✅ Migrations applied successfully!");
+                            Console.WriteLine("[INFO] Migrations applied successfully!");
                         }
                     }
                     else
                     {
-                        Console.WriteLine("✅ Database schema is up to date!");
+                        Console.WriteLine("[INFO] Database schema is up to date!");
                     }
                     
-                    Console.WriteLine("✅ Database schema ready - no seeding required (clean setup)");
+                    // Create default admin user if none exists
+                    if (!await context.Users.AnyAsync(u => u.Role == "Admin"))
+                    {
+                        Console.WriteLine("[INFO] Creating default admin user...");
+                        var passwordHasher = services.GetRequiredService<IPasswordHasher<Users>>();
+                        var admin = new Users
+                        {
+                            Username = "admin",
+                            Email = "admin@denkamwaters.co.ke",
+                            Role = "Admin",
+                            IsBootstrap = true,
+                            IsActive = true,
+                            CreatedDate = DateTime.UtcNow
+                        };
+                        admin.PasswordHash = passwordHasher.HashPassword(admin, "Admin123!");
+                        
+                        context.Users.Add(admin);
+                        await context.SaveChangesAsync();
+                        Console.WriteLine("[INFO] Default admin user created - Username: admin, Password: Admin123!");
+                    }
                     
-                    Console.WriteLine("✅ Database initialization completed successfully!");
+                    Console.WriteLine("[INFO] Database initialization completed successfully!");
                 }
                 else
                 {
-                    Console.WriteLine("❌ Cannot connect to database. Check connection string and database availability.");
+                    Console.WriteLine("[ERROR] Cannot connect to database. Check connection string and database availability.");
                 }
             }
             catch (Exception ex)
             {
                 var logger = services.GetRequiredService<ILogger<Program>>();
-                logger.LogError(ex, "❌ An error occurred while initializing the database.");
-                Console.WriteLine($"❌ Database initialization failed: {ex.Message}");
+                logger.LogError(ex, "[ERROR] An error occurred while initializing the database.");
+                Console.WriteLine($"[ERROR] Database initialization failed: {ex.Message}");
                 
                 // Don't stop the application, let it run without database for now
-                Console.WriteLine("⚠️ Application will continue without database initialization.");
+                Console.WriteLine("[WARN] Application will continue without database initialization.");
             }
         }
 

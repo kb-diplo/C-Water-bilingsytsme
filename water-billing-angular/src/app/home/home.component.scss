@@ -24,6 +24,31 @@
   border-bottom: 1px solid #e5e7eb;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   
+  // Mobile hamburger menu styling
+  .navbar-toggler {
+    border: 2px solid var(--primary-blue) !important;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    background: transparent;
+    transition: all 0.3s ease;
+    
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba(8, 145, 178, 0.25) !important;
+      outline: none;
+    }
+    
+    &:hover {
+      background: rgba(8, 145, 178, 0.1);
+      border-color: var(--secondary-blue) !important;
+    }
+    
+    .navbar-toggler-icon {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%230891b2' stroke-linecap='round' stroke-miterlimit='10' stroke-width='3' d='m4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+      width: 1.5em;
+      height: 1.5em;
+    }
+  }
+  
   .navbar-brand {
     text-decoration: none;
     
@@ -560,6 +585,41 @@
 
 // Responsive Design
 @media (max-width: 768px) {
+  .navbar {
+    padding: 0.75rem 0;
+    
+    .navbar-brand .brand-logo .brand-text {
+      font-size: 0.9rem;
+    }
+    
+    .navbar-collapse {
+      background: white;
+      border-radius: 8px;
+      margin-top: 1rem;
+      padding: 1rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e5e7eb;
+    }
+    
+    .nav-link {
+      padding: 0.75rem 1rem !important;
+      margin: 0.25rem 0;
+      border-radius: 6px;
+      text-align: center;
+      
+      &:hover, &.active {
+        background-color: rgba(8, 145, 178, 0.1) !important;
+      }
+    }
+    
+    .btn-login {
+      margin-top: 1rem;
+      width: 100%;
+      text-align: center;
+      padding: 1rem 2rem;
+    }
+  }
+
   .hero-title {
     font-size: 2.5rem;
   }
@@ -578,6 +638,45 @@
 
   .feature-card {
     margin-bottom: 2rem;
+  }
+}
+
+// Extra small devices (phones, 576px and down)
+@media (max-width: 576px) {
+  .navbar {
+    .navbar-brand .brand-logo .brand-text {
+      font-size: 0.8rem;
+    }
+    
+    .navbar-toggler {
+      padding: 0.4rem 0.6rem;
+    }
+  }
+  
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-description {
+    font-size: 1rem;
+  }
+  
+  .hero-buttons {
+    .btn-login-hero, .btn-learn-more {
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      width: 100%;
+      text-align: center;
+    }
+  }
+  
+  .section-title {
+    font-size: 1.8rem;
+  }
+  
+  .feature-card {
+    padding: 2rem 1.5rem;
   }
 }
 

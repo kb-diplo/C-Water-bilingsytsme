@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { CookieConsentComponent } from './shared/cookie-consent/cookie-consent.component';
+import { CookieConsentComponent } from './shared/components/cookie-consent/cookie-consent.component';
 
 @Component({
   selector: 'app-root',

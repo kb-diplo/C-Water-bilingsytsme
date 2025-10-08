@@ -1,1 +1,70 @@
 /* You can add global styles to this file, and also import other style files */
+
+// Global Mobile Optimizations
+* {
+  box-sizing: border-box;
+}
+
+// Touch-friendly buttons
+.btn {
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+}
+
+// Responsive tables
+.table-responsive {
+  @media (max-width: 768px) {
+    border: none;
+    
+    .table {
+      font-size: 0.875rem;
+      
+      th, td {
+        padding: 0.5rem 0.25rem;
+        white-space: nowrap;
+      }
+      
+      // Hide less important columns on mobile
+      .d-none-mobile {
+        display: none !important;
+      }
+    }
+  }
+}
+
+// Mobile-friendly forms
+.form-control, .form-select {
+  @media (max-width: 768px) {
+    font-size: 16px; // Prevents zoom on iOS
+    min-height: 44px;
+  }
+}
+
+// Mobile-friendly modals
+.modal {
+  @media (max-width: 768px) {
+    .modal-dialog {
+      margin: 0.5rem;
+      max-width: calc(100vw - 1rem);
+    }
+    
+    .modal-content {
+      border-radius: 8px;
+    }
+    
+    .modal-body {
+      padding: 1rem;
+    }
+  }
+}
+
+// Improved touch targets
+a, button, .btn, .nav-link {
+  @media (max-width: 768px) {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
