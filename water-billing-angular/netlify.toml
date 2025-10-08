@@ -8,48 +8,49 @@
   to = "/home"
   status = 301
 
-# Don't redirect static assets - serve them directly
+# Explicit static file handling - prevent redirects
+[[redirects]]
+  from = "/polyfills-*.js"
+  to = "/polyfills-:splat.js"
+  status = 200
+
+[[redirects]]
+  from = "/scripts-*.js"
+  to = "/scripts-:splat.js"
+  status = 200
+
+[[redirects]]
+  from = "/main-*.js"
+  to = "/main-:splat.js"
+  status = 200
+
+[[redirects]]
+  from = "/chunk-*.js"
+  to = "/chunk-:splat.js"
+  status = 200
+
+[[redirects]]
+  from = "/styles-*.css"
+  to = "/styles-:splat.css"
+  status = 200
+
+# Generic static assets
 [[redirects]]
   from = "/*.js"
-  to = "/:splat"
+  to = "/:splat.js"
   status = 200
-  force = false
 
 [[redirects]]
   from = "/*.css"
-  to = "/:splat"
+  to = "/:splat.css"
   status = 200
-  force = false
 
-[[redirects]]
-  from = "/*.png"
-  to = "/:splat"
-  status = 200
-  force = false
-
-[[redirects]]
-  from = "/*.jpg"
-  to = "/:splat"
-  status = 200
-  force = false
-
-[[redirects]]
-  from = "/*.ico"
-  to = "/:splat"
-  status = 200
-  force = false
-
-[[redirects]]
-  from = "/*.svg"
-  to = "/:splat"
-  status = 200
-  force = false
-
-# Angular SPA fallback - only for non-file requests
+# Angular SPA fallback - ONLY for routes without file extensions
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+  conditions = {Role = ["document"]}
 
 [[headers]]
   for = "/*"
