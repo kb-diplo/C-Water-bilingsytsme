@@ -113,39 +113,24 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   
   <script>
-    console.log('🚀 Index.html loaded successfully');
-    console.log('📍 Current URL:', window.location.href);
-    console.log('🔗 Current Path:', window.location.pathname);
-    
     window.addEventListener('load', function() {
-      console.log('📦 Window load event fired');
       const loader = document.getElementById('initial-loader');
       if (loader) {
-        console.log('✅ Loader found, hiding it');
         loader.style.display = 'none';
-      } else {
-        console.log('❌ Loader not found');
       }
     });
     
     setTimeout(function() {
-      console.log('⏰ 3-second fallback triggered');
       const loader = document.getElementById('initial-loader');
       if (loader) {
-        console.log('✅ Fallback: Loader found, hiding it');
         loader.style.display = 'none';
-      } else {
-        console.log('❌ Fallback: Loader not found');
       }
     }, 3000);
     
     setTimeout(function() {
       const appRoot = document.querySelector('app-root');
       if (appRoot && appRoot.innerHTML.trim() === '') {
-        console.log('❌ Angular app-root is empty - Angular may not be loading');
-        document.body.innerHTML += '<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: red; color: white; padding: 20px; z-index: 99999;">Angular failed to load. Check console for errors.</div>';
-      } else {
-        console.log('✅ Angular app-root has content');
+        document.body.innerHTML += '<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #dc2626; color: white; padding: 20px; border-radius: 8px; z-index: 99999; font-family: Arial, sans-serif;"><h3>⚠️ Loading Issue</h3><p>Please refresh the page or check your connection.</p></div>';
       }
     }, 5000);
   </script>

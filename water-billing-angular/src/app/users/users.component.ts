@@ -27,17 +27,14 @@ export class UsersComponent implements OnInit, OnDestroy {
   paginatedUsers: UserDto[] = [];
   loading = true;
   
-  // Filter properties
   selectedRole = '';
   selectedStatus = '';
   searchTerm = '';
   
-  // Pagination properties
   currentPage = 1;
   pageSize = 10;
   totalPages = 0;
   
-  // Caching and performance
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
   showCreateModal = false;
@@ -62,7 +59,6 @@ export class UsersComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private cacheService: CacheService
   ) {
-    // Setup debounced search
     this.searchSubject.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -86,11 +82,10 @@ export class UsersComponent implements OnInit, OnDestroy {
     console.log('Loading users with caching');
     this.loading = true;
     
-    // Use cache service with 5-minute cache duration
     this.cacheService.get(
       'users-list',
       () => this.http.get<UserDto[]>(`${this.apiUrl}/auth/users`),
-      5 * 60 * 1000 // 5 minutes
+      5 * 60 * 1000
     ).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
@@ -103,7 +98,7 @@ export class UsersComponent implements OnInit, OnDestroy {
         }
         
         this.users = users;
-        this.applyFilters(); // Apply initial filters
+        this.applyFilters();
         this.loading = false;
       },
       error: (error) => {
@@ -118,13 +113,11 @@ export class UsersComponent implements OnInit, OnDestroy {
         this.users = [];
         this.loading = false;
         
-        // Show error message for critical errors
         if (error.status === 401 || error.status === 403) {
           Swal.fire('Access Denied', 'You do not have permission to view users', 'error');
         } else if (error.status === 500) {
           Swal.fire('Server Error', 'Unable to load users. Please try again later.', 'error');
         }
-        // For other errors, just show empty table
       }
     });
   }
@@ -156,7 +149,6 @@ export class UsersComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Add validation for password length
     if (this.newUser.password.length < 6) {
       Swal.fire('Error', 'Password must be at least 6 characters long', 'error');
       return;
@@ -248,7 +240,6 @@ export class UsersComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Add validation for password if provided
     if (this.editUser.password && this.editUser.password.length < 6) {
       Swal.fire('Error', 'Password must be at least 6 characters long if changing', 'error');
       return;
@@ -263,7 +254,6 @@ export class UsersComponent implements OnInit, OnDestroy {
       IsActive: this.editUser.isActive
     };
 
-    // Only include password if it's provided
     if (this.editUser.password && this.editUser.password.trim() !== '') {
       updateData.Password = this.editUser.password;
     }
@@ -318,7 +308,6 @@ export class UsersComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Check if trying to delete current user
     const currentUser = this.authService.getCurrentUser();
     if (currentUser && currentUser.username === username) {
       Swal.fire('Error', 'You cannot delete your own account', 'error');
@@ -340,10 +329,8 @@ export class UsersComponent implements OnInit, OnDestroy {
           next: (response) => {
             console.log('User delete response:', response);
             
-            // Remove user from local array immediately for better UX
             this.users = this.users.filter(u => this.getUserUsername(u) !== username);
             
-            // Also reload from server to ensure consistency
             this.loadUsers();
             
             Swal.fire('Deleted', 'User has been deleted successfully!', 'success');
@@ -363,7 +350,6 @@ export class UsersComponent implements OnInit, OnDestroy {
             } else if (error.status === 403) {
               errorMessage = 'You do not have permission to delete this user';
             } else if (error.status === 400) {
-              // Handle foreign key constraint errors
               if (error.error && typeof error.error === 'string') {
                 if (error.error.includes('REFERENCE constraint') || 
                     error.error.includes('foreign key') ||
@@ -395,18 +381,15 @@ export class UsersComponent implements OnInit, OnDestroy {
   applyFilters(): void {
     let filtered = [...this.users];
 
-    // Apply role filter
     if (this.selectedRole) {
       filtered = filtered.filter(user => this.getUserRole(user) === this.selectedRole);
     }
 
-    // Apply status filter
     if (this.selectedStatus) {
       const isActive = this.selectedStatus === 'active';
       filtered = filtered.filter(user => this.getUserIsActive(user) === isActive);
     }
 
-    // Apply search filter
     if (this.searchTerm.trim()) {
       const searchLower = this.searchTerm.toLowerCase();
       filtered = filtered.filter(user =>
@@ -499,7 +482,6 @@ export class UsersComponent implements OnInit, OnDestroy {
       'Created Date': this.getUserCreatedDate(user)
     }));
 
-    // Convert to UserDto format for existing download method
     this.downloadUsers(this.filteredUsers, 'filtered_users');
   }
 
@@ -507,7 +489,6 @@ export class UsersComponent implements OnInit, OnDestroy {
     return user.id || index;
   }
 
-  // Helper methods to handle both camelCase and PascalCase field names
   getUserId(user: any): number {
     return user.id || user.Id || 0;
   }
@@ -543,12 +524,10 @@ export class UsersComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Download methods
   downloadAllUsers(): void {
     this.downloadUsers(this.users, 'all-users');
   }
 
-  // Legacy methods - now use downloadFilteredUsers() instead
 
   private downloadUsers(users: UserDto[], filename: string): void {
     if (users.length === 0) {
@@ -565,7 +544,6 @@ export class UsersComponent implements OnInit, OnDestroy {
       'Created Date': this.getUserCreatedDate(user)
     }));
 
-    // Generate PDF
     this.generatePDF(exportData, filename, users.length);
   }
 
@@ -593,36 +571,30 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   private generatePDF(data: any[], filename: string, count: number): void {
     try {
-      // Create new PDF document
       const doc = new jsPDF();
       
-      // Add header
       doc.setFontSize(20);
       doc.setTextColor(40, 40, 40);
       doc.text('Denkam Waters - Users Report', 105, 20, { align: 'center' });
       
-      // Add generation info
       doc.setFontSize(12);
       doc.setTextColor(100, 100, 100);
       doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, 30, { align: 'center' });
       doc.text(`Total Users: ${count}`, 105, 37, { align: 'center' });
       
-      // Add line separator
       doc.setDrawColor(200, 200, 200);
       doc.line(20, 45, 190, 45);
       
-      // Prepare table data
       const headers = Object.keys(data[0]);
       const rows = data.map(row => Object.values(row).map(val => String(val || '')));
       
-      // Generate table using autoTable
       autoTable(doc, {
         head: [headers],
         body: rows as any,
         startY: 50,
         theme: 'grid',
         headStyles: {
-          fillColor: [78, 115, 223], // Blue header
+          fillColor: [78, 115, 223],
           textColor: 255,
           fontSize: 10,
           fontStyle: 'bold'
@@ -636,16 +608,15 @@ export class UsersComponent implements OnInit, OnDestroy {
         },
         margin: { top: 50, left: 20, right: 20 },
         columnStyles: {
-          0: { cellWidth: 20 }, // ID column
-          1: { cellWidth: 35 }, // Username
-          2: { cellWidth: 50 }, // Email
-          3: { cellWidth: 25 }, // Role
-          4: { cellWidth: 25 }, // Status
-          5: { cellWidth: 35 }  // Created Date
+          0: { cellWidth: 20 },
+          1: { cellWidth: 35 },
+          2: { cellWidth: 50 },
+          3: { cellWidth: 25 },
+          4: { cellWidth: 25 },
+          5: { cellWidth: 35 }
         }
       });
       
-      // Add footer
       const pageCount = doc.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
@@ -655,7 +626,6 @@ export class UsersComponent implements OnInit, OnDestroy {
         doc.text(`Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
       }
       
-      // Save the PDF
       doc.save(`${filename}-${new Date().toISOString().split('T')[0]}.pdf`);
       
       // Show success message

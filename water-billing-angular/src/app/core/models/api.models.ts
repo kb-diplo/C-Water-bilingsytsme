@@ -1,6 +1,6 @@
-// API Models and DTOs based on C# backend analysis
+// API Models and DTOs
 
-// Authentication DTOs
+// Authentication
 export interface LoginDto {
   username: string;
   password: string;
@@ -10,7 +10,7 @@ export interface RegisterDto {
   username: string;
   email: string;
   password: string;
-  role: string; // Admin, MeterReader, Client
+  role: string;
 }
 
 export interface UserResponse {

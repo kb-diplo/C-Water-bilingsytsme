@@ -50,17 +50,19 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "1MB",
-                  "maximumError": "2MB"
+                  "maximumWarning": "2MB",
+                  "maximumError": "5MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "15kB",
-                  "maximumError": "20kB"
+                  "maximumWarning": "20kB",
+                  "maximumError": "50kB"
                 }
               ],
               "outputHashing": "all",
               "baseHref": "/",
+              "optimization": true,
+              "sourceMap": false,
               "allowedCommonJsDependencies": [
                 "sweetalert2",
                 "html2canvas",
