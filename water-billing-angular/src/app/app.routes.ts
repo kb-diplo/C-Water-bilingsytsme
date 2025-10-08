@@ -15,26 +15,26 @@ export const routes: Routes = [
     loadComponent: () => import('./home/home.component').then(m => m.HomeComponent)
   },
   {
-    path: '',
+    path: 'dashboard',
     loadComponent: () => import('./shared/layout/layout.component').then(m => m.LayoutComponent),
     canActivate: [AuthGuard],
     children: [
       {
-        path: 'dashboard',
+        path: '',
         loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent)
       },
       {
-        path: 'dashboard/admin',
+        path: 'admin',
         loadComponent: () => import('./dashboard/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
         data: { roles: ['Admin'] }
       },
       {
-        path: 'dashboard/meter-reader',
+        path: 'meter-reader',
         loadComponent: () => import('./dashboard/meter-reader-dashboard/meter-reader-dashboard.component').then(m => m.MeterReaderDashboardComponent),
         data: { roles: ['MeterReader'] }
       },
       {
-        path: 'dashboard/client',
+        path: 'client',
         loadComponent: () => import('./dashboard/client-dashboard/client-dashboard.component').then(m => m.ClientDashboardComponent),
         data: { roles: ['Client', 'Customer'] }
       },
