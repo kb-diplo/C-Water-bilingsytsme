@@ -15,6 +15,17 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.updateActiveSection();
+    // Hide the initial loader when home component loads
+    this.hideInitialLoader();
+  }
+
+  private hideInitialLoader(): void {
+    setTimeout(() => {
+      const loader = document.getElementById('initial-loader');
+      if (loader) {
+        loader.style.display = 'none';
+      }
+    }, 100);
   }
 
   ngOnDestroy(): void {
