@@ -435,7 +435,7 @@ namespace MyApi.Controllers
         // JWT Generator
         private string GenerateJwtToken(Users user)
         {
-            var keyString = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is not configured");
+            var keyString = _configuration["Jwt:Key"] ?? Environment.GetEnvironmentVariable("JWT_KEY") ?? "DenkamWaters2024SecretKeyMinimum32Characters!";
             var keyBytes = Encoding.UTF8.GetBytes(keyString);
             var key = new SymmetricSecurityKey(keyBytes);
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -448,11 +448,15 @@ namespace MyApi.Controllers
                 new(ClaimTypes.NameIdentifier, user.Id.ToString())
             };
 
+            var jwtIssuer = _configuration["Jwt:Issuer"] ?? Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "DenkamWaters";
+            var jwtAudience = _configuration["Jwt:Audience"] ?? Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "DenkamWatersUsers";
+            var expireMinutes = _configuration["Jwt:ExpireMinutes"] ?? Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES") ?? "30";
+
             var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
+                issuer: jwtIssuer,
+                audience: jwtAudience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(Convert.ToDouble(_configuration["Jwt:ExpireMinutes"] ?? "30")),
+                expires: DateTime.UtcNow.AddMinutes(Convert.ToDouble(expireMinutes)),
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);

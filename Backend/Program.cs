@@ -244,9 +244,12 @@ public partial class Program
             c.DocInclusionPredicate((name, api) => true);
         });
 
-        // Configure JWT Authentication
-        var jwtSettings = builder.Configuration.GetSection("Jwt");
-        var keyBytes = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
+        // Configure JWT Authentication with fallback to environment variables
+        var jwtKey = builder.Configuration["Jwt:Key"] ?? Environment.GetEnvironmentVariable("JWT_KEY") ?? "DenkamWaters2024SecretKeyMinimum32Characters!";
+        var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "DenkamWaters";
+        var jwtAudience = builder.Configuration["Jwt:Audience"] ?? Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "DenkamWatersUsers";
+        
+        var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
         var key = new SymmetricSecurityKey(keyBytes);
         
         // Configure JWT Bearer authentication
@@ -263,8 +266,8 @@ public partial class Program
                 ValidateAudience = true,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = jwtSettings["Issuer"],
-                ValidAudience = jwtSettings["Audience"],
+                ValidIssuer = jwtIssuer,
+                ValidAudience = jwtAudience,
                 IssuerSigningKey = key,
                 RoleClaimType = ClaimTypes.Role,
                 NameClaimType = ClaimTypes.Name,
@@ -386,20 +389,27 @@ public partial class Program
                     {
                         Console.WriteLine("[INFO] Creating default admin user...");
                         var passwordHasher = services.GetRequiredService<IPasswordHasher<Users>>();
+                        
+                        // Get admin password from environment variable or use default
+                        var adminPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "TempPass123!";
+                        var adminUsername = Environment.GetEnvironmentVariable("ADMIN_USERNAME") ?? "admin";
+                        var adminEmail = Environment.GetEnvironmentVariable("ADMIN_EMAIL") ?? "admin@denkamwaters.co.ke";
+                        
                         var admin = new Users
                         {
-                            Username = "admin",
-                            Email = "admin@denkamwaters.co.ke",
+                            Username = adminUsername,
+                            Email = adminEmail,
                             Role = "Admin",
                             IsBootstrap = true,
                             IsActive = true,
                             CreatedDate = DateTime.UtcNow
                         };
-                        admin.PasswordHash = passwordHasher.HashPassword(admin, "Admin123!");
+                        admin.PasswordHash = passwordHasher.HashPassword(admin, adminPassword);
                         
                         context.Users.Add(admin);
                         await context.SaveChangesAsync();
-                        Console.WriteLine("[INFO] Default admin user created - Username: admin, Password: Admin123!");
+                        Console.WriteLine($"[INFO] Default admin user created - Username: {adminUsername}");
+                        Console.WriteLine("[WARN] Please change the default admin password after first login!");
                     }
                     
                     Console.WriteLine("[INFO] Database initialization completed successfully!");
