@@ -13,10 +13,9 @@ import { CookieService } from '../../core/services/cookie.service';
           <i class="fas fa-cookie-bite"></i>
         </div>
         <div class="cookie-text">
-          <h4>We Value Your Privacy</h4>
+          <h4>🍪 Cookie Notice</h4>
           <p>
-            Denkam Waters uses essential cookies to ensure our water billing system works properly and securely. 
-            We store your login session and preferences locally to provide you with the best experience.
+            We use essential cookies for login and preferences. No tracking or ads.
           </p>
           <div class="cookie-details" *ngIf="showDetails">
             <h5>What we store:</h5>
@@ -49,16 +48,15 @@ import { CookieService } from '../../core/services/cookie.service';
     .cookie-consent-banner {
       position: fixed;
       bottom: -100%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 90%;
-      max-width: 600px;
-      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-      border: 2px solid #0891b2;
-      border-radius: 16px;
-      box-shadow: 0 20px 40px rgba(8, 145, 178, 0.2);
+      left: 20px;
+      width: 320px;
+      max-width: calc(100vw - 40px);
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
       z-index: 10000;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.3s ease-out;
       backdrop-filter: blur(10px);
       overflow: hidden;
     }
@@ -80,23 +78,22 @@ import { CookieService } from '../../core/services/cookie.service';
 
     .cookie-content {
       display: flex;
-      padding: 24px;
-      gap: 20px;
+      padding: 16px;
+      gap: 12px;
       align-items: flex-start;
     }
 
     .cookie-icon {
       flex-shrink: 0;
-      width: 60px;
-      height: 60px;
+      width: 32px;
+      height: 32px;
       background: linear-gradient(135deg, #0891b2, #164e63);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
-      font-size: 1.5rem;
-      box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3);
+      font-size: 0.9rem;
     }
 
     .cookie-text {
@@ -104,17 +101,17 @@ import { CookieService } from '../../core/services/cookie.service';
     }
 
     .cookie-text h4 {
-      margin: 0 0 12px 0;
+      margin: 0 0 6px 0;
       color: #164e63;
-      font-size: 1.25rem;
+      font-size: 0.9rem;
       font-weight: 600;
     }
 
     .cookie-text p {
-      margin: 0 0 16px 0;
-      color: #4b5563;
-      line-height: 1.5;
-      font-size: 0.95rem;
+      margin: 0 0 12px 0;
+      color: #64748b;
+      line-height: 1.4;
+      font-size: 0.8rem;
     }
 
     .cookie-details {
@@ -161,51 +158,51 @@ import { CookieService } from '../../core/services/cookie.service';
 
     .cookie-actions {
       display: flex;
-      gap: 12px;
-      padding: 0 24px 24px;
+      gap: 8px;
+      padding: 0 16px 16px;
       justify-content: flex-end;
       align-items: center;
     }
 
     .btn-details {
       background: transparent;
-      border: 2px solid #0891b2;
-      color: #0891b2;
-      padding: 10px 20px;
-      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      color: #64748b;
+      padding: 6px 12px;
+      border-radius: 6px;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.9rem;
+      gap: 4px;
+      font-size: 0.75rem;
     }
 
     .btn-details:hover {
-      background: #0891b2;
-      color: white;
-      transform: translateY(-1px);
+      background: #f1f5f9;
+      border-color: #94a3b8;
     }
 
     .btn-accept {
-      background: linear-gradient(135deg, #0891b2, #164e63);
+      background: linear-gradient(135deg, #0891b2, #0284c7);
       border: none;
       color: white;
-      padding: 12px 24px;
-      border-radius: 8px;
+      padding: 8px 16px;
+      border-radius: 6px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
       display: flex;
       align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3);
+      gap: 4px;
+      font-size: 0.75rem;
+      box-shadow: 0 2px 8px rgba(8, 145, 178, 0.2);
     }
 
     .btn-accept:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(8, 145, 178, 0.4);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3);
     }
 
     @media (max-width: 768px) {

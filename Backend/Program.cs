@@ -117,8 +117,7 @@ public partial class Program
         // Register PasswordHasher
         builder.Services.AddScoped<IPasswordHasher<Users>, PasswordHasher<Users>>();
 
-        // Add database seeder
-        builder.Services.AddScoped<DatabaseSeeder>();
+        // Database seeder removed - clean setup
 
         // Configure Email Settings
         builder.Services.Configure<EmailSettings>(
@@ -379,22 +378,7 @@ public partial class Program
                         Console.WriteLine("✅ Database schema is up to date!");
                     }
                     
-                    Console.WriteLine("🌱 Seeding initial data...");
-                    var seeder = services.GetRequiredService<DatabaseSeeder>();
-                    
-                    try
-                    {
-                        await seeder.SeedAdminUserAsync();
-                        Console.WriteLine("✅ Admin user seeding completed");
-                    }
-                    catch (Exception seedEx)
-                    {
-                        Console.WriteLine($"⚠️ Admin user seeding failed: {seedEx.Message}");
-                        // Continue with test clients even if admin seeding fails
-                    }
-                    
-                    // Skip test clients seeding - only create admin user
-                    Console.WriteLine("⏭️ Skipping test clients seeding (admin only setup)");
+                    Console.WriteLine("✅ Database schema ready - no seeding required (clean setup)");
                     
                     Console.WriteLine("✅ Database initialization completed successfully!");
                 }

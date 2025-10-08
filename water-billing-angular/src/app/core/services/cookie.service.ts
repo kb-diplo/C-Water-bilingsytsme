@@ -103,7 +103,7 @@ export class CookieService {
    * Get privacy-friendly summary of stored data
    */
   getStoredDataSummary(): { key: string, size: string, type: string }[] {
-    const summary = [];
+    const summary: { key: string, size: string, type: string }[] = [];
     
     if (localStorage.getItem('token')) {
       summary.push({
