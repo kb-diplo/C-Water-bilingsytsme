@@ -11,12 +11,16 @@ export class HealthService {
   constructor(private http: HttpClient) {}
 
   checkBackendHealth(): Observable<any> {
+    // Use the environment API URL and fallback to default
+    const baseUrl = environment.apiUrl.replace('/api', '');
     const healthUrls = [
-      'https://localhost:7001/api/hello/test',
-      'http://localhost:5000/api/hello/test',
-      'https://localhost:5001/api/hello/test',
-      'http://localhost:7000/api/hello/test'
+      `${baseUrl}/api/health`,
+      `${baseUrl}/`,
+      'https://c-water-bilingsytsme.onrender.com/api/health',
+      'https://c-water-bilingsytsme.onrender.com/'
     ];
+    
+    console.log('Checking backend health at:', healthUrls[0]);
 
     // Try each URL and return the first successful one
     return this.tryUrls(healthUrls);
