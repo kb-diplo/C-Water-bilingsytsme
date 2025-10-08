@@ -1,18 +1,20 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
-import { provideRouter, withDebugTracing } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { importProvidersFrom } from '@angular/core';
+import { importProvidersFrom, ErrorHandler } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { routes } from './app/app.routes';
 import { authInterceptor } from './app/core/interceptors/auth.interceptor';
+import { GlobalErrorHandler } from './app/core/services/error-handler.service';
 
 
 bootstrapApplication(AppComponent, {
   providers: [
-    provideRouter(routes, withDebugTracing()),
+    provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
     importProvidersFrom(
       ReactiveFormsModule,
       FormsModule,

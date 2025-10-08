@@ -5,6 +5,7 @@ import { tap, catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { LoginDto, RegisterDto, UserResponse, UserDto } from '../models/api.models';
 import { environment } from '../../../environments/environment';
+import { LoggerService } from './logger.service';
 
 export interface User {
   id: number;
@@ -36,7 +37,8 @@ export class AuthService {
 
   constructor(
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private logger: LoggerService
   ) {
     this.loadUserFromStorage();
   }
@@ -45,9 +47,6 @@ export class AuthService {
     return this.http.post<UserResponse>(`${this.apiUrl}/auth/login`, credentials)
       .pipe(
         tap(response => {
-          if (!environment.production) {
-            console.log('🔐 AuthService.login() response:', response);
-          }
 
           if (response.token) {
             this.setToken(response.token);
