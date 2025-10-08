@@ -34,7 +34,7 @@
                 "output": "assets"
               },
               {
-                "glob": "test.html",
+                "glob": "_redirects",
                 "input": "src",
                 "output": "/"
               }

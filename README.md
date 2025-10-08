@@ -1,6 +1,11 @@
-# 💧 Water Billing System
+# 💧 Denkam Waters - Water Billing System
 
-A comprehensive water billing management system built with **Angular 17** frontend and **ASP.NET Core 8** backend, featuring role-based access control and modern UI/UX design.
+A comprehensive water billing management system built with **Angular 17** frontend and **ASP.NET Core 8** backend, featuring role-based access control, M-Pesa integration, and modern UI/UX design.
+
+## 🌐 Live Demo
+- **Frontend**: [https://denkamwaterskenya.netlify.app](https://denkamwaterskenya.netlify.app)
+- **Backend API**: [https://c-water-bilingsytsme.onrender.com](https://c-water-bilingsytsme.onrender.com)
+- **API Documentation**: [https://c-water-bilingsytsme.onrender.com/swagger](https://c-water-bilingsytsme.onrender.com/swagger)
 
 ## 🌟 Features
 
@@ -18,9 +23,10 @@ A comprehensive water billing management system built with **Angular 17** fronte
 ### 💼 Core Functionality
 - **Customer Management**: CRUD operations with search and filtering
 - **Billing System**: Automated bill generation and status tracking
-- **Payment Processing**: Payment recording and history management
-- **Meter Readings**: Reading entry and consumption analytics
+- **Payment Processing**: M-Pesa STK Push integration, payment recording and history
+- **Meter Readings**: Monthly reading restrictions, billing period tracking
 - **Reports & Analytics**: Financial reports with data visualization
+- **Email System**: Bill reminders, payment confirmations, password reset
 - **System Settings**: Configurable billing rates and system parameters
 
 ### 🎨 Modern UI/UX
@@ -33,9 +39,17 @@ A comprehensive water billing management system built with **Angular 17** fronte
 
 - **Backend**: ASP.NET Core 8 Web API
 - **Frontend**: Angular 17 with standalone components
-- **Database**: SQL Server with Entity Framework Core
+- **Database**: PostgreSQL (Production) / SQL Server (Development)
 - **Authentication**: JWT tokens with role-based policies
+- **Payments**: M-Pesa Daraja API integration
+- **Email**: SMTP with professional templates
+- **Deployment**: Netlify (Frontend) + Render (Backend)
 - **API Documentation**: Swagger/OpenAPI integration
+
+### 📚 Documentation
+- **[Architecture Guide](ARCHITECTURE.md)**: Complete system architecture
+- **[API Documentation](API_DOCUMENTATION.md)**: Full API reference
+- **[Quick Start Guide](QUICK_START_GUIDE.md)**: Setup instructions
 
 ## 🚀 Quick Start
 
@@ -86,7 +100,7 @@ ng serve
 
 ## 🔑 Default Admin Account
 - **Username**: admin
-- **Password**: (as configured in appsettings.json)
+- **Password**: Admin123! (Bootstrap admin for initial setup)
 
 ## 📊 API Endpoints
 
@@ -108,7 +122,9 @@ ng serve
 
 ### Payments (`/api/payments`)
 - `POST /` - Record payment
+- `POST /mpesa/stkpush` - M-Pesa STK Push payment
 - `GET /` - All payments (Admin)
+- `GET /{id}/receipt` - Download payment receipt
 
 ### Reports (`/api/reports`)
 - `GET /financial` - Financial reports (Admin)
@@ -144,11 +160,31 @@ The project follows a structured commit history for easy tracking:
 12. **Advanced UI** - Reports and analytics
 13. **Final Polish** - Styling and assets
 
-## 📚 Documentation
+## 🎯 Key Features Implemented
 
-- **API Documentation**: Visit `https://localhost:44372/swagger` when backend is running
-- **Database Schema**: See `Backend/Models/` for entity definitions
-- **Frontend Components**: Organized in `water-billing-angular/src/app/`
+### 🔄 Monthly Reading System
+- **One reading per client per month** with validation
+- **Automatic billing period tracking** (YYYY-MM format)
+- **Bill generation** for non-zero usage
+- **Previous reading display** with smart validation
+
+### 💳 M-Pesa Integration
+- **STK Push payments** directly from client dashboard
+- **Phone number validation** (254XXXXXXXXX format)
+- **Real-time payment processing**
+- **Payment confirmation emails**
+
+### 📧 Email System
+- **Bill reminder emails** with overdue/due soon logic
+- **Payment confirmation emails** with receipt details
+- **Password reset emails** with secure tokens
+- **Professional HTML templates** with company branding
+
+### 🏢 Company Information
+- **Denkam Waters Company Limited**
+- **Location**: Ikinu, Kiambu County, Kenya
+- **Phone**: +254 757 690 915
+- **Email**: info@denkamwaters.co.ke
 
 ## 🛠️ Configuration
 
