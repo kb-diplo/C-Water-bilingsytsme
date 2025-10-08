@@ -114,6 +114,13 @@
   
   <script>
     console.log('🚀 Denkam Waters - Loading Application');
+    console.log('📍 Location:', window.location.href);
+    
+    // Redirect root to home
+    if (window.location.pathname === '/') {
+      console.log('🔄 Redirecting to /home');
+      window.location.replace('/home');
+    }
     
     window.addEventListener('load', function() {
       const loader = document.getElementById('initial-loader');
@@ -133,7 +140,7 @@
       const appRoot = document.querySelector('app-root');
       if (appRoot && appRoot.innerHTML.trim() === '') {
         console.error('❌ Angular failed to load');
-        document.body.innerHTML += '<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #dc2626; color: white; padding: 20px; border-radius: 8px; z-index: 99999; font-family: Arial, sans-serif;"><h3>⚠️ Loading Issue</h3><p>Please refresh the page. If the issue persists, contact support.</p></div>';
+        document.body.innerHTML += '<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #dc2626; color: white; padding: 20px; border-radius: 8px; z-index: 99999; font-family: Arial, sans-serif;"><h3>⚠️ Loading Issue</h3><p>Angular failed to load. <a href="/home" style="color: #60a5fa;">Go to Home</a></p></div>';
       }
     }, 8000);
   </script>

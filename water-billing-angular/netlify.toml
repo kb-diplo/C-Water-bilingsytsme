@@ -1,6 +1,11 @@
 [build]
   publish = "dist/water-billing-angular/browser"
-  command = "npm ci && npm run build --configuration=production"
+  command = "npm ci && npm run build"
+
+[[redirects]]
+  from = "/"
+  to = "/home"
+  status = 301
 
 [[redirects]]
   from = "/*"
