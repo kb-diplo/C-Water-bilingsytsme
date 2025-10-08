@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { CookieService } from '../../core/services/cookie.service';
 
 @Component({
@@ -443,7 +443,7 @@ export class CookiePolicyComponent implements OnInit {
   hasConsent = false;
   consentDate: Date | null = null;
 
-  constructor(private cookieService: CookieService) {}
+  constructor(private cookieService: CookieService, private router: Router) {}
 
   ngOnInit(): void {
     this.storedData = this.cookieService.getStoredDataSummary();
@@ -466,6 +466,6 @@ export class CookiePolicyComponent implements OnInit {
   }
 
   goBack(): void {
-    window.history.back();
+    this.router.navigate(['/home']);
   }
 }

@@ -38,6 +38,7 @@ import { FormsModule } from '@angular/forms';
           <div class="modal-header">
             <h5 class="modal-title">Cookie Preferences</h5>
             <button type="button" class="btn-close" (click)="showSettings = false"></button>
+          </div>
           <div class="modal-body">
             <div class="cookie-category mb-4">
               <div class="d-flex justify-content-between align-items-center">

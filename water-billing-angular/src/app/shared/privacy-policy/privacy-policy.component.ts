@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 
 @Component({
   selector: 'app-privacy-policy',
@@ -384,7 +384,9 @@ import { RouterModule } from '@angular/router';
   `]
 })
 export class PrivacyPolicyComponent {
+  constructor(private router: Router) {}
+
   goBack(): void {
-    window.history.back();
+    this.router.navigate(['/home']);
   }
 }
