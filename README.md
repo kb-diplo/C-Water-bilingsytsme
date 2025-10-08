@@ -3,9 +3,7 @@
 A comprehensive water billing management system built with **Angular 17** frontend and **ASP.NET Core 8** backend, featuring role-based access control, M-Pesa integration, and modern UI/UX design.
 
 ## 🌐 Live Demo
-- **Frontend**: [https://denkamwaterskenya.netlify.app](https://denkamwaterskenya.netlify.app)
-- **Backend API**: [https://c-water-bilingsytsme.onrender.com](https://c-water-bilingsytsme.onrender.com)
-- **API Documentation**: [https://c-water-bilingsytsme.onrender.com/swagger](https://c-water-bilingsytsme.onrender.com/swagger)
+- **Application**: [https://denkamwaterskenya.netlify.app](https://denkamwaterskenya.netlify.app)
 
 ## 🌟 Features
 
