@@ -17,6 +17,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   constructor(private cookieService: CookieService) {}
 
   ngOnInit(): void {
+    console.log('🏠 Home component initialized');
+    console.log('🏠 Current URL when home loads:', window.location.href);
     this.updateActiveSection();
     // Hide the initial loader when home component loads
     this.hideInitialLoader();
