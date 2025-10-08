@@ -5,12 +5,13 @@ import {
   FinancialReportDto, 
   DateRangeDto 
 } from '../models/api.models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ReportService {
-  private apiUrl = 'http://localhost:5000/api/reports';
+  private apiUrl = `${environment.apiUrl}/reports`;
 
   constructor(private http: HttpClient) {}
 

@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { SystemSettingsDto, SystemSettingsResponseDto } from '../models/api.models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SettingsService {
-  private apiUrl = 'http://localhost:5000/api/metrics'; // Note: Your backend uses MetricsController
+  private apiUrl = `${environment.apiUrl}/metrics`; // Note: Your backend uses MetricsController
 
   constructor(private http: HttpClient) {}
 

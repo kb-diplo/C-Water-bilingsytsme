@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://localhost:7297/api',
+  apiUrl: 'https://c-water-bilingsytsme.onrender.com/api',
   version: '1.0.0',
   features: {
     enableLogging: true,
