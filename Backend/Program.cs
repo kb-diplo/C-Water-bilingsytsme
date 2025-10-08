@@ -88,10 +88,11 @@ public partial class Program
             {
                 var uri = new Uri(databaseUrl);
                 var host = uri.Host;
-                var port = uri.Port;
+                var port = uri.Port == -1 ? 5432 : uri.Port; // Default PostgreSQL port
                 var database = uri.AbsolutePath.TrimStart('/');
-                var username = uri.UserInfo.Split(':')[0];
-                var password = uri.UserInfo.Split(':')[1];
+                var userInfo = uri.UserInfo.Split(':');
+                var username = userInfo[0];
+                var password = userInfo.Length > 1 ? userInfo[1] : "";
                 
                 var connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;";
                 
@@ -102,6 +103,7 @@ public partial class Program
             catch (Exception ex)
             {
                 Console.WriteLine($"Error parsing DATABASE_URL: {ex.Message}");
+                Console.WriteLine($"DATABASE_URL format should be: postgresql://username:password@host:port/database");
                 throw new InvalidOperationException($"Invalid DATABASE_URL format: {databaseUrl}", ex);
             }
         }
