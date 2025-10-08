@@ -7,13 +7,8 @@ import { CookieConsentComponent } from './shared/cookie-consent/cookie-consent.c
   standalone: true,
   imports: [RouterOutlet, CookieConsentComponent],
   template: `
-    <div>
-      <div id="debug-info" style="position: fixed; top: 0; right: 0; background: red; color: white; padding: 5px; z-index: 10000; font-size: 12px;">
-        Angular Loaded
-      </div>
-      <router-outlet></router-outlet>
-      <app-cookie-consent></app-cookie-consent>
-    </div>
+    <router-outlet></router-outlet>
+    <app-cookie-consent></app-cookie-consent>
   `,
   styleUrls: ['./app.component.scss']
 })
