@@ -6,10 +6,7 @@ import { RouterOutlet } from '@angular/router';
   standalone: true,
   imports: [RouterOutlet],
   template: `
-    <div>
-      <h1>Loading Water Billing System...</h1>
-      <router-outlet></router-outlet>
-    </div>
+    <router-outlet></router-outlet>
   `,
   styleUrls: ['./app.component.scss']
 })
