@@ -146,16 +146,20 @@ public partial class Program
                         "http://localhost:4200", 
                         "http://localhost:4201", 
                         "http://localhost:4202",
-                        "https://denkamwaterskenya.netlify.app",
                         "https://denkamwaterskenya.vercel.app",
-                        "https://denkam-waters.vercel.app",
-                        "https://denkam-waters-frontend.vercel.app",
-                        "https://*.vercel.app",
                         "https://c-water-bilingsytsme.onrender.com"
                     )
                       .AllowAnyHeader()
                       .AllowAnyMethod()
                       .AllowCredentials();
+            });
+            
+            // Temporary permissive policy for debugging
+            options.AddPolicy("AllowAll", policy =>
+            {
+                policy.AllowAnyOrigin()
+                      .AllowAnyHeader()
+                      .AllowAnyMethod();
             });
         });
 
@@ -452,8 +456,8 @@ public partial class Program
             app.UseHttpsRedirection();
         }
         
-        // Use CORS (must be before Swagger)
-        app.UseCors("AllowAngularApp");
+        // Use CORS (must be before Swagger) - temporarily using AllowAll for debugging
+        app.UseCors("AllowAll");
 
         // Enable Swagger in all environments (after CORS, before Auth)
         try
