@@ -378,13 +378,9 @@ public partial class Program
         app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
            .AllowAnonymous();
            
-        // Add root endpoint for basic connectivity test (no authentication required)
-        app.MapGet("/", () => Results.Ok(new { 
-            message = "Water Billing System API", 
-            version = "1.0", 
-            status = "running",
-            timestamp = DateTime.UtcNow 
-        })).AllowAnonymous();
+        // Redirect root URL to Swagger documentation
+        app.MapGet("/", () => Results.Redirect("/swagger"))
+           .AllowAnonymous();
 
         app.Run();
     }
