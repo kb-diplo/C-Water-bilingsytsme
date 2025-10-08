@@ -6,10 +6,10 @@
       <p class="mb-0 text-gray-600">Welcome to your admin dashboard</p>
     </div>
     <div class="d-flex align-items-center">
-      <a routerLink="/clients" class="btn btn-primary btn-sm shadow-sm mr-3">
+      <a routerLink="/dashboard/clients" class="btn btn-primary btn-sm shadow-sm mr-3">
         <i class="fas fa-users fa-sm text-white-50"></i> Manage Clients
       </a>
-      <a routerLink="/reports" class="btn btn-success btn-sm shadow-sm">
+      <a routerLink="/dashboard/reports" class="btn btn-success btn-sm shadow-sm">
         <i class="fas fa-chart-bar fa-sm text-white-50"></i> View Reports
       </a>
     </div>
@@ -23,7 +23,7 @@
         <div class="card-body">
           <div class="row no-gutters align-items-center">
             <div class="col mr-2">
-              <a routerLink="/clients">
+              <a routerLink="/dashboard/clients">
                 <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                   Total Clients
                 </div>
@@ -44,7 +44,7 @@
         <div class="card-body">
           <div class="row no-gutters align-items-center">
             <div class="col mr-2">
-              <a routerLink="/bills/ongoing">
+              <a routerLink="/dashboard/bills/ongoing">
                 <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                   Total Bills
                 </div>
@@ -65,7 +65,7 @@
         <div class="card-body">
           <div class="row no-gutters align-items-center">
             <div class="col mr-2">
-              <a routerLink="/reports">
+              <a routerLink="/dashboard/reports">
                 <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                   Total Revenue
                 </div>
@@ -86,7 +86,7 @@
         <div class="card-body">
           <div class="row no-gutters align-items-center">
             <div class="col mr-2">
-              <a routerLink="/reports">
+              <a routerLink="/dashboard/reports">
                 <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                   Outstanding
                 </div>
@@ -241,7 +241,7 @@
       <div class="card shadow">
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
           <h6 class="m-0 font-weight-bold text-primary">Recent Unpaid Bills</h6>
-          <a routerLink="/bills/ongoing" class="btn btn-sm btn-primary">View All</a>
+          <a routerLink="/dashboard/bills/ongoing" class="btn btn-sm btn-primary">View All</a>
         </div>
         <div class="card-body">
           <div *ngIf="ongoingBills.length === 0" class="text-center py-3">

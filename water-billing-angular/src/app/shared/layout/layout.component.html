@@ -160,12 +160,6 @@
 
           <!-- Right Side: User Profile Dropdown -->
           <div class="d-flex align-items-center ml-auto">
-            <!-- Quick Logout Button for easier access -->
-            <button class="btn btn-outline-danger btn-sm me-2" (click)="logout()" *ngIf="currentUser" title="Logout">
-              <i class="fas fa-sign-out-alt"></i>
-              <span class="d-none d-sm-inline ms-1">Logout</span>
-            </button>
-            
             <div class="dropdown" *ngIf="currentUser">
               <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center" 
                       type="button" 
