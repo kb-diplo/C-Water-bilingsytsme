@@ -1,6 +1,6 @@
 [build]
   publish = "dist/water-billing-angular/browser"
-  command = "npm ci && npm run build"
+  command = "npm ci && npm run build --prod"
 
 [[redirects]]
   from = "/"
@@ -11,7 +11,6 @@
   from = "/*"
   to = "/index.html"
   status = 200
-  force = false
 
 [[headers]]
   for = "/*"
