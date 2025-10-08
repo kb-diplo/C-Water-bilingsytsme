@@ -20,19 +20,5 @@ import { CookieConsentComponent } from './shared/cookie-consent/cookie-consent.c
 export class AppComponent implements OnInit {
   title = 'Water Billing System';
   
-  ngOnInit() {
-    console.log('📱 App Component Initialized');
-    console.log('📍 Current URL:', window.location.href);
-    console.log('🔗 Current Path:', window.location.pathname);
-    console.log('🔍 Hash:', window.location.hash);
-    
-    // Check if router outlet exists
-    setTimeout(() => {
-      const outlet = document.querySelector('router-outlet');
-      console.log('🔌 Router outlet found:', !!outlet);
-      if (outlet) {
-        console.log('🔌 Router outlet content:', outlet.innerHTML.length > 0 ? 'Has content' : 'Empty');
-      }
-    }, 1000);
-  }
+  ngOnInit() {}
 }

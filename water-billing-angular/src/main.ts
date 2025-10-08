@@ -8,11 +8,6 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { routes } from './app/app.routes';
 import { authInterceptor } from './app/core/interceptors/auth.interceptor';
 
-console.log('🚀 Starting Angular application...');
-console.log('🌍 Environment:', window.location.hostname);
-console.log('📍 Current URL:', window.location.href);
-console.log('🔗 Current Path:', window.location.pathname);
-console.log('🔧 Routes configured:', routes.length, 'routes');
 
 bootstrapApplication(AppComponent, {
   providers: [

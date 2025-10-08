@@ -15,6 +15,14 @@ export const routes: Routes = [
     loadComponent: () => import('./home/home.component').then(m => m.HomeComponent)
   },
   {
+    path: 'privacy-policy',
+    loadComponent: () => import('./shared/privacy-policy/privacy-policy.component').then(m => m.PrivacyPolicyComponent)
+  },
+  {
+    path: 'cookie-policy',
+    loadComponent: () => import('./shared/cookie-policy/cookie-policy.component').then(m => m.CookiePolicyComponent)
+  },
+  {
     path: 'dashboard',
     loadComponent: () => import('./shared/layout/layout.component').then(m => m.LayoutComponent),
     canActivate: [AuthGuard],
