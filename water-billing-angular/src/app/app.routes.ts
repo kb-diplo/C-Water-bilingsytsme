@@ -61,29 +61,30 @@ export const routes: Routes = [
         children: [
           {
             path: 'ongoing',
-            loadComponent: () => import('./bills/bills-list/bills-list.component').then(m => m.BillsListComponent)
+            loadComponent: () => import('./bills/bills-list/bills-list.component').then(m => m.BillsListComponent),
+            data: { roles: ['Admin', 'MeterReader', 'Client', 'Customer'] }
           },
           {
             path: 'history',
-            loadComponent: () => import('./bills/bills-list/bills-list.component').then(m => m.BillsListComponent)
+            loadComponent: () => import('./bills/bills-list/bills-list.component').then(m => m.BillsListComponent),
+            data: { roles: ['Admin', 'MeterReader', 'Client', 'Customer'] }
           }
         ]
       },
       {
         path: 'reports',
-        loadComponent: () => import('./reports/reports.component').then(m => m.ReportsComponent)
+        loadComponent: () => import('./reports/reports.component').then(m => m.ReportsComponent),
+        data: { roles: ['Admin'] }
       },
       {
         path: 'payments',
-        loadComponent: () => import('./payments/payments.component').then(m => m.PaymentsComponent)
-      },
-      {
-        path: 'readings',
-        loadComponent: () => import('./readings/readings.component').then(m => m.ReadingsComponent)
+        loadComponent: () => import('./payments/payments.component').then(m => m.PaymentsComponent),
+        data: { roles: ['Admin', 'MeterReader'] }
       },
       {
         path: 'settings',
-        loadComponent: () => import('./settings/settings.component').then(m => m.SettingsComponent)
+        loadComponent: () => import('./settings/settings.component').then(m => m.SettingsComponent),
+        data: { roles: ['Admin'] }
       },
       {
         path: 'users',

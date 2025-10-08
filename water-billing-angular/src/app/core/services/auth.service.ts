@@ -63,14 +63,14 @@ export class AuthService {
 
             this.setCurrentUser(user);
 
-            if (!environment.production) {
+            if (environment.features.enableLogging) {
               console.log('✅ User set in AuthService, current user:', this.getCurrentUser());
             }
           }
         }),
         catchError(error => {
-          // Only log in development mode
-          if (!environment.production) {
+          // Only log when logging is enabled
+          if (environment.features.enableLogging) {
             console.error('❌ Login error:', error);
             console.error('❌ Error details:', {
               status: error.status,
@@ -117,7 +117,7 @@ export class AuthService {
 
   getCurrentUser(): User | null {
     const user = this.currentUserSubject.value;
-    if (!environment.production && user) {
+    if (environment.features.enableLogging && user) {
       // Only log occasionally to avoid spam
       if (Math.random() < 0.1) {
         console.log('👤 AuthService.getCurrentUser() called:', user);
@@ -127,14 +127,14 @@ export class AuthService {
   }
 
   setCurrentUser(user: User): void {
-    if (!environment.production) {
+    if (environment.features.enableLogging) {
       console.log('💾 AuthService.setCurrentUser() called with:', user);
     }
 
     localStorage.setItem('currentUser', JSON.stringify(user));
     this.currentUserSubject.next(user);
 
-    if (!environment.production) {
+    if (environment.features.enableLogging) {
       console.log('💾 AuthService.setCurrentUser() - stored in localStorage and updated subject');
       console.log('💾 Current user after setting:', this.getCurrentUser());
     }
@@ -218,13 +218,13 @@ export class AuthService {
   getDashboardRoute(): string {
     const user = this.getCurrentUser();
     if (!user) {
-      if (!environment.production) {
+      if (environment.features.enableLogging) {
         console.warn('⚠️ No user found in getDashboardRoute()');
       }
       return '/login';
     }
 
-    if (!environment.production) {
+    if (environment.features.enableLogging) {
       console.log('🎯 AuthService.getDashboardRoute() called for user:', {
         username: user.username,
         role: user.role,
@@ -244,7 +244,7 @@ export class AuthService {
       case 'customer': // Handle both Client and Customer roles
         return '/dashboard/client';
       default:
-        if (!environment.production) {
+        if (environment.features.enableLogging) {
           console.warn('⚠️ Unknown role in getDashboardRoute():', user.role);
         }
         return '/dashboard';
@@ -255,7 +255,7 @@ export class AuthService {
     const user = this.getCurrentUser();
     
     if (!user) {
-      if (!environment.production) {
+      if (environment.features.enableLogging) {
         console.error('🚨 redirectToDashboard() called but no user found!');
       }
       this.router.navigate(['/login']);
@@ -265,7 +265,7 @@ export class AuthService {
     const dashboardRoute = this.getDashboardRoute();
 
     // Debug logging for client dashboard issue
-    if (!environment.production) {
+    if (environment.features.enableLogging) {
       console.log('🔄 AuthService.redirectToDashboard() called:', {
         user: user,
         userRole: user?.role,
@@ -280,7 +280,7 @@ export class AuthService {
       const currentUser = this.getCurrentUser();
       const finalRoute = this.getDashboardRoute();
       
-      if (!environment.production) {
+      if (environment.features.enableLogging) {
         console.log('🚀 AuthService.redirectToDashboard() executing navigation:', {
           currentUser: currentUser,
           dashboardRoute: finalRoute,

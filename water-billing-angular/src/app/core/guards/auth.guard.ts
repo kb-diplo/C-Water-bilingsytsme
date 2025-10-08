@@ -29,8 +29,8 @@ export const AuthGuard: CanActivateFn = (route, state) => {
     const hasRequiredRole = requiredRoles.some(role => role.toLowerCase() === userRole);
 
     if (!hasRequiredRole) {
-      // Log unauthorized access attempt (only in development)
-      if (!environment.production) {
+      // Log unauthorized access attempt when logging is enabled
+      if (environment.features.enableLogging) {
         console.warn(`AuthGuard: Unauthorized access attempt: User ${user.username} (${user.role}) tried to access ${state.url} which requires roles: ${requiredRoles.join(', ')}`);
       }
 
@@ -55,8 +55,8 @@ export const AuthGuard: CanActivateFn = (route, state) => {
       return false;
     }
 
-    // Log successful role-based access (only in development)
-    if (!environment.production) {
+    // Log successful role-based access when logging is enabled
+    if (environment.features.enableLogging) {
       console.log(`AuthGuard: Access granted for ${user.username} (${user.role}) to ${state.url}`);
     }
   }

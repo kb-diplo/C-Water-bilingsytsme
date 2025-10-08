@@ -52,7 +52,7 @@ export class LoginComponent implements OnInit {
         this.loading = false;
 
         // Debug logging for client redirect issue
-        if (!environment.production) {
+        if (environment.features.enableLogging) {
           console.log('🔑 Login successful:', {
             response: response,
             username: response.username,
@@ -70,7 +70,7 @@ export class LoginComponent implements OnInit {
         });
 
         // Centralized dashboard redirect (Admin, MeterReader, Client)
-        if (!environment.production) {
+        if (environment.features.enableLogging) {
           console.log('🔄 About to call redirectToDashboard() for user:', {
             username: response.username,
             role: response.role,
@@ -87,7 +87,7 @@ export class LoginComponent implements OnInit {
       error: (error) => {
         this.loading = false;
 
-        if (!environment.production) {
+        if (environment.features.enableLogging) {
           console.error('Login error details:', error);
         }
 
