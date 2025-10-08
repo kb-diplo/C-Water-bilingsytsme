@@ -21,7 +21,9 @@ export class ReadingsComponent implements OnInit {
   searchTerm = '';
   loading = true;
   showAddModal = false;
+  showInitialReadingModal = false;
   readingForm: FormGroup;
+  initialReadingForm: FormGroup;
 
   constructor(
     private readingService: ReadingService,
@@ -30,6 +32,11 @@ export class ReadingsComponent implements OnInit {
     private formBuilder: FormBuilder
   ) {
     this.readingForm = this.formBuilder.group({
+      clientId: ['', Validators.required],
+      currentReading: ['', [Validators.required, Validators.min(0)]]
+    });
+    
+    this.initialReadingForm = this.formBuilder.group({
       clientId: ['', Validators.required],
       currentReading: ['', [Validators.required, Validators.min(0)]]
     });
@@ -90,6 +97,16 @@ export class ReadingsComponent implements OnInit {
     this.readingForm.reset();
   }
 
+  openInitialReadingModal(): void {
+    this.showInitialReadingModal = true;
+    this.initialReadingForm.reset();
+  }
+
+  closeInitialReadingModal(): void {
+    this.showInitialReadingModal = false;
+    this.initialReadingForm.reset();
+  }
+
   onSubmit(): void {
     if (this.readingForm.invalid) {
       this.markFormGroupTouched();
@@ -116,9 +133,55 @@ export class ReadingsComponent implements OnInit {
     });
   }
 
+  onSubmitInitialReading(): void {
+    if (this.initialReadingForm.invalid) {
+      this.markInitialFormGroupTouched();
+      return;
+    }
+
+    const readingData: MeterReadingCreateDto = {
+      clientId: parseInt(this.initialReadingForm.value.clientId),
+      currentReading: parseFloat(this.initialReadingForm.value.currentReading)
+    };
+
+    // Show confirmation for initial reading
+    Swal.fire({
+      title: 'Add Initial Reading?',
+      text: 'This will set the starting meter reading for this client. This should only be done once per client.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, add it!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.readingService.addReading(readingData).subscribe({
+          next: (reading) => {
+            this.readings.unshift(reading);
+            this.filteredReadings = this.readings;
+            this.closeInitialReadingModal();
+            Swal.fire('Success', 'Initial meter reading added successfully', 'success');
+          },
+          error: (error) => {
+            console.error('Error adding initial reading:', error);
+            const errorMessage = error.error?.message || 'Failed to add initial meter reading';
+            Swal.fire('Error', errorMessage, 'error');
+          }
+        });
+      }
+    });
+  }
+
   private markFormGroupTouched(): void {
     Object.keys(this.readingForm.controls).forEach(key => {
       const control = this.readingForm.get(key);
+      control?.markAsTouched();
+    });
+  }
+
+  private markInitialFormGroupTouched(): void {
+    Object.keys(this.initialReadingForm.controls).forEach(key => {
+      const control = this.initialReadingForm.get(key);
       control?.markAsTouched();
     });
   }

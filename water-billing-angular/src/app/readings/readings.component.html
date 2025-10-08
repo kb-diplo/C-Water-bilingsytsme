@@ -2,10 +2,15 @@
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Meter Readings</h1>
     <div class="d-flex">
-      <button *ngIf="isAdmin() || isMeterReader()" 
+      <button *ngIf="isMeterReader()" 
               class="btn btn-primary btn-sm me-2"
               (click)="openAddModal()">
         <i class="fas fa-plus fa-sm text-white-50"></i> Add Reading
+      </button>
+      <button *ngIf="isAdmin()" 
+              class="btn btn-warning btn-sm me-2"
+              (click)="openInitialReadingModal()">
+        <i class="fas fa-plus fa-sm text-white-50"></i> Add Initial Reading
       </button>
     </div>
   </div>
