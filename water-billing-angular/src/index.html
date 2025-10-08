@@ -113,6 +113,8 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   
   <script>
+    console.log('🚀 Denkam Waters - Loading Application');
+    
     window.addEventListener('load', function() {
       const loader = document.getElementById('initial-loader');
       if (loader) {
@@ -130,9 +132,10 @@
     setTimeout(function() {
       const appRoot = document.querySelector('app-root');
       if (appRoot && appRoot.innerHTML.trim() === '') {
-        document.body.innerHTML += '<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #dc2626; color: white; padding: 20px; border-radius: 8px; z-index: 99999; font-family: Arial, sans-serif;"><h3>⚠️ Loading Issue</h3><p>Please refresh the page or check your connection.</p></div>';
+        console.error('❌ Angular failed to load');
+        document.body.innerHTML += '<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #dc2626; color: white; padding: 20px; border-radius: 8px; z-index: 99999; font-family: Arial, sans-serif;"><h3>⚠️ Loading Issue</h3><p>Please refresh the page. If the issue persists, contact support.</p></div>';
       }
-    }, 5000);
+    }, 8000);
   </script>
 </body>
 </html>

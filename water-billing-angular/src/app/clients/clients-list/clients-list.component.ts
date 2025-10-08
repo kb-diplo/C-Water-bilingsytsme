@@ -37,7 +37,6 @@ export class ClientsListComponent implements OnInit {
   itemsPerPage = 10;
   totalItems = 0;
   
-  // Search with debouncing
   private searchSubject = new Subject<string>();
 
   constructor(
@@ -64,7 +63,6 @@ export class ClientsListComponent implements OnInit {
       currentReading: ['', [Validators.required, Validators.min(0.01)]]
     });
 
-    // Setup debounced search
     this.searchSubject.pipe(
       debounceTime(300),
       distinctUntilChanged()
@@ -85,7 +83,6 @@ export class ClientsListComponent implements OnInit {
     }).subscribe({
       next: (clients) => {
         console.log('Clients response:', clients);
-        // Filter out any clients with invalid IDs
         const validClients = clients.filter(client => client.id && client.id > 0);
         this.clients = validClients;
         this.filteredClients = validClients;
@@ -110,7 +107,6 @@ export class ClientsListComponent implements OnInit {
         this.totalItems = 0;
         this.loading = false;
         
-        // Show appropriate error message
         let errorMessage = 'Failed to load clients';
         if (error.status === 401 || error.status === 403) {
           errorMessage = 'You do not have permission to view clients';
@@ -135,7 +131,6 @@ export class ClientsListComponent implements OnInit {
       return;
     }
 
-    // Perform client-side filtering for instant results
     const term = searchTerm.toLowerCase();
     this.filteredClients = this.clients.filter(client =>
       this.getFullName(client).toLowerCase().includes(term) ||
@@ -153,7 +148,6 @@ export class ClientsListComponent implements OnInit {
     this.clientForm.reset();
     this.clientForm.patchValue({ status: 'Connected' });
     
-    // Add password validators for new client
     this.clientForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
     this.clientForm.get('confirmPassword')?.setValidators([Validators.required]);
     this.clientForm.get('password')?.updateValueAndValidity();
@@ -168,7 +162,6 @@ export class ClientsListComponent implements OnInit {
   }
 
   onSubmit(): void {
-    // For edit mode, only validate required fields (not password fields)
     if (this.isEditMode) {
       const requiredFields = ['username', 'meterNumber', 'firstName', 'lastName', 'email', 'contactNumber', 'address', 'status'];
       let isValid = true;
@@ -186,7 +179,6 @@ export class ClientsListComponent implements OnInit {
         return;
       }
     } else {
-      // For new clients, validate all fields including passwords
       if (this.clientForm.invalid) {
         this.markFormGroupTouched();
         return;
@@ -243,7 +235,6 @@ export class ClientsListComponent implements OnInit {
   private updateClient(formData: any): void {
     if (!this.editingClientId) return;
 
-    // Send all fields - backend will handle partial updates
     const clientData: ClientUpdateDto = {
       FirstName: formData.firstName,
       MiddleName: formData.middleName,
@@ -275,7 +266,6 @@ export class ClientsListComponent implements OnInit {
       return;
     }
 
-    // Prepare data for Excel export
     const exportData = this.clients.map(client => ({
       'ID': client.id,
       'Full Name': this.getFullName(client),
@@ -288,7 +278,6 @@ export class ClientsListComponent implements OnInit {
       'Status': client.isActive ? 'Active' : 'Inactive'
     }));
 
-    // Convert to CSV format (Excel can open CSV files)
     const csv = this.convertToCSV(exportData);
     this.downloadFile(csv, 'clients-export.csv', 'text/csv');
     Swal.fire('Success', 'Clients exported successfully', 'success');
@@ -320,7 +309,6 @@ export class ClientsListComponent implements OnInit {
     this.isEditMode = true;
     this.editingClientId = client.id;
     
-    // Pre-populate form with client data
     this.clientForm.patchValue({
       meterNumber: client.meterNumber,
       firstName: client.firstName,
@@ -332,7 +320,6 @@ export class ClientsListComponent implements OnInit {
       status: client.connectionStatus || client.status || 'Active'
     });
     
-    // Remove password requirements for editing
     this.clientForm.get('password')?.clearValidators();
     this.clientForm.get('confirmPassword')?.clearValidators();
     this.clientForm.get('password')?.updateValueAndValidity();
@@ -366,7 +353,7 @@ export class ClientsListComponent implements OnInit {
   }
 
   deleteClient(client: Client): void {
-    // Check if client has valid ID
+    // Check if client has valid ID before attempting deletion
     if (!client.id || client.id === 0) {
       console.error('Invalid client ID for deletion:', client);
       Swal.fire('Error', 'Cannot delete client: Invalid client ID', 'error');
@@ -447,7 +434,6 @@ export class ClientsListComponent implements OnInit {
     return this.authService.isMeterReader();
   }
 
-  // Pagination methods
   get paginatedClients(): Client[] {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     return this.filteredClients.slice(startIndex, startIndex + this.itemsPerPage);
@@ -479,26 +465,21 @@ export class ClientsListComponent implements OnInit {
   }
 
   private loadPreviousReading(clientId: number): void {
-    // Reset previous reading data
     this.previousReading = null;
     this.previousReadingDate = null;
 
-    // Fetch the latest reading for this client
     this.readingService.getClientReadings(clientId).subscribe({
       next: (readings) => {
         if (readings && readings.length > 0) {
-          // Get the most recent reading
           const latestReading = readings[0]; // Assuming readings are sorted by date desc
           this.previousReading = latestReading.currentReading;
           this.previousReadingDate = latestReading.readingDate;
           
-          // Update form validation to require reading greater than previous
           this.readingForm.get('currentReading')?.setValidators([
             Validators.required,
             Validators.min(this.previousReading + 0.01)
           ]);
         } else {
-          // No previous readings - first reading for this client
           this.readingForm.get('currentReading')?.setValidators([
             Validators.required,
             Validators.min(0.01)
@@ -508,7 +489,6 @@ export class ClientsListComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading previous reading:', error);
-        // Set default validation if we can't load previous reading
         this.readingForm.get('currentReading')?.setValidators([
           Validators.required,
           Validators.min(0.01)
@@ -578,7 +558,6 @@ export class ClientsListComponent implements OnInit {
         
         this.readingLoading = false;
         
-        // More detailed error message
         let errorMessage = 'Failed to add meter reading with override';
         if (error.error) {
           if (typeof error.error === 'string') {
@@ -586,7 +565,7 @@ export class ClientsListComponent implements OnInit {
           } else if (error.error.message) {
             errorMessage = error.error.message;
           } else if (error.error.errors) {
-            // Handle validation errors
+            // Handle validation errors from backend
             const validationErrors = Object.values(error.error.errors).flat();
             errorMessage = validationErrors.join(', ');
           }

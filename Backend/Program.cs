@@ -408,13 +408,20 @@ public partial class Program
         app.UseCors("AllowAngularApp");
 
         // Enable Swagger in all environments (after CORS, before Auth)
-        app.UseSwagger();
-        app.UseSwaggerUI(c =>
+        try
         {
-            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Water Billing API v1");
-            c.RoutePrefix = "swagger";
-            c.DocumentTitle = "Water Billing API Documentation";
-        });
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Water Billing API v1");
+                c.RoutePrefix = "swagger";
+                c.DocumentTitle = "Water Billing API Documentation";
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Swagger configuration error: {ex.Message}");
+        }
         
         app.UseAuthentication();
         app.UseAuthorization();
