@@ -336,19 +336,43 @@ public partial class Program
                 
                 if (canConnect)
                 {
-                    Console.WriteLine("🔄 Applying migrations to create/update database schema...");
-                    var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
-                    Console.WriteLine($"📋 Pending migrations: {pendingMigrations.Count()}");
+                    Console.WriteLine("🔄 Checking database schema...");
                     
-                    if (pendingMigrations.Any())
+                    // Check if database exists and has tables
+                    var tablesExist = false;
+                    try
                     {
-                        Console.WriteLine("🏗️ Applying pending migrations...");
-                        foreach (var migration in pendingMigrations)
+                        tablesExist = await context.Users.AnyAsync();
+                        Console.WriteLine("✅ Database tables exist and accessible");
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine("⚠️ Database tables don't exist or not accessible - will create them");
+                        tablesExist = false;
+                    }
+                    
+                    if (!tablesExist)
+                    {
+                        Console.WriteLine("🏗️ Creating database schema...");
+                        
+                        // First try to ensure database is created
+                        await context.Database.EnsureCreatedAsync();
+                        Console.WriteLine("✅ Database structure ensured");
+                        
+                        // Then apply any pending migrations
+                        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+                        Console.WriteLine($"📋 Pending migrations: {pendingMigrations.Count()}");
+                        
+                        if (pendingMigrations.Any())
                         {
-                            Console.WriteLine($"   - {migration}");
+                            Console.WriteLine("🔄 Applying pending migrations...");
+                            foreach (var migration in pendingMigrations)
+                            {
+                                Console.WriteLine($"   - {migration}");
+                            }
+                            await context.Database.MigrateAsync();
+                            Console.WriteLine("✅ Migrations applied successfully!");
                         }
-                        await context.Database.MigrateAsync();
-                        Console.WriteLine("✅ Migrations applied successfully!");
                     }
                     else
                     {
@@ -369,16 +393,8 @@ public partial class Program
                         // Continue with test clients even if admin seeding fails
                     }
                     
-                    try
-                    {
-                        await seeder.SeedTestClientsAsync();
-                        Console.WriteLine("✅ Test clients seeding completed");
-                    }
-                    catch (Exception seedEx)
-                    {
-                        Console.WriteLine($"⚠️ Test clients seeding failed: {seedEx.Message}");
-                        // Continue - this is not critical for app startup
-                    }
+                    // Skip test clients seeding - only create admin user
+                    Console.WriteLine("⏭️ Skipping test clients seeding (admin only setup)");
                     
                     Console.WriteLine("✅ Database initialization completed successfully!");
                 }
