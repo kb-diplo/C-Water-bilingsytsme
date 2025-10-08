@@ -529,13 +529,33 @@
       margin-bottom: 0.5rem;
       
       a {
-        color: #cbd5e0;
+        color: #e5e7eb;
         text-decoration: none;
         transition: color 0.3s ease;
         
         &:hover {
           color: var(--primary-blue);
         }
+      }
+    }
+  }
+  
+  .footer-services {
+    list-style: none;
+    padding: 0;
+    
+    li {
+      margin-bottom: 0.5rem;
+      color: #e5e7eb;
+      position: relative;
+      padding-left: 1rem;
+      
+      &:before {
+        content: '•';
+        color: var(--primary-blue);
+        position: absolute;
+        left: 0;
+        font-weight: bold;
       }
     }
   }
@@ -677,6 +697,28 @@
   
   .feature-card {
     padding: 2rem 1.5rem;
+  }
+  
+  // Footer mobile improvements
+  .footer-section {
+    text-align: center;
+    
+    .footer-brand h4 {
+      font-size: 1.5rem;
+    }
+    
+    .footer-services li {
+      padding-left: 0;
+      
+      &:before {
+        display: none;
+      }
+    }
+    
+    .footer-copyright, .footer-developer {
+      font-size: 0.8rem;
+      text-align: center !important;
+    }
   }
 }
 
