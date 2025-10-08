@@ -130,12 +130,31 @@ import { FormsModule } from '@angular/forms';
     }
     
     .modal {
-      z-index: 1060 !important;
+      z-index: 9999 !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    
+    .modal-dialog {
+      max-width: 600px !important;
+      margin: 0 auto !important;
+      z-index: 10000 !important;
     }
     
     .modal-backdrop {
-      z-index: 1055 !important;
-      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 9998 !important;
+      background-color: rgba(0, 0, 0, 0.7) !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
     }
     
     @media (max-width: 768px) {

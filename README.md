@@ -2,9 +2,13 @@
 
 A comprehensive water billing management system built with **Angular 17** frontend and **ASP.NET Core 8** backend, featuring role-based access control, M-Pesa integration, and modern UI/UX design.
 
-## 🌐 Live Demo
-- **Frontend**: [Deploying to Vercel](https://vercel.com) (Migration from Netlify)
-- **Backend API**: [https://c-water-bilingsytsme.onrender.com](https://c-water-bilingsytsme.onrender.com)
+## 🌐 Live Application
+- **Application**: [https://denkamwaterskenya.vercel.app](https://denkamwaterskenya.vercel.app)
+
+## 🚀 Quick Start
+### Default Login Credentials:
+- **Admin**: `username: admin` | `password: Admin123`
+- **Test the system**: Visit the live application and login with admin credentials
 
 ## 🌟 Features
 
@@ -205,17 +209,16 @@ For Gmail SMTP, use App Passwords:
 
 ### Frontend (Vercel)
 - **Platform**: Vercel
-- **Build Command**: `npm run build:vercel`
-- **Output Directory**: `dist/water-billing-angular`
-- **Framework**: Angular
+- **Application**: [https://denkamwaterskenya.vercel.app](https://denkamwaterskenya.vercel.app)
+- **Framework**: Angular 17
 - **Auto-deploy**: GitHub integration
+- **Status**: ✅ **Live and Running**
 
 ### Backend (Render)
-- **Platform**: Render
-- **Service**: Web Service
-- **Build Command**: `dotnet publish -c Release -o out`
-- **Start Command**: `dotnet out/MyApi.dll`
-- **Database**: PostgreSQL (Render)
+- **Platform**: Render Web Service
+- **Framework**: ASP.NET Core 8
+- **Database**: PostgreSQL
+- **Status**: ✅ **Live and Running**
 
 ### Recent Improvements
 - ✅ Mobile UI optimizations (footer, navigation, spacing)
