@@ -34,3 +34,4 @@
 [build.environment]
   NODE_VERSION = "20"
   CI = "false"
+  NG_CLI_ANALYTICS = "false"
