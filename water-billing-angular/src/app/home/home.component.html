@@ -8,20 +8,21 @@
       </div>
     </a>
     
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
         <li class="nav-item">
-          <a class="nav-link" [class.active]="activeSection === 'home'" href="#home" (click)="scrollToSection('home', $event)">HOME</a>
+          <a class="nav-link" [class.active]="activeSection === 'home'" href="#home" (click)="scrollToSection('home', $event); closeNavbar()">HOME</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" [class.active]="activeSection === 'features'" href="#features" (click)="scrollToSection('features', $event)">FEATURES</a>
+          <a class="nav-link" [class.active]="activeSection === 'features'" href="#features" (click)="scrollToSection('features', $event); closeNavbar()">FEATURES</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" [class.active]="activeSection === 'about'" href="#about" (click)="scrollToSection('about', $event)">ABOUT US</a>
+          <a class="nav-link" [class.active]="activeSection === 'about'" href="#about" (click)="scrollToSection('about', $event); closeNavbar()">ABOUT US</a>
         </li>
         <li class="nav-item ms-3">
           <a routerLink="/login" class="btn btn-login">

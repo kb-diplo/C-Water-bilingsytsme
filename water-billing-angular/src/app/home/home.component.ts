@@ -96,4 +96,14 @@ export class HomeComponent implements OnInit, OnDestroy {
     event.preventDefault();
     this.router.navigate(['/cookie-policy']);
   }
+
+  closeNavbar(): void {
+    const navbarCollapse = document.getElementById('navbarNav');
+    if (navbarCollapse && navbarCollapse.classList.contains('show')) {
+      const bsCollapse = new (window as any).bootstrap.Collapse(navbarCollapse, {
+        toggle: false
+      });
+      bsCollapse.hide();
+    }
+  }
 }

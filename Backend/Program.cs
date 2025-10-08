@@ -384,32 +384,26 @@ public partial class Program
                         Console.WriteLine("[INFO] Database schema is up to date!");
                     }
                     
-                    // Create default admin user if none exists
+                    // Create bootstrap admin user if none exists
                     if (!await context.Users.AnyAsync(u => u.Role == "Admin"))
                     {
-                        Console.WriteLine("[INFO] Creating default admin user...");
+                        Console.WriteLine("[INFO] Creating bootstrap admin user...");
                         var passwordHasher = services.GetRequiredService<IPasswordHasher<Users>>();
-                        
-                        // Get admin password from environment variable or use default
-                        var adminPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "TempPass123!";
-                        var adminUsername = Environment.GetEnvironmentVariable("ADMIN_USERNAME") ?? "admin";
-                        var adminEmail = Environment.GetEnvironmentVariable("ADMIN_EMAIL") ?? "admin@denkamwaters.co.ke";
                         
                         var admin = new Users
                         {
-                            Username = adminUsername,
-                            Email = adminEmail,
+                            Username = "admin",
+                            Email = "admin@denkamwaters.co.ke",
                             Role = "Admin",
                             IsBootstrap = true,
                             IsActive = true,
                             CreatedDate = DateTime.UtcNow
                         };
-                        admin.PasswordHash = passwordHasher.HashPassword(admin, adminPassword);
+                        admin.PasswordHash = passwordHasher.HashPassword(admin, "Admin123");
                         
                         context.Users.Add(admin);
                         await context.SaveChangesAsync();
-                        Console.WriteLine($"[INFO] Default admin user created - Username: {adminUsername}");
-                        Console.WriteLine("[WARN] Please change the default admin password after first login!");
+                        Console.WriteLine("[INFO] Bootstrap admin user created - Username: admin, Password: Admin123");
                     }
                     
                     Console.WriteLine("[INFO] Database initialization completed successfully!");

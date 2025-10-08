@@ -82,29 +82,25 @@ import { FormsModule } from '@angular/forms';
   styles: [`
     .cookie-consent-banner {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      bottom: 20px;
+      left: 20px;
+      max-width: 400px;
       background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
       color: white;
-      padding: 1rem;
-      box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.2);
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
       z-index: 1050;
-      transform: translateY(100%);
+      transform: translateX(-120%);
       transition: transform 0.3s ease-in-out;
     }
     
     .cookie-consent-banner.show {
-      transform: translateY(0);
+      transform: translateX(0);
     }
     
     .cookie-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 2rem;
+      display: block;
     }
     
     .cookie-text h5 {
@@ -121,7 +117,13 @@ import { FormsModule } from '@angular/forms';
     .cookie-buttons {
       display: flex;
       gap: 0.5rem;
-      flex-shrink: 0;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    
+    .cookie-buttons .btn {
+      font-size: 0.8rem;
+      padding: 0.4rem 0.8rem;
     }
     
     .cookie-category {
