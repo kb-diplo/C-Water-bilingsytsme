@@ -46,8 +46,9 @@ public partial class Program
             if (isProduction && !string.IsNullOrEmpty(renderDatabaseUrl))
             {
                 // Production: Use PostgreSQL from Render DATABASE_URL
+                Console.WriteLine("🔗 Converting Render DATABASE_URL to connection string...");
                 var npgsqlConnectionString = ConvertRenderPostgresUrl(renderDatabaseUrl);
-                Console.WriteLine("Using PostgreSQL for production");
+                Console.WriteLine("✅ Using PostgreSQL for production");
                 
                 builder.Services.AddDbContext<WaterBillingDbContext>(options =>
                     options.UseNpgsql(npgsqlConnectionString, npgsqlOptions =>
@@ -96,7 +97,12 @@ public partial class Program
                 
                 var connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;";
                 
-                Console.WriteLine($"Converted connection string: Host={host};Port={port};Database={database};Username={username};Password=***;SSL Mode=Require;Trust Server Certificate=true;");
+                Console.WriteLine($"✅ Database connection parsed successfully:");
+                Console.WriteLine($"   Host: {host}");
+                Console.WriteLine($"   Port: {port}");
+                Console.WriteLine($"   Database: {database}");
+                Console.WriteLine($"   Username: {username}");
+                Console.WriteLine($"   SSL: Required");
                 
                 return connectionString;
             }
@@ -320,19 +326,55 @@ public partial class Program
             var services = scope.ServiceProvider;
             try
             {
-                // Apply any pending migrations
+                Console.WriteLine("🔄 Initializing database...");
                 var context = services.GetRequiredService<WaterBillingDbContext>();
-                await context.Database.MigrateAsync();
                 
-                // Seed the admin user and test clients
-                var seeder = services.GetRequiredService<DatabaseSeeder>();
-                await seeder.SeedAdminUserAsync();
-                await seeder.SeedTestClientsAsync();
+                // Check if database can be connected to
+                Console.WriteLine("📡 Testing database connection...");
+                var canConnect = await context.Database.CanConnectAsync();
+                Console.WriteLine($"📡 Database connection: {(canConnect ? "✅ Success" : "❌ Failed")}");
+                
+                if (canConnect)
+                {
+                    Console.WriteLine("🔄 Applying migrations to create/update database schema...");
+                    var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+                    Console.WriteLine($"📋 Pending migrations: {pendingMigrations.Count()}");
+                    
+                    if (pendingMigrations.Any())
+                    {
+                        Console.WriteLine("🏗️ Applying pending migrations...");
+                        foreach (var migration in pendingMigrations)
+                        {
+                            Console.WriteLine($"   - {migration}");
+                        }
+                        await context.Database.MigrateAsync();
+                        Console.WriteLine("✅ Migrations applied successfully!");
+                    }
+                    else
+                    {
+                        Console.WriteLine("✅ Database schema is up to date!");
+                    }
+                    
+                    Console.WriteLine("🌱 Seeding initial data...");
+                    var seeder = services.GetRequiredService<DatabaseSeeder>();
+                    await seeder.SeedAdminUserAsync();
+                    await seeder.SeedTestClientsAsync();
+                    
+                    Console.WriteLine("✅ Database initialization completed successfully!");
+                }
+                else
+                {
+                    Console.WriteLine("❌ Cannot connect to database. Check connection string and database availability.");
+                }
             }
             catch (Exception ex)
             {
                 var logger = services.GetRequiredService<ILogger<Program>>();
-                logger.LogError(ex, "An error occurred while initializing the database.");
+                logger.LogError(ex, "❌ An error occurred while initializing the database.");
+                Console.WriteLine($"❌ Database initialization failed: {ex.Message}");
+                
+                // Don't stop the application, let it run without database for now
+                Console.WriteLine("⚠️ Application will continue without database initialization.");
             }
         }
 
