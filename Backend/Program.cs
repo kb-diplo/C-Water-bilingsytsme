@@ -147,7 +147,7 @@ public partial class Program
                         "http://localhost:4201", 
                         "http://localhost:4202",
                         "https://denkamwaterskenya.netlify.app",
-                        "https://denkamwaterkenya.vercel.app",
+                        "https://denkamwaterskenya.vercel.app",
                         "https://denkam-waters.vercel.app",
                         "https://denkam-waters-frontend.vercel.app",
                         "https://*.vercel.app"
