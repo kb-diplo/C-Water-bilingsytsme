@@ -121,21 +121,44 @@
   
   <!-- Simple loader management -->
   <script>
+    console.log('🚀 Index.html loaded successfully');
+    console.log('📍 Current URL:', window.location.href);
+    console.log('🔗 Current Path:', window.location.pathname);
+    
     // Hide loader when page loads
     window.addEventListener('load', function() {
+      console.log('📦 Window load event fired');
       const loader = document.getElementById('initial-loader');
       if (loader) {
+        console.log('✅ Loader found, hiding it');
         loader.style.display = 'none';
+      } else {
+        console.log('❌ Loader not found');
       }
     });
     
     // Fallback: hide after 3 seconds
     setTimeout(function() {
+      console.log('⏰ 3-second fallback triggered');
       const loader = document.getElementById('initial-loader');
       if (loader) {
+        console.log('✅ Fallback: Loader found, hiding it');
         loader.style.display = 'none';
+      } else {
+        console.log('❌ Fallback: Loader not found');
       }
     }, 3000);
+    
+    // Check if Angular is loading
+    setTimeout(function() {
+      const appRoot = document.querySelector('app-root');
+      if (appRoot && appRoot.innerHTML.trim() === '') {
+        console.log('❌ Angular app-root is empty - Angular may not be loading');
+        document.body.innerHTML += '<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: red; color: white; padding: 20px; z-index: 99999;">Angular failed to load. Check console for errors.</div>';
+      } else {
+        console.log('✅ Angular app-root has content');
+      }
+    }, 5000);
   </script>
 </body>
 </html>

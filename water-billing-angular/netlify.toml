@@ -1,5 +1,4 @@
 [build]
-  base = "water-billing-angular"
   publish = "dist/water-billing-angular/browser"
   command = "npm ci && npm run build"
 
