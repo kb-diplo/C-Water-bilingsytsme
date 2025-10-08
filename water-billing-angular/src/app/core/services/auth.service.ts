@@ -57,7 +57,7 @@ export class AuthService {
               email: response.email
             };
 
-            if (!environment.production) {
+            if (environment.features.enableLogging) {
               console.log('👤 Creating user object:', user);
             }
 

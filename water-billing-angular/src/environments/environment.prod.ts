@@ -3,7 +3,7 @@ export const environment = {
   apiUrl: 'https://c-water-bilingsytsme.onrender.com/api',
   version: '1.0.0',
   features: {
-    enableLogging: false,
+    enableLogging: true,
     enableAnalytics: true,
     enableErrorReporting: true,
     enablePerformanceMonitoring: true
