@@ -129,6 +129,15 @@ import { FormsModule } from '@angular/forms';
       padding: 1rem;
     }
     
+    .modal {
+      z-index: 1060 !important;
+    }
+    
+    .modal-backdrop {
+      z-index: 1055 !important;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    
     @media (max-width: 768px) {
       .cookie-content {
         flex-direction: column;
