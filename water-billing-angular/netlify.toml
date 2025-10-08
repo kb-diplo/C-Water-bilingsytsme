@@ -2,56 +2,6 @@
   publish = "dist/water-billing-angular/browser"
   command = "npm ci && npm run build --configuration=production"
 
-# Root redirect to home
-[[redirects]]
-  from = "/"
-  to = "/home"
-  status = 301
-
-# Explicit static file handling - prevent redirects
-[[redirects]]
-  from = "/polyfills-*.js"
-  to = "/polyfills-:splat.js"
-  status = 200
-
-[[redirects]]
-  from = "/scripts-*.js"
-  to = "/scripts-:splat.js"
-  status = 200
-
-[[redirects]]
-  from = "/main-*.js"
-  to = "/main-:splat.js"
-  status = 200
-
-[[redirects]]
-  from = "/chunk-*.js"
-  to = "/chunk-:splat.js"
-  status = 200
-
-[[redirects]]
-  from = "/styles-*.css"
-  to = "/styles-:splat.css"
-  status = 200
-
-# Generic static assets
-[[redirects]]
-  from = "/*.js"
-  to = "/:splat.js"
-  status = 200
-
-[[redirects]]
-  from = "/*.css"
-  to = "/:splat.css"
-  status = 200
-
-# Angular SPA fallback - ONLY for routes without file extensions
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  conditions = {Role = ["document"]}
-
 [[headers]]
   for = "/*"
   [headers.values]
