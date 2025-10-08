@@ -217,8 +217,13 @@ public partial class Program
             // Custom operation ID to fix endpoint naming issues
             c.CustomOperationIds(apiDesc => 
             {
-                var actionName = apiDesc.ActionDescriptor.RouteValues["action"];
-                return actionName;
+                if (apiDesc.ActionDescriptor.RouteValues.TryGetValue("action", out var actionName))
+                {
+                    return actionName?.ToString();
+                }
+                
+                // Fallback for endpoints without action (like health check)
+                return apiDesc.HttpMethod + "_" + apiDesc.RelativePath?.Replace("/", "_").Replace("{", "").Replace("}", "");
             });
 
             // Add security requirements
