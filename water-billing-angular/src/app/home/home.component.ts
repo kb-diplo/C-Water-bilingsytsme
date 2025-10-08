@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { CookieService } from '../core/services/cookie.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-home',
@@ -14,11 +16,16 @@ export class HomeComponent implements OnInit, OnDestroy {
   showBackToTop = false;
   activeSection = 'home';
 
-  constructor(private cookieService: CookieService, private router: Router) {}
+  constructor(
+    private cookieService: CookieService, 
+    private router: Router,
+    private http: HttpClient
+  ) {}
 
   ngOnInit(): void {
     this.updateActiveSection();
     this.hideInitialLoader();
+    this.testBackendConnection();
   }
 
   private hideInitialLoader(): void {
@@ -105,5 +112,33 @@ export class HomeComponent implements OnInit, OnDestroy {
       });
       bsCollapse.hide();
     }
+  }
+
+  private testBackendConnection(): void {
+    console.log('Testing backend connection to:', environment.apiUrl);
+    
+    // Test basic connectivity
+    this.http.get(`${environment.apiUrl}/health`, { 
+      responseType: 'text',
+      headers: { 'Accept': 'text/plain' }
+    }).subscribe({
+      next: (response) => {
+        console.log('✅ Backend connection successful:', response);
+      },
+      error: (error) => {
+        console.log('❌ Backend connection failed:', error);
+        console.log('Trying alternative endpoint...');
+        
+        // Try the base API endpoint
+        this.http.get(`${environment.apiUrl}`, { responseType: 'text' }).subscribe({
+          next: (response) => {
+            console.log('✅ Backend base endpoint accessible:', response);
+          },
+          error: (err) => {
+            console.log('❌ Backend completely unreachable:', err);
+          }
+        });
+      }
+    });
   }
 }
