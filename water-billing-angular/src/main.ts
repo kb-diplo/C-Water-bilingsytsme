@@ -24,11 +24,21 @@ bootstrapApplication(AppComponent, {
   console.log('Angular application started successfully');
 }).catch(err => {
   console.error('Failed to start Angular application:', err);
+  // Show a more user-friendly error message
   document.body.innerHTML = `
-    <div style="padding: 20px; font-family: Arial, sans-serif;">
-      <h1 style="color: red;">Application Failed to Load</h1>
-      <p>Error: ${err.message}</p>
-      <pre style="background: #f5f5f5; padding: 10px; overflow: auto;">${err.stack}</pre>
+    <div style="padding: 40px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background-color: #f8f9fa;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #dc3545; margin-bottom: 20px;"></i>
+        <h1 style="color: #dc3545; margin-bottom: 20px;">Application Loading Error</h1>
+        <p style="color: #6c757d; margin-bottom: 20px;">We're experiencing technical difficulties. Please try refreshing the page.</p>
+        <button onclick="window.location.reload()" style="background: #007bff; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 16px;">
+          <i class="fas fa-refresh"></i> Refresh Page
+        </button>
+        <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 4px; text-align: left;">
+          <strong>Error Details:</strong><br>
+          <code style="color: #dc3545;">${err.message}</code>
+        </div>
+      </div>
     </div>
   `;
 });
