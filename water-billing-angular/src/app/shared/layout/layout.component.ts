@@ -15,6 +15,7 @@ import Swal from 'sweetalert2';
 export class LayoutComponent implements OnInit {
   currentUser: User | null = null;
   sidebarToggled = false;
+  showUserDropdown = false;
 
   constructor(
     private authService: AuthService,
@@ -29,6 +30,10 @@ export class LayoutComponent implements OnInit {
 
   toggleSidebar(): void {
     this.sidebarToggled = !this.sidebarToggled;
+  }
+
+  toggleUserDropdown(): void {
+    this.showUserDropdown = !this.showUserDropdown;
   }
 
   logout(): void {

@@ -164,8 +164,7 @@
               <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center" 
                       type="button" 
                       id="userDropdown" 
-                      data-bs-toggle="dropdown" 
-                      aria-expanded="false"
+                      (click)="toggleUserDropdown()"
                       style="border: none; color: #5a5c69;">
                 <span class="d-none d-sm-inline small font-weight-medium">
                   {{ getUserDisplayName() }} ({{ currentUser.role }})
@@ -173,7 +172,7 @@
                 <i class="fas fa-caret-down ml-2"></i>
               </button>
               <!-- Dropdown Menu -->
-              <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+              <ul class="dropdown-menu dropdown-menu-end shadow" [class.show]="showUserDropdown" [style.display]="showUserDropdown ? 'block' : 'none'">
                 <li class="dropdown-header text-center">
                   <strong>{{ getUserDisplayName() }}</strong>
                   <br>

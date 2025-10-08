@@ -74,7 +74,8 @@ export class ReadingsListComponent implements OnInit {
     this.http.get<Reading[]>(`${this.apiUrl}/readings`).subscribe({
       next: (data) => {
         console.log('Readings loaded successfully:', data);
-        this.readings = data;
+        // Filter out initial readings (where currentReading is 0) for new clients
+        this.readings = data.filter(reading => reading.currentReading > 0);
         this.filteredReadings = [...this.readings];
         this.availableRecorders = this.getUniqueRecorders();
         this.loading = false;
