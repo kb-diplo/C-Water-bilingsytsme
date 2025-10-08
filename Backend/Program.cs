@@ -334,40 +334,23 @@ public partial class Program
             }
         }
 
-        // Enable middleware to serve generated Swagger as a JSON endpoint.
-        app.UseSwagger(c =>
-        {
-            c.RouteTemplate = "swagger/{documentName}/swagger.json";
-            c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
-            {
-                swaggerDoc.Servers =
-                [
-                    new() { Url = $"{httpReq.Scheme}://{httpReq.Host.Value}" }
-                ];
-            });
-        });
-
-        // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.)
-        app.UseSwaggerUI(c =>
-        {
-            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Water Billing API v1");
-            c.RoutePrefix = "swagger";
-            c.DocumentTitle = "Water Billing API Documentation";
-            c.DisplayRequestDuration();
-            c.EnableDeepLinking();
-            c.EnableFilter();
-            c.EnablePersistAuthorization();
-            c.DisplayOperationId();
-        });
-
         // Only use HTTPS redirection in development (Render handles HTTPS termination)
         if (!app.Environment.IsProduction())
         {
             app.UseHttpsRedirection();
         }
         
-        // Use CORS
+        // Use CORS (must be before Swagger)
         app.UseCors("AllowAngularApp");
+
+        // Enable Swagger in all environments (after CORS, before Auth)
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Water Billing API v1");
+            c.RoutePrefix = "swagger";
+            c.DocumentTitle = "Water Billing API Documentation";
+        });
         
         app.UseAuthentication();
         app.UseAuthorization();
