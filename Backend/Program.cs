@@ -150,7 +150,8 @@ public partial class Program
                         "https://denkamwaters-kenya.vercel.app",
                         "https://denkam-waters.vercel.app",
                         "https://denkam-waters-frontend.vercel.app",
-                        "https://*.vercel.app"
+                        "https://*.vercel.app",
+                        "https://c-water-bilingsytsme.onrender.com"
                     )
                       .AllowAnyHeader()
                       .AllowAnyMethod()
