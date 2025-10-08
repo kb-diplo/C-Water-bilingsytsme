@@ -357,8 +357,28 @@ public partial class Program
                     
                     Console.WriteLine("🌱 Seeding initial data...");
                     var seeder = services.GetRequiredService<DatabaseSeeder>();
-                    await seeder.SeedAdminUserAsync();
-                    await seeder.SeedTestClientsAsync();
+                    
+                    try
+                    {
+                        await seeder.SeedAdminUserAsync();
+                        Console.WriteLine("✅ Admin user seeding completed");
+                    }
+                    catch (Exception seedEx)
+                    {
+                        Console.WriteLine($"⚠️ Admin user seeding failed: {seedEx.Message}");
+                        // Continue with test clients even if admin seeding fails
+                    }
+                    
+                    try
+                    {
+                        await seeder.SeedTestClientsAsync();
+                        Console.WriteLine("✅ Test clients seeding completed");
+                    }
+                    catch (Exception seedEx)
+                    {
+                        Console.WriteLine($"⚠️ Test clients seeding failed: {seedEx.Message}");
+                        // Continue - this is not critical for app startup
+                    }
                     
                     Console.WriteLine("✅ Database initialization completed successfully!");
                 }

@@ -19,14 +19,15 @@ namespace MyApi.Data
 
         public async Task SeedAdminUserAsync()
         {
-            // Check if the database exists and apply any pending migrations
-            await _context.Database.MigrateAsync();
+            try
+            {
+                // Check if admin user already exists (migrations should be applied before calling this)
+                var adminUsername = _configuration["BootstrapAdmin:Username"] ?? "admin";
+                var adminPassword = _configuration["BootstrapAdmin:Password"] ?? "Admin123!";
 
-            // Check if admin user already exists
-            var adminUsername = _configuration["BootstrapAdmin:Username"] ?? "admin";
-            var adminPassword = _configuration["BootstrapAdmin:Password"] ?? "Admin123!";
-
-            var adminExists = await _context.Users.AnyAsync(u => u.Username != null && u.Username.ToLower() == adminUsername.ToLower());
+                Console.WriteLine($"🔍 Checking for existing admin user: {adminUsername}");
+                
+                var adminExists = await _context.Users.AnyAsync(u => u.Username != null && u.Username.ToLower() == adminUsername.ToLower());
             
             if (!adminExists)
             {
@@ -44,21 +45,32 @@ namespace MyApi.Data
                 _context.Users.Add(admin);
                 await _context.SaveChangesAsync();
 
-                Console.WriteLine($"Created initial admin user: {adminUsername}");
+                Console.WriteLine($"✅ Created initial admin user: {adminUsername}");
             }
             else
             {
-                Console.WriteLine("Admin user already exists");
+                Console.WriteLine("✅ Admin user already exists");
+            }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error seeding admin user: {ex.Message}");
+                throw; // Re-throw to be handled by caller
             }
         }
 
         public async Task SeedTestClientsAsync()
         {
-            // Check if test clients already exist
-            if (await _context.Clients.AnyAsync(c => c.Email.Contains("testclient")))
+            try
             {
-                return; // Test clients already exist
-            }
+                Console.WriteLine("🔍 Checking for existing test clients...");
+                
+                // Check if test clients already exist
+                if (await _context.Clients.AnyAsync(c => c.Email.Contains("testclient")))
+                {
+                    Console.WriteLine("✅ Test clients already exist");
+                    return; // Test clients already exist
+                }
 
             var testClients = new[]
             {
@@ -105,6 +117,12 @@ namespace MyApi.Data
 
             await _context.SaveChangesAsync();
             Console.WriteLine("✅ Test clients created successfully!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error seeding test clients: {ex.Message}");
+                throw; // Re-throw to be handled by caller
+            }
         }
     }
 }
