@@ -80,7 +80,7 @@
   }
   
   .btn-login {
-    background: linear-gradient(135deg, #ff6b6b, #ee5a24) !important;
+    background: linear-gradient(135deg, #00bcd4, #0097a7) !important;
     color: white !important;
     border: none !important;
     padding: 1rem 2.5rem;
@@ -91,7 +91,7 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     text-decoration: none;
     text-transform: uppercase;
-    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+    box-shadow: 0 8px 25px rgba(0, 188, 212, 0.4);
     position: relative;
     overflow: hidden;
     
@@ -107,10 +107,10 @@
     }
     
     &:hover {
-      background: linear-gradient(135deg, #ff5252, #d63031) !important;
+      background: linear-gradient(135deg, #0097a7, #00838f) !important;
       color: white !important;
       transform: translateY(-3px) scale(1.05);
-      box-shadow: 0 15px 35px rgba(255, 107, 107, 0.6);
+      box-shadow: 0 15px 35px rgba(0, 188, 212, 0.6);
       
       &::before {
         left: 100%;
@@ -189,7 +189,7 @@
 
 .hero-buttons {
   .btn-login-hero {
-    background: linear-gradient(135deg, #ff6b6b, #ee5a24) !important;
+    background: linear-gradient(135deg, #00bcd4, #0097a7) !important;
     color: white !important;
     border: none !important;
     padding: 1.2rem 3rem;
@@ -200,7 +200,7 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     text-decoration: none;
     display: inline-block;
-    box-shadow: 0 10px 30px rgba(255, 107, 107, 0.5);
+    box-shadow: 0 10px 30px rgba(0, 188, 212, 0.5);
     text-transform: uppercase;
     position: relative;
     overflow: hidden;
@@ -217,10 +217,10 @@
     }
     
     &:hover {
-      background: linear-gradient(135deg, #ff5252, #d63031) !important;
+      background: linear-gradient(135deg, #0097a7, #00838f) !important;
       color: white !important;
       transform: translateY(-4px) scale(1.08);
-      box-shadow: 0 20px 40px rgba(255, 107, 107, 0.7);
+      box-shadow: 0 20px 40px rgba(0, 188, 212, 0.7);
       
       &::before {
         left: 100%;
