@@ -147,18 +147,20 @@ import { FormsModule } from '@angular/forms';
     }
   `]
 })
+export class CookieConsentComponent implements OnInit {
   showBanner = false;
   showSettings = false;
   
   preferences = {
     essential: true,
     functional: false,
+    analytics: false,
     performance: false
   };
 
   ngOnInit() {
     this.checkCookieConsent();
-{{ ... }}
+  }
 
   private checkCookieConsent() {
     const consent = localStorage.getItem('cookieConsent');
@@ -176,6 +178,7 @@ import { FormsModule } from '@angular/forms';
     this.preferences = {
       essential: true,
       functional: true,
+      analytics: true,
       performance: true
     };
     this.saveConsent();
@@ -185,6 +188,7 @@ import { FormsModule } from '@angular/forms';
     this.preferences = {
       essential: true,
       functional: false,
+      analytics: false,
       performance: false
     };
     this.saveConsent();
@@ -194,6 +198,7 @@ import { FormsModule } from '@angular/forms';
     this.preferences = {
       essential: true, // Essential cookies cannot be declined
       functional: false,
+      analytics: false,
       performance: false
     };
     this.saveConsent();
