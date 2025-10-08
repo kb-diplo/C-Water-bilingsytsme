@@ -137,12 +137,12 @@ export class MeterReaderDashboardComponent implements OnInit {
   // Navigation methods
   navigateToClients(): void {
     console.log('Navigating to clients...');
-    this.router.navigate(['/clients']);
+    this.router.navigate(['/dashboard/clients']);
   }
 
   navigateToReadings(): void {
     console.log('Navigating to readings...');
-    this.router.navigate(['/readings']);
+    this.router.navigate(['/dashboard/readings']);
   }
 
   openQuickAddReading(): void {

@@ -157,12 +157,12 @@ export class ClientDashboardComponent implements OnInit {
   // Navigation methods for Quick Actions
   navigateToMyBills(): void {
     console.log('Navigating to bills...');
-    this.router.navigate(['/bills/ongoing']);
+    this.router.navigate(['/dashboard/bills/ongoing']);
   }
 
   navigateToPayments(): void {
     console.log('Navigating to payments...');
-    this.router.navigate(['/payments']);
+    this.router.navigate(['/dashboard/payments']);
   }
 
   scrollToPayment(): void {

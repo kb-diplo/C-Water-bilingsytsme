@@ -36,4 +36,9 @@ export class PaymentService {
   getClientPayments(clientId: number): Observable<PaymentResponseDto[]> {
     return this.http.get<PaymentResponseDto[]>(`${this.apiUrl}/client/${clientId}`);
   }
+
+  // Initiate M-Pesa STK Push
+  initiateMpesaPayment(stkPushData: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/mpesa/stkpush`, stkPushData);
+  }
 }
