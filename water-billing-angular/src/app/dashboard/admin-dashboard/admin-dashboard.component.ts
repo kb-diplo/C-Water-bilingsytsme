@@ -49,11 +49,11 @@ export class AdminDashboardComponent implements OnInit {
     this.currentUser = this.authService.getCurrentUser();
     // Verify user has admin role
     if (!this.authService.isAdmin()) {
-      // Redirect to appropriate dashboard based on role
+      // Redirect to appropriate dashboard based on role using Angular router
       if (this.currentUser?.role === 'MeterReader') {
-        window.location.href = '/dashboard/meter-reader';
+        this.router.navigate(['/dashboard/meter-reader']);
       } else if (this.currentUser?.role === 'Client') {
-        window.location.href = '/dashboard/client';
+        this.router.navigate(['/dashboard/client']);
       } else {
         this.authService.logout();
       }

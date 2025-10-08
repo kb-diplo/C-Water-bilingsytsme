@@ -224,7 +224,8 @@ export class ClientDashboardComponent implements OnInit {
           confirmButtonText: 'Refresh Page'
         }).then((result) => {
           if (result.isConfirmed) {
-            window.location.reload();
+            // Reload component data instead of full page reload
+            this.loadDashboardData();
           }
         });
       }

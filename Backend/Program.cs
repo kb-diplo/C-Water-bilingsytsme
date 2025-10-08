@@ -57,7 +57,8 @@ public partial class Program
                             maxRetryCount: 3,
                             maxRetryDelay: TimeSpan.FromSeconds(5),
                             errorCodesToAdd: null);
-                    }));
+                    })
+                    .UseSnakeCaseNamingConvention()); // PostgreSQL naming convention
             }
             else if (!string.IsNullOrEmpty(configConnectionString))
             {
@@ -356,28 +357,20 @@ public partial class Program
                         tablesExist = false;
                     }
                     
-                    if (!tablesExist)
+                    // Always check for and apply pending migrations
+                    Console.WriteLine("[INFO] Checking for pending migrations...");
+                    var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+                    Console.WriteLine($"[INFO] Pending migrations: {pendingMigrations.Count()}");
+                    
+                    if (pendingMigrations.Any())
                     {
-                        Console.WriteLine("[INFO] Creating database schema...");
-                        
-                        // First try to ensure database is created
-                        await context.Database.EnsureCreatedAsync();
-                        Console.WriteLine("[INFO] Database structure ensured");
-                        
-                        // Then apply any pending migrations
-                        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
-                        Console.WriteLine($"[INFO] Pending migrations: {pendingMigrations.Count()}");
-                        
-                        if (pendingMigrations.Any())
+                        Console.WriteLine("[INFO] Applying pending migrations...");
+                        foreach (var migration in pendingMigrations)
                         {
-                            Console.WriteLine("[INFO] Applying pending migrations...");
-                            foreach (var migration in pendingMigrations)
-                            {
-                                Console.WriteLine($"   - {migration}");
-                            }
-                            await context.Database.MigrateAsync();
-                            Console.WriteLine("[INFO] Migrations applied successfully!");
+                            Console.WriteLine($"   - {migration}");
                         }
+                        await context.Database.MigrateAsync();
+                        Console.WriteLine("[INFO] Migrations applied successfully!");
                     }
                     else
                     {

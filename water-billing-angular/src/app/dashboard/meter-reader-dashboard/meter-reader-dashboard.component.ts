@@ -46,12 +46,12 @@ export class MeterReaderDashboardComponent implements OnInit {
     
     // Verify user has meter reader role
     if (!this.authService.isMeterReader()) {
-      // Redirect to appropriate dashboard based on role
+      // Redirect to appropriate dashboard based on role using Angular router
       const user = this.authService.getCurrentUser();
       if (user?.role === 'Admin') {
-        window.location.href = '/dashboard/admin';
+        this.router.navigate(['/dashboard/admin']);
       } else if (user?.role === 'Client') {
-        window.location.href = '/dashboard/client';
+        this.router.navigate(['/dashboard/client']);
       } else {
         this.authService.logout();
       }
