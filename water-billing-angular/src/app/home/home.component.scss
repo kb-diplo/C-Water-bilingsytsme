@@ -524,6 +524,7 @@
   .social-links {
     display: flex;
     gap: 1rem;
+    justify-content: center; // Center on mobile
     
     .social-link {
       width: 40px;
@@ -542,6 +543,12 @@
         color: white;
         transform: translateY(-2px);
       }
+    }
+    
+    // Mobile adjustments
+    @media (max-width: 768px) {
+      justify-content: center;
+      margin: 1rem 0;
     }
   }
   

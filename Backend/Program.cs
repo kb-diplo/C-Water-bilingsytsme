@@ -359,22 +359,46 @@ public partial class Program
                     
                     // Always check for and apply pending migrations
                     Console.WriteLine("[INFO] Checking for pending migrations...");
-                    var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
-                    Console.WriteLine($"[INFO] Pending migrations: {pendingMigrations.Count()}");
                     
-                    if (pendingMigrations.Any())
+                    try
                     {
-                        Console.WriteLine("[INFO] Applying pending migrations...");
-                        foreach (var migration in pendingMigrations)
+                        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+                        Console.WriteLine($"[INFO] Pending migrations: {pendingMigrations.Count()}");
+                        
+                        if (pendingMigrations.Any())
                         {
-                            Console.WriteLine($"   - {migration}");
+                            Console.WriteLine("[INFO] Applying pending migrations...");
+                            foreach (var migration in pendingMigrations)
+                            {
+                                Console.WriteLine($"   - {migration}");
+                            }
+                            await context.Database.MigrateAsync();
+                            Console.WriteLine("[INFO] Migrations applied successfully!");
                         }
-                        await context.Database.MigrateAsync();
-                        Console.WriteLine("[INFO] Migrations applied successfully!");
+                        else
+                        {
+                            Console.WriteLine("[INFO] Database schema is up to date!");
+                        }
                     }
-                    else
+                    catch (Exception migrationEx)
                     {
-                        Console.WriteLine("[INFO] Database schema is up to date!");
+                        Console.WriteLine($"[WARN] Migration failed: {migrationEx.Message}");
+                        Console.WriteLine("[INFO] Attempting to recreate database schema...");
+                        
+                        try
+                        {
+                            // For PostgreSQL, drop and recreate schema
+                            await context.Database.EnsureDeletedAsync();
+                            Console.WriteLine("[INFO] Database dropped");
+                            
+                            await context.Database.EnsureCreatedAsync();
+                            Console.WriteLine("[INFO] Database recreated successfully");
+                        }
+                        catch (Exception recreateEx)
+                        {
+                            Console.WriteLine($"[ERROR] Database recreation failed: {recreateEx.Message}");
+                            throw;
+                        }
                     }
                     
                     // Create bootstrap admin user if none exists
