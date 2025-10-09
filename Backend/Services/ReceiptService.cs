@@ -32,11 +32,13 @@ namespace MyApi.Services
             var payment = await _context.Payments
                 .Include(p => p.Bill)
                 .ThenInclude(b => b.Client)
+                .Include(p => p.Bill)
+                .ThenInclude(b => b.Payments)
                 .Include(p => p.RecordedByUser)
                 .FirstOrDefaultAsync(p => p.Id == paymentId);
 
             if (payment == null)
-                throw new ArgumentException("Payment not found");
+                throw new ArgumentException($"Payment with ID {paymentId} not found", nameof(paymentId));
 
             var settings = await _context.SystemSettings.FirstOrDefaultAsync();
             var companyName = "Denkam Waters";
@@ -136,14 +138,23 @@ namespace MyApi.Services
                 <span>Amount Paid:</span>
                 <span>KSh {payment.Amount:N2}</span>
             </div>
+            {(payment.Bill.Balance > 0 ? $@"
+            <div class='amount-row' style='color: #dc3545; font-weight: bold;'>
+                <span>Remaining Balance:</span>
+                <span>KSh {payment.Bill.Balance:N2}</span>
+            </div>" : "")}
         </div>
         
         <div style='text-align: center; margin: 20px 0;'>
-            <span class='status-paid'>PAID</span>
+            {(payment.Bill.Balance > 0 ? 
+                "<span class='status-partial' style='background: #ffc107; color: #212529; padding: 8px 16px; border-radius: 4px; font-weight: bold;'>PARTIAL PAYMENT</span>" : 
+                "<span class='status-paid'>PAID</span>")}
         </div>
         
         <div class='footer'>
-            <p>Thank you for your payment!</p>
+            <p>{(payment.Bill.Balance > 0 ? 
+                "Thank you for your payment! Please pay the remaining balance to avoid penalties." : 
+                "Thank you for your payment! Your bill is now fully paid.")}</p>
             <p>This is a computer-generated receipt. No signature required.</p>
             <p>Generated on {DateTime.Now:dd MMM yyyy HH:mm}</p>
         </div>

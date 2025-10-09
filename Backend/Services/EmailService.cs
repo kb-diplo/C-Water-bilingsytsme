@@ -14,12 +14,40 @@ namespace MyApi.Services
         {
             _emailSettings = emailSettings.Value;
             _logger = logger;
+            
+            // Fallback to environment variables if settings are empty
+            if (string.IsNullOrEmpty(_emailSettings.SenderEmail))
+            {
+                _emailSettings.SenderEmail = Environment.GetEnvironmentVariable("SENDER_EMAIL") ?? "";
+            }
+            if (string.IsNullOrEmpty(_emailSettings.SenderPassword))
+            {
+                _emailSettings.SenderPassword = Environment.GetEnvironmentVariable("SENDER_PASSWORD") ?? "";
+            }
+            if (string.IsNullOrEmpty(_emailSettings.SmtpServer))
+            {
+                _emailSettings.SmtpServer = Environment.GetEnvironmentVariable("SMTP_SERVER") ?? "smtp.gmail.com";
+            }
+            if (_emailSettings.SmtpPort == 0)
+            {
+                _emailSettings.SmtpPort = int.TryParse(Environment.GetEnvironmentVariable("SMTP_PORT"), out int port) ? port : 587;
+            }
         }
 
         public async Task<bool> SendPasswordResetEmailAsync(string toEmail, string firstName, string resetToken)
         {
             try
             {
+                // Log email configuration (without password)
+                _logger.LogInformation("Email Configuration - Server: {Server}, Port: {Port}, Sender: {Sender}", 
+                    _emailSettings.SmtpServer, _emailSettings.SmtpPort, _emailSettings.SenderEmail);
+
+                if (string.IsNullOrEmpty(_emailSettings.SenderEmail) || string.IsNullOrEmpty(_emailSettings.SenderPassword))
+                {
+                    _logger.LogError("Email settings are not configured properly. SenderEmail or SenderPassword is missing.");
+                    return false;
+                }
+
                 var resetLink = $"https://my-angular-app/reset-password?token={resetToken}";
                 var subject = "Water Billing System - Password Reset Request";
                 var htmlBody = GetPasswordResetEmailTemplate(firstName, resetLink);

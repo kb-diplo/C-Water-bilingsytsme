@@ -22,6 +22,10 @@ namespace MyApi.Models
         [Required]
         public string Location { get; set; } = string.Empty;
         public string ConnectionStatus { get; set; } = "Pending"; // Connected, Disconnected, Pending
+        public decimal InitialReading { get; set; } = 0; // Initial meter reading set by admin
+        public bool HasInitialReading { get; set; } = false; // Flag to track if initial reading is set
+        public DateTime? InitialReadingDate { get; set; } // When initial reading was set
+        public int? InitialReadingSetByUserId { get; set; } // Who set the initial reading
         public bool IsActive { get; set; } = true;
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public int CreatedByUserId { get; set; }
@@ -83,6 +87,9 @@ namespace MyApi.Models
         public int CreatedByUserId { get; set; }
         public string BillingPeriod { get; set; } = string.Empty; // Format: YYYY-MM
         
+        // Computed property for remaining balance
+        public decimal Balance => TotalAmount - Payments.Sum(p => p.Amount);
+        
         // Navigation properties
         [JsonIgnore]
         public Users CreatedByUser { get; set; } = null!;
@@ -120,6 +127,24 @@ namespace MyApi.Models
         
         // Navigation property
         public Users? UpdatedByUser { get; set; }
+    }
+
+    // Price History model for tracking rate changes over time
+    public class PriceHistory
+    {
+        public int Id { get; set; }
+        public decimal RatePerUnit { get; set; }
+        public decimal PenaltyRate { get; set; }
+        public DateTime EffectiveFrom { get; set; } // When this price becomes effective
+        public DateTime? EffectiveTo { get; set; } // When this price expires (null for current)
+        public string BillingPeriodFrom { get; set; } = string.Empty; // Format: YYYY-MM
+        public string? BillingPeriodTo { get; set; } // Format: YYYY-MM (null for ongoing)
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public int CreatedByUserId { get; set; }
+        public bool IsActive { get; set; } = true;
+        
+        // Navigation property
+        public Users CreatedByUser { get; set; } = null!;
     }
 
     // DTOs for API requests

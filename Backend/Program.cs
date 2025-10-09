@@ -137,6 +137,9 @@ public partial class Program
         // Register Receipt Service
         builder.Services.AddScoped<IReceiptService, ReceiptService>();
 
+        // Register Price Service
+        builder.Services.AddScoped<IPriceService, PriceService>();
+
         // Add CORS
         builder.Services.AddCors(options =>
         {

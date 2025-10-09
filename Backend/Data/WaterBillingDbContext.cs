@@ -12,6 +12,7 @@ namespace MyApi.Data
         public DbSet<Bill> Bills { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<SystemSettings> SystemSettings { get; set; }
+        public DbSet<PriceHistory> PriceHistory { get; set; }
         public DbSet<Users> Users { get; set; }
         public DbSet<MpesaTransaction> MpesaTransactions { get; set; }
 
@@ -22,20 +23,19 @@ namespace MyApi.Data
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.FirstName).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.MiddleName).HasMaxLength(50);
                 entity.Property(e => e.LastName).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.Email).HasMaxLength(100);
-                entity.Property(e => e.Phone).HasMaxLength(20);
+                entity.Property(e => e.MiddleName).HasMaxLength(50);
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Phone).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.MeterNumber).IsRequired().HasMaxLength(50);
-                entity.HasIndex(e => e.MeterNumber).IsUnique();
-                entity.Property(e => e.Location).HasMaxLength(200);
+                entity.Property(e => e.Location).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.ConnectionStatus).HasMaxLength(20);
+                entity.Property(e => e.InitialReading).HasPrecision(10, 2);
             });
 
             // MeterReading configuration
             modelBuilder.Entity<MeterReading>(entity =>
             {
-                entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.Client)
                     .WithMany(c => c.MeterReadings)
                     .HasForeignKey(e => e.ClientId);
@@ -81,6 +81,21 @@ namespace MyApi.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.RatePerUnit).HasPrecision(10, 2);
                 entity.Property(e => e.PenaltyRate).HasPrecision(5, 2);
+            });
+
+            // PriceHistory configuration
+            modelBuilder.Entity<PriceHistory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.RatePerUnit).HasPrecision(10, 2);
+                entity.Property(e => e.PenaltyRate).HasPrecision(5, 2);
+                entity.Property(e => e.BillingPeriodFrom).IsRequired().HasMaxLength(7); // YYYY-MM
+                entity.Property(e => e.BillingPeriodTo).HasMaxLength(7); // YYYY-MM
+                
+                entity.HasOne(p => p.CreatedByUser)
+                    .WithMany()
+                    .HasForeignKey(p => p.CreatedByUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             // Users configuration

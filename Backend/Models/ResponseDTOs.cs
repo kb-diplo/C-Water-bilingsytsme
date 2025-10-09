@@ -99,6 +99,20 @@ namespace MyApi.Models
         
         // Admin override for monthly restriction (Admin only)
         public bool OverrideMonthlyRestriction { get; set; } = false;
+        
+        // Reading period in YYYY-MM format (optional - defaults to current month)
+        public string? ReadingPeriod { get; set; }
+    }
+
+    // DTO for setting initial reading (Admin only)
+    public class InitialReadingDto
+    {
+        [Required]
+        public int ClientId { get; set; }
+        
+        [Required]
+        [Range(0, double.MaxValue, ErrorMessage = "Initial reading must be a positive number")]
+        public decimal InitialReading { get; set; }
     }
 
     public class ClientUpdateDto
@@ -272,9 +286,40 @@ namespace MyApi.Models
     {
         public decimal RatePerUnit { get; set; }
         public decimal PenaltyRate { get; set; }
-        public int GracePeriodDays { get; set; }
         public DateTime EffectiveDate { get; set; }
         public string UpdatedByUsername { get; set; } = string.Empty;
+    }
+
+    // Price History DTOs
+    public class PriceHistoryCreateDto
+    {
+        [Required]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Rate per unit must be greater than 0")]
+        public decimal RatePerUnit { get; set; }
+        
+        [Required]
+        [Range(0, 100, ErrorMessage = "Penalty rate must be between 0 and 100")]
+        public decimal PenaltyRate { get; set; }
+        
+        [Required]
+        public string BillingPeriodFrom { get; set; } = string.Empty; // YYYY-MM format
+        
+        public string? BillingPeriodTo { get; set; } // YYYY-MM format (optional for ongoing)
+    }
+
+    public class PriceHistoryResponseDto
+    {
+        public int Id { get; set; }
+        public decimal RatePerUnit { get; set; }
+        public decimal PenaltyRate { get; set; }
+        public DateTime EffectiveFrom { get; set; }
+        public DateTime? EffectiveTo { get; set; }
+        public string BillingPeriodFrom { get; set; } = string.Empty;
+        public string? BillingPeriodTo { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public string CreatedByUsername { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+        public bool IsCurrent { get; set; } // Helper property to indicate if this is the current active price
     }
 
     public class SystemMetricsDto
@@ -282,7 +327,6 @@ namespace MyApi.Models
         public int TotalClients { get; set; }
         public int ActiveConnections { get; set; }
         public int TotalReadings { get; set; }
-        public int TotalBills { get; set; }
         public int TotalPayments { get; set; }
         public decimal TotalRevenue { get; set; }
         public decimal OutstandingAmount { get; set; }
