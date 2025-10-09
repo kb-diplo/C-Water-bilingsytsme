@@ -798,20 +798,112 @@
 // Back to Top Button - Using same colors as login button
 .back-to-top {
   position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px;
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  background: linear-gradient(135deg, #00bcd4, #0097a7) !important;
   color: white; border: none; border-radius: 50%; font-size: 1.2rem; cursor: pointer;
   transition: all 0.3s ease; z-index: 1050; opacity: 0; visibility: hidden;
   transform: translateY(20px); 
-  box-shadow: 0 4px 15px rgba(8, 145, 178, 0.4);
+  box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
 
   &.show { opacity: 1; visibility: visible; transform: translateY(0); }
   &:hover { 
-    background: linear-gradient(135deg, var(--accent-blue), var(--primary-blue));
+    background: linear-gradient(135deg, #0097a7, #00838f) !important;
     transform: translateY(-3px); 
-    box-shadow: 0 6px 20px rgba(8, 145, 178, 0.6);
+    box-shadow: 0 6px 20px rgba(0, 188, 212, 0.6);
   }
   i { 
     font-size: 1rem; 
+  }
+}
+
+// Improved Footer Bottom Section
+.footer-bottom {
+  padding: 1rem 0;
+  
+  .footer-copyright {
+    p {
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--text-light);
+    }
+  }
+  
+  .footer-links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    
+    @media (max-width: 576px) {
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+  }
+  
+  .footer-link {
+    color: var(--primary-blue);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+    
+    &:hover {
+      color: var(--accent-blue);
+      text-decoration: underline;
+    }
+  }
+  
+  .footer-separator {
+    color: var(--text-light);
+    margin: 0 0.5rem;
+    
+    @media (max-width: 576px) {
+      display: none;
+    }
+  }
+  
+  .developer-info {
+    p {
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--text-light);
+    }
+  }
+  
+  .social-links-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    
+    @media (max-width: 576px) {
+      gap: 1.5rem;
+    }
+  }
+  
+  .social-link-footer {
+    color: var(--primary-blue);
+    text-decoration: none;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    
+    &:hover {
+      color: var(--accent-blue);
+      transform: translateY(-2px);
+    }
+    
+    i {
+      font-size: 1.2rem;
+    }
+    
+    @media (min-width: 768px) {
+      font-size: 0.9rem;
+      
+      i {
+        font-size: 1rem;
+      }
+    }
   }
 }
 

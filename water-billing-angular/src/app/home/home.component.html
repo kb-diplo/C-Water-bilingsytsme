@@ -195,7 +195,8 @@
     <hr class="footer-divider">
     <div class="row">
       <div class="col-12 text-center">
-        <p class="footer-copyright mb-0">
+        <!-- Desktop footer (original layout) -->
+        <p class="footer-copyright mb-0 d-none d-md-block">
           Copyright © Water Billing System 2025 | 
           <a href="#" class="text-primary ms-2" (click)="showPrivacyPolicy($event)">Privacy Policy</a> | 
           <a href="#" class="text-primary ms-2" (click)="showCookiePolicy($event)">Cookie Policy</a> | 
@@ -203,6 +204,31 @@
           <a href="https://github.com/kb-diplo" class="text-primary">GitHub</a> | 
           <a href="http://www.linkedin.com/in/mbugualawrence" class="text-primary">LinkedIn</a>
         </p>
+        
+        <!-- Mobile footer (improved layout) -->
+        <div class="footer-bottom d-block d-md-none">
+          <div class="footer-copyright text-center mb-3">
+            <p class="mb-2">Copyright © Water Billing System 2025</p>
+            <div class="footer-links">
+              <a href="#" class="footer-link" (click)="showPrivacyPolicy($event)">Privacy Policy</a>
+              <span class="footer-separator">•</span>
+              <a href="#" class="footer-link" (click)="showCookiePolicy($event)">Cookie Policy</a>
+            </div>
+          </div>
+          <div class="developer-info text-center mb-3">
+            <p class="mb-2">Developed by <strong>Lawrence Mbugua</strong> 2025</p>
+            <div class="social-links-footer">
+              <a href="https://github.com/kb-diplo" class="social-link-footer" target="_blank" rel="noopener">
+                <i class="fab fa-github"></i>
+                <span class="ms-1">GitHub</span>
+              </a>
+              <a href="http://www.linkedin.com/in/mbugualawrence" class="social-link-footer" target="_blank" rel="noopener">
+                <i class="fab fa-linkedin"></i>
+                <span class="ms-1">LinkedIn</span>
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
