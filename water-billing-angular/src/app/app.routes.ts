@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
+import { RoleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
   {
@@ -34,26 +35,31 @@ export const routes: Routes = [
       {
         path: 'admin',
         loadComponent: () => import('./dashboard/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
+        canActivate: [RoleGuard],
         data: { roles: ['Admin'] }
       },
       {
         path: 'meter-reader',
         loadComponent: () => import('./dashboard/meter-reader-dashboard/meter-reader-dashboard.component').then(m => m.MeterReaderDashboardComponent),
+        canActivate: [RoleGuard],
         data: { roles: ['MeterReader'] }
       },
       {
         path: 'client',
         loadComponent: () => import('./dashboard/client-dashboard/client-dashboard.component').then(m => m.ClientDashboardComponent),
+        canActivate: [RoleGuard],
         data: { roles: ['Client', 'Customer'] }
       },
       {
         path: 'clients',
         loadComponent: () => import('./clients/clients-list/clients-list.component').then(m => m.ClientsListComponent),
+        canActivate: [RoleGuard],
         data: { roles: ['Admin', 'MeterReader'] }
       },
       {
         path: 'readings',
         loadComponent: () => import('./readings/readings-list/readings-list.component').then(m => m.ReadingsListComponent),
+        canActivate: [RoleGuard],
         data: { roles: ['Admin', 'MeterReader'] }
       },
       {
@@ -62,11 +68,13 @@ export const routes: Routes = [
           {
             path: 'ongoing',
             loadComponent: () => import('./bills/bills-list/bills-list.component').then(m => m.BillsListComponent),
+            canActivate: [RoleGuard],
             data: { roles: ['Admin', 'MeterReader', 'Client', 'Customer'] }
           },
           {
             path: 'history',
             loadComponent: () => import('./bills/bills-list/bills-list.component').then(m => m.BillsListComponent),
+            canActivate: [RoleGuard],
             data: { roles: ['Admin', 'MeterReader', 'Client', 'Customer'] }
           }
         ]
@@ -74,26 +82,32 @@ export const routes: Routes = [
       {
         path: 'reports',
         loadComponent: () => import('./reports/reports.component').then(m => m.ReportsComponent),
+        canActivate: [RoleGuard],
         data: { roles: ['Admin'] }
       },
       {
         path: 'payments',
         loadComponent: () => import('./payments/payments.component').then(m => m.PaymentsComponent),
+        canActivate: [RoleGuard],
         data: { roles: ['Admin', 'MeterReader'] }
       },
       {
         path: 'settings',
         loadComponent: () => import('./settings/settings.component').then(m => m.SettingsComponent),
+        canActivate: [RoleGuard],
         data: { roles: ['Admin'] }
       },
       {
         path: 'users',
         loadComponent: () => import('./users/users.component').then(m => m.UsersComponent),
+        canActivate: [RoleGuard],
         data: { roles: ['Admin'] }
       },
       {
         path: 'profile',
-        loadComponent: () => import('./profile/profile.component').then(m => m.ProfileComponent)
+        loadComponent: () => import('./profile/profile.component').then(m => m.ProfileComponent),
+        canActivate: [RoleGuard],
+        data: { roles: ['Admin', 'MeterReader', 'Client', 'Customer'] }
       }
     ]
   },
@@ -104,6 +118,6 @@ export const routes: Routes = [
   },
   { 
     path: '**', 
-    redirectTo: 'home' 
+    redirectTo: '/home' 
   }
 ];

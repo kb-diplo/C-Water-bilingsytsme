@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyApi.Data;
 using MyApi.Models;
+using MyApi.Services;
 using System.Security.Claims;
 
 namespace MyApi.Controllers
@@ -10,83 +11,50 @@ namespace MyApi.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class ReadingsController(WaterBillingDbContext context) : ControllerBase
+    public class ReadingsController(WaterBillingDbContext context, IPriceService priceService) : ControllerBase
     {
         private readonly WaterBillingDbContext _context = context;
+        private readonly IPriceService _priceService = priceService;
 
         /// <summary>
-        /// Set initial reading for a client (Admin only)
+        /// Set initial reading for a client (Admin only) - This sets the baseline, not a regular reading
         /// </summary>
         [HttpPost("initial")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<MeterReadingResponseDto>> SetInitialReading(MeterReadingCreateDto dto)
+        public async Task<ActionResult<object>> SetInitialReading(InitialReadingDto dto)
         {
             var client = await _context.Clients.FindAsync(dto.ClientId);
             if (client == null) return NotFound("Client not found");
 
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
 
-            // Check if client already has any actual readings (not placeholders)
-            var existingActualReadings = await _context.MeterReadings
-                .Where(r => r.ClientId == dto.ClientId &&
-                           !(r.CurrentReading == 0 && r.PreviousReading == 0 && r.UnitsUsed == 0))
+            // Check if client already has meter readings
+            var existingReadings = await _context.MeterReadings
+                .Where(r => r.ClientId == dto.ClientId)
                 .AnyAsync();
 
-            if (existingActualReadings)
+            if (existingReadings)
             {
-                return BadRequest($"Client {client.FullName} already has actual meter readings. Initial reading can only be set for new clients.");
+                return BadRequest($"Client {client.FullName} already has meter readings. Initial reading can only be set for clients without any readings.");
             }
 
-            // Remove any existing placeholder readings for this client
-            var placeholderReadings = await _context.MeterReadings
-                .Where(r => r.ClientId == dto.ClientId &&
-                           r.CurrentReading == 0 && r.PreviousReading == 0 && r.UnitsUsed == 0)
-                .ToListAsync();
+            // Update client with initial reading information
+            client.InitialReading = dto.InitialReading;
+            client.HasInitialReading = true;
+            client.InitialReadingDate = DateTime.UtcNow;
+            client.InitialReadingSetByUserId = userId;
 
-            if (placeholderReadings.Any())
-            {
-                _context.MeterReadings.RemoveRange(placeholderReadings);
-            }
-
-            var billingPeriod = $"{DateTime.UtcNow:yyyy-MM}";
-
-            var initialReading = new MeterReading
-            {
-                ClientId = dto.ClientId,
-                CurrentReading = dto.CurrentReading,
-                PreviousReading = 0, // Initial reading always has 0 as previous
-                UnitsUsed = dto.CurrentReading, // For initial reading, units used = current reading
-                RecordedByUserId = userId,
-                Status = "Approved",
-                BillingPeriod = billingPeriod,
-                ReadingDate = DateTime.UtcNow
-            };
-
-            _context.MeterReadings.Add(initialReading);
             await _context.SaveChangesAsync();
 
-            // Auto-generate bill only if units were used
-            if (initialReading.UnitsUsed > 0)
+            return Ok(new
             {
-                await GenerateBill(initialReading);
-            }
-
-            var response = new MeterReadingResponseDto
-            {
-                Id = initialReading.Id,
-                ClientId = initialReading.ClientId,
-                ClientName = client.FullName,
-                MeterNumber = client.MeterNumber,
-                CurrentReading = initialReading.CurrentReading,
-                PreviousReading = initialReading.PreviousReading,
-                UnitsUsed = initialReading.UnitsUsed,
-                ReadingDate = initialReading.ReadingDate,
-                RecordedByUsername = User.Identity?.Name ?? "System",
-                Status = initialReading.Status,
-                BillingPeriod = initialReading.BillingPeriod
-            };
-
-            return Ok(response);
+                message = $"Initial reading of {dto.InitialReading} m³ set successfully for {client.FullName}",
+                clientId = client.Id,
+                clientName = client.FullName,
+                initialReading = client.InitialReading,
+                setDate = client.InitialReadingDate,
+                setBy = User.Identity?.Name ?? "Admin"
+            });
         }
 
         /// <summary>
@@ -101,59 +69,96 @@ namespace MyApi.Controllers
 
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
 
-            var currentMonth = DateTime.UtcNow.Month;
-            var currentYear = DateTime.UtcNow.Year;
+            // Use provided reading period or default to current month
+            var billingPeriod = !string.IsNullOrEmpty(dto.ReadingPeriod) ? dto.ReadingPeriod : $"{DateTime.UtcNow:yyyy-MM}";
+            
+            // Validate reading period format (YYYY-MM)
+            if (!string.IsNullOrEmpty(dto.ReadingPeriod))
+            {
+                if (!DateTime.TryParseExact(dto.ReadingPeriod + "-01", "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out _))
+                {
+                    return BadRequest("Invalid reading period format. Use YYYY-MM format (e.g., 2024-08).");
+                }
+            }
 
-            // VALIDATION: Check if reading already exists for this month
+            // VALIDATION: Check if reading already exists for this billing period
             // Exclude placeholder/initial readings (readings with CurrentReading = 0 and PreviousReading = 0 and UnitsUsed = 0)
-            var existingReadingThisMonth = await _context.MeterReadings
+            var existingReadingThisPeriod = await _context.MeterReadings
                 .Where(r => r.ClientId == dto.ClientId && 
-                           r.ReadingDate.Month == currentMonth && 
-                           r.ReadingDate.Year == currentYear &&
+                           r.BillingPeriod == billingPeriod &&
                            !(r.CurrentReading == 0 && r.PreviousReading == 0 && r.UnitsUsed == 0)) // Exclude placeholder readings
                 .FirstOrDefaultAsync();
 
-            if (existingReadingThisMonth != null)
+            if (existingReadingThisPeriod != null)
             {
                 // Add debugging information
-                var debugInfo = $"Existing reading found - ID: {existingReadingThisMonth.Id}, " +
-                               $"Date: {existingReadingThisMonth.ReadingDate:yyyy-MM-dd HH:mm:ss}, " +
-                               $"Current Reading: {existingReadingThisMonth.CurrentReading}, " +
-                               $"Recorded By: {existingReadingThisMonth.RecordedByUserId}";
+                var debugInfo = $"Existing reading found - ID: {existingReadingThisPeriod.Id}, " +
+                               $"Date: {existingReadingThisPeriod.ReadingDate:yyyy-MM-dd HH:mm:ss}, " +
+                               $"Current Reading: {existingReadingThisPeriod.CurrentReading}, " +
+                               $"Recorded By: {existingReadingThisPeriod.RecordedByUserId}";
                 
-                Console.WriteLine($"Monthly reading validation failed for Client {dto.ClientId}: {debugInfo}");
+                Console.WriteLine($"Period reading validation failed for Client {dto.ClientId}: {debugInfo}");
                 
                 // Check if admin is overriding the monthly restriction
                 var currentUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
                 if (dto.OverrideMonthlyRestriction && currentUserRole == "Admin")
                 {
                     Console.WriteLine($"Admin override applied for Client {dto.ClientId} by user {userId}");
-                    // Continue with reading creation - skip the monthly restriction
+                    // Continue with reading creation - skip the period restriction
                 }
                 else
                 {
-                    return BadRequest($"Reading already exists for {client.FullName} for {DateTime.UtcNow:MMMM yyyy}. Only one reading per month is allowed. " +
-                                    $"Existing reading was recorded on {existingReadingThisMonth.ReadingDate:yyyy-MM-dd} with value {existingReadingThisMonth.CurrentReading}.");
+                    return BadRequest($"Reading already exists for {client.FullName} for period {billingPeriod}. Only one reading per period is allowed. " +
+                                    $"Existing reading was recorded on {existingReadingThisPeriod.ReadingDate:yyyy-MM-dd} with value {existingReadingThisPeriod.CurrentReading}.");
                 }
             }
 
-            // Get the last actual reading (not placeholder readings)
-            var lastReading = await _context.MeterReadings
-                .Where(r => r.ClientId == dto.ClientId &&
-                           !(r.CurrentReading == 0 && r.PreviousReading == 0 && r.UnitsUsed == 0)) // Exclude placeholder readings
-                .OrderByDescending(r => r.ReadingDate)
-                .FirstOrDefaultAsync();
+            // Smart validation based on chronological order
+            var allReadings = await _context.MeterReadings
+                .Where(r => r.ClientId == dto.ClientId)
+                .OrderBy(r => r.BillingPeriod)
+                .ToListAsync();
 
-            var previousReading = lastReading?.CurrentReading ?? 0;
-
-            // VALIDATION: New reading cannot be less than previous reading
-            if (dto.CurrentReading < previousReading)
+            // Parse the billing period to compare chronologically
+            var currentPeriodDate = DateTime.ParseExact(billingPeriod + "-01", "yyyy-MM-dd", null);
+            
+            // Find readings before and after this period
+            var readingsBefore = allReadings.Where(r => 
             {
-                return BadRequest($"New reading ({dto.CurrentReading}) cannot be less than previous reading ({previousReading}). Please verify the meter reading.");
+                var rDate = DateTime.ParseExact(r.BillingPeriod + "-01", "yyyy-MM-dd", null);
+                return rDate < currentPeriodDate;
+            }).OrderByDescending(r => r.BillingPeriod).ToList();
+
+            var readingsAfter = allReadings.Where(r => 
+            {
+                var rDate = DateTime.ParseExact(r.BillingPeriod + "-01", "yyyy-MM-dd", null);
+                return rDate > currentPeriodDate;
+            }).OrderBy(r => r.BillingPeriod).ToList();
+
+            // Determine the appropriate previous reading for calculation
+            var previousReading = readingsBefore.FirstOrDefault()?.CurrentReading ?? client.InitialReading;
+
+            // CHRONOLOGICAL VALIDATION
+            // 1. Reading must be >= previous chronological reading (if any)
+            if (readingsBefore.Any() && dto.CurrentReading < previousReading)
+            {
+                return BadRequest($"New reading ({dto.CurrentReading}) cannot be less than the previous chronological reading ({previousReading}) for period {readingsBefore.First().BillingPeriod}. Please verify the meter reading.");
+            }
+
+            // 2. Reading must be <= next chronological reading (if any)
+            if (readingsAfter.Any() && dto.CurrentReading > readingsAfter.First().CurrentReading)
+            {
+                return BadRequest($"New reading ({dto.CurrentReading}) cannot be greater than the next chronological reading ({readingsAfter.First().CurrentReading}) for period {readingsAfter.First().BillingPeriod}. Please verify the meter reading.");
+            }
+
+            // 3. If no previous readings, must be >= initial reading
+            if (!readingsBefore.Any() && dto.CurrentReading < client.InitialReading)
+            {
+                return BadRequest($"New reading ({dto.CurrentReading}) cannot be less than the initial reading ({client.InitialReading}). Please verify the meter reading.");
             }
 
             var unitsUsed = dto.CurrentReading - previousReading;
-            var billingPeriod = $"{DateTime.UtcNow:yyyy-MM}"; // Format: 2024-01
+            // billingPeriod is already set above based on dto.ReadingPeriod or current month
 
             var reading = new MeterReading
             {
@@ -164,7 +169,7 @@ namespace MyApi.Controllers
                 RecordedByUserId = userId,
                 Status = "Approved",
                 BillingPeriod = billingPeriod,
-                ReadingDate = DateTime.UtcNow
+                ReadingDate = DateTime.UtcNow // Always use current date for when reading was actually recorded
             };
 
             _context.MeterReadings.Add(reading);
@@ -292,10 +297,13 @@ namespace MyApi.Controllers
                 return;
             }
 
+            // Get the appropriate rate for the billing period
+            var ratePerUnit = await _priceService.GetRateForPeriodAsync(reading.BillingPeriod);
+            var amount = reading.UnitsUsed * ratePerUnit;
+
+            // Get system settings for grace period (this doesn't change with price history)
             var settings = await _context.SystemSettings.FirstOrDefaultAsync() 
                 ?? new SystemSettings { RatePerUnit = 50, PenaltyRate = 10, GracePeriodDays = 30 };
-
-            var amount = reading.UnitsUsed * settings.RatePerUnit;
             var dueDate = DateTime.UtcNow.AddDays(settings.GracePeriodDays);
             var billNumber = await GenerateBillNumber();
 
@@ -307,7 +315,7 @@ namespace MyApi.Controllers
                 MeterReadingId = reading.Id, // Link bill to the reading that generated it
                 BillNumber = billNumber,
                 UnitsUsed = reading.UnitsUsed,
-                RatePerUnit = settings.RatePerUnit,
+                RatePerUnit = ratePerUnit,
                 Amount = amount,
                 PenaltyAmount = 0, // No penalty on new bills
                 TotalAmount = amount,

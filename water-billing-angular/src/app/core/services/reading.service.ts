@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { MeterReadingCreateDto, MeterReadingResponseDto } from '../models/api.models';
+import { MeterReadingCreateDto, MeterReadingResponseDto, InitialReadingDto } from '../models/api.models';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -15,6 +15,11 @@ export class ReadingService {
   // Add meter reading (Admin/MeterReader only)
   addReading(reading: MeterReadingCreateDto): Observable<MeterReadingResponseDto> {
     return this.http.post<MeterReadingResponseDto>(this.apiUrl, reading);
+  }
+
+  // Set initial reading for a client (Admin only)
+  setInitialReading(initialReading: InitialReadingDto): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/initial`, initialReading);
   }
 
   // Get all readings (Admin only)
