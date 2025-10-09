@@ -113,6 +113,13 @@ export interface MeterReadingCreateDto {
   currentReading: number;
   notes?: string;
   overrideMonthlyRestriction?: boolean;
+  readingPeriod?: string; // YYYY-MM format (optional - defaults to current month)
+}
+
+// DTO for setting initial reading (Admin only)
+export interface InitialReadingDto {
+  clientId: number;
+  initialReading: number;
 }
 
 export interface MeterReadingResponseDto {
@@ -185,13 +192,38 @@ export interface AdminDashboardStats {
   unpaidBills: number;
 }
 
-export interface MeterReaderDashboardStats {
+export interface SystemMetricsDto {
+  totalClients: number;
+  activeConnections: number;
   totalReadings: number;
-  todayReadings: number;
-  totalCustomers: number;
-  readingsThisMonth: number;
-  pendingReadings: number;
+  totalPayments: number;
+  totalRevenue: number;
+  outstandingAmount: number;
+  collectionRate: number;
   averageConsumption: number;
+  currentRatePerUnit: number;
+}
+
+// Price History DTOs
+export interface PriceHistoryCreateDto {
+  ratePerUnit: number;
+  penaltyRate: number;
+  billingPeriodFrom: string; // YYYY-MM format
+  billingPeriodTo?: string; // YYYY-MM format (optional for ongoing)
+}
+
+export interface PriceHistoryResponseDto {
+  id: number;
+  ratePerUnit: number;
+  penaltyRate: number;
+  effectiveFrom: Date;
+  effectiveTo?: Date;
+  billingPeriodFrom: string;
+  billingPeriodTo?: string;
+  createdDate: Date;
+  createdByUsername: string;
+  isActive: boolean;
+  isCurrent: boolean; // Helper property to indicate if this is the current active price
 }
 
 export interface ClientDashboardStats {
@@ -200,7 +232,6 @@ export interface ClientDashboardStats {
   lastPayment?: Date;
   unpaidBills: number;
   totalPaidThisYear: number;
-  paymentCount: number;
   averageMonthlyBill: number;
   paymentHistory: any[]; // Array of payment records
 }

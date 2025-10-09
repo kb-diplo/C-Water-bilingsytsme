@@ -371,13 +371,13 @@ namespace MyApi.Controllers
 
                 // Prevent deleting own account
                 var currentUsername = User.Identity?.Name;
-                if (user.Username != null && currentUsername != null && user.Username.ToLower() == currentUsername.ToLower())
+                if (user.Username != null && currentUsername != null && string.Equals(user.Username, currentUsername, StringComparison.OrdinalIgnoreCase))
                     return BadRequest("You cannot delete your own account");
 
                 _logger.LogInformation("Found user with ID: {UserId}, Role: {UserRole}", user.Id, user.Role);
 
                 // If user has related data, handle it appropriately
-                if (user.Clients?.Any() == true)
+                if (user.Clients?.Count > 0)
                 {
                     _logger.LogInformation("User has {Count} related clients. Updating...", user.Clients.Count);
                     // Find another admin to reassign the clients to
