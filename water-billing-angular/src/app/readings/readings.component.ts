@@ -4,7 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { AuthService } from '../core/services/auth.service';
 import { ReadingService } from '../core/services/reading.service';
 import { ClientService } from '../core/services/client.service';
-import { MeterReadingCreateDto, MeterReadingResponseDto, ClientDto } from '../core/models/api.models';
+import { MeterReadingCreateDto, MeterReadingResponseDto, ClientDto, InitialReadingDto } from '../core/models/api.models';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -24,6 +24,7 @@ export class ReadingsComponent implements OnInit {
   showInitialReadingModal = false;
   readingForm: FormGroup;
   initialReadingForm: FormGroup;
+  availablePeriods: { value: string, label: string }[] = [];
 
   constructor(
     private readingService: ReadingService,
@@ -33,18 +34,43 @@ export class ReadingsComponent implements OnInit {
   ) {
     this.readingForm = this.formBuilder.group({
       clientId: ['', Validators.required],
-      currentReading: ['', [Validators.required, Validators.min(0)]]
+      currentReading: ['', [Validators.required, Validators.min(0)]],
+      readingPeriod: [''] // Optional - defaults to current month
     });
     
     this.initialReadingForm = this.formBuilder.group({
       clientId: ['', Validators.required],
-      currentReading: ['', [Validators.required, Validators.min(0)]]
+      currentReading: ['', [Validators.required, Validators.min(0)]],
+      readingPeriod: [''] // Optional - defaults to current month
     });
+    
+    this.generateAvailablePeriods();
   }
 
   ngOnInit(): void {
     this.loadReadings();
     this.loadClients();
+  }
+
+  generateAvailablePeriods(): void {
+    const currentDate = new Date();
+    const periods: { value: string, label: string }[] = [];
+    
+    // Add current month as default (empty value)
+    periods.push({ 
+      value: '', 
+      label: `Current Month (${currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })})` 
+    });
+    
+    // Add previous 12 months
+    for (let i = 1; i <= 12; i++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const label = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      periods.push({ value, label });
+    }
+    
+    this.availablePeriods = periods;
   }
 
   loadReadings(): void {
@@ -115,7 +141,8 @@ export class ReadingsComponent implements OnInit {
 
     const readingData: MeterReadingCreateDto = {
       clientId: parseInt(this.readingForm.value.clientId),
-      currentReading: parseFloat(this.readingForm.value.currentReading)
+      currentReading: parseFloat(this.readingForm.value.currentReading),
+      readingPeriod: this.readingForm.value.readingPeriod || undefined
     };
 
     this.readingService.addReading(readingData).subscribe({
@@ -139,32 +166,31 @@ export class ReadingsComponent implements OnInit {
       return;
     }
 
-    const readingData: MeterReadingCreateDto = {
+    const initialReadingData: InitialReadingDto = {
       clientId: parseInt(this.initialReadingForm.value.clientId),
-      currentReading: parseFloat(this.initialReadingForm.value.currentReading)
+      initialReading: parseFloat(this.initialReadingForm.value.currentReading)
     };
 
     // Show confirmation for initial reading
     Swal.fire({
-      title: 'Add Initial Reading?',
-      text: 'This will set the starting meter reading for this client. This should only be done once per client.',
+      title: 'Set Initial Reading?',
+      text: 'This will set the baseline meter reading for this client. This is NOT added as a regular reading but sets the starting point for future readings.',
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, add it!'
+      confirmButtonText: 'Yes, set baseline!'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.readingService.addReading(readingData).subscribe({
-          next: (reading) => {
-            this.readings.unshift(reading);
-            this.filteredReadings = this.readings;
+        this.readingService.setInitialReading(initialReadingData).subscribe({
+          next: (response) => {
             this.closeInitialReadingModal();
-            Swal.fire('Success', 'Initial meter reading added successfully', 'success');
+            Swal.fire('Success', response.message || 'Initial reading baseline set successfully', 'success');
+            // Don't add to readings list as this is just setting the baseline
           },
           error: (error) => {
-            console.error('Error adding initial reading:', error);
-            const errorMessage = error.error?.message || 'Failed to add initial meter reading';
+            console.error('Error setting initial reading:', error);
+            const errorMessage = error.error?.message || error.error || 'Failed to set initial reading baseline';
             Swal.fire('Error', errorMessage, 'error');
           }
         });

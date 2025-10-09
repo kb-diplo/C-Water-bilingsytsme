@@ -94,6 +94,7 @@ export class SettingsComponent implements OnInit {
     });
   }
 
+
   resetForm(): void {
     if (this.currentSettings) {
       this.settingsForm.patchValue({

@@ -146,6 +146,22 @@
             </div>
           </div>
           
+          <div class="row">
+            <div class="col-md-12">
+              <div class="form-group mb-3">
+                <label for="readingPeriod">Reading Period</label>
+                <select formControlName="readingPeriod" class="form-control">
+                  <option *ngFor="let period of availablePeriods" [value]="period.value">
+                    {{ period.label }}
+                  </option>
+                </select>
+                <small class="form-text text-muted">
+                  Select the billing period for this reading. Default is current month.
+                </small>
+              </div>
+            </div>
+          </div>
+          
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" (click)="closeAddModal()">Cancel</button>
@@ -158,3 +174,78 @@
   </div>
 </div>
 <div class="modal-backdrop fade" [class.show]="showAddModal" *ngIf="showAddModal"></div>
+
+<!-- Initial Reading Modal -->
+<div class="modal fade" [class.show]="showInitialReadingModal" [style.display]="showInitialReadingModal ? 'block' : 'none'" 
+     tabindex="-1" role="dialog" *ngIf="showInitialReadingModal">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Set Initial Reading Baseline</h5>
+        <button type="button" class="btn-close" (click)="closeInitialReadingModal()"></button>
+      </div>
+      <form [formGroup]="initialReadingForm" (ngSubmit)="onSubmitInitialReading()">
+        <div class="modal-body">
+          <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Set Initial Reading Baseline:</strong> This sets the starting point for meter readings for existing clients who had meters before the system. This is NOT added as a reading record but sets the baseline from which future readings will be calculated.
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label for="clientId">Client</label>
+                <select formControlName="clientId" class="form-control" 
+                        [class.is-invalid]="initialReadingForm.get('clientId')?.invalid && initialReadingForm.get('clientId')?.touched">
+                  <option value="">Select Client</option>
+                  <option *ngFor="let client of clients" [value]="client.id">
+                    {{ client.fullName }} - {{ client.meterNumber }}
+                  </option>
+                </select>
+                <div class="invalid-feedback" *ngIf="initialReadingForm.get('clientId')?.invalid && initialReadingForm.get('clientId')?.touched">
+                  Client is required
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group mb-3">
+                <label for="currentReading">Initial Reading (m³)</label>
+                <input type="number" formControlName="currentReading" class="form-control"
+                       [class.is-invalid]="initialReadingForm.get('currentReading')?.invalid && initialReadingForm.get('currentReading')?.touched"
+                       placeholder="Enter initial reading" step="0.01">
+                <div class="invalid-feedback" *ngIf="initialReadingForm.get('currentReading')?.invalid && initialReadingForm.get('currentReading')?.touched">
+                  <div *ngIf="initialReadingForm.get('currentReading')?.errors?.['required']">Initial reading is required</div>
+                  <div *ngIf="initialReadingForm.get('currentReading')?.errors?.['min']">Reading must be positive</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-12">
+              <div class="form-group mb-3">
+                <label for="readingPeriod">Reading Period</label>
+                <select formControlName="readingPeriod" class="form-control">
+                  <option *ngFor="let period of availablePeriods" [value]="period.value">
+                    {{ period.label }}
+                  </option>
+                </select>
+                <small class="form-text text-muted">
+                  Select the billing period for this initial reading. Default is current month.
+                </small>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeInitialReadingModal()">Cancel</button>
+          <button type="submit" class="btn btn-warning" [disabled]="initialReadingForm.invalid">
+            Set Baseline Reading
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showInitialReadingModal" *ngIf="showInitialReadingModal"></div>

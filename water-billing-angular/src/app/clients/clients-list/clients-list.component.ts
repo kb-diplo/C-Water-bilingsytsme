@@ -31,6 +31,7 @@ export class ClientsListComponent implements OnInit {
   previousReadingDate: Date | null = null;
   clientForm: FormGroup;
   readingForm: FormGroup;
+  availablePeriods: { value: string, label: string }[] = [];
   
   // Pagination
   currentPage = 1;
@@ -60,8 +61,11 @@ export class ClientsListComponent implements OnInit {
     });
 
     this.readingForm = this.formBuilder.group({
-      currentReading: ['', [Validators.required, Validators.min(0.01)]]
+      currentReading: ['', [Validators.required, Validators.min(0.01)]],
+      readingPeriod: [''] // Optional - defaults to current month
     });
+    
+    this.generateAvailablePeriods();
 
     this.searchSubject.pipe(
       debounceTime(300),
@@ -73,6 +77,27 @@ export class ClientsListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadClients();
+  }
+
+  generateAvailablePeriods(): void {
+    const currentDate = new Date();
+    const periods: { value: string, label: string }[] = [];
+    
+    // Add current month as default (empty value)
+    periods.push({ 
+      value: '', 
+      label: `Current Month (${currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })})` 
+    });
+    
+    // Add previous 12 months
+    for (let i = 1; i <= 12; i++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const label = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      periods.push({ value, label });
+    }
+    
+    this.availablePeriods = periods;
   }
 
   loadClients(): void {
@@ -536,13 +561,14 @@ export class ClientsListComponent implements OnInit {
     this.readingLoading = true;
     const readingData: MeterReadingCreateDto = {
       clientId: this.selectedClient.id,
-      currentReading: parseFloat(currentReadingValue)
+      currentReading: currentReadingValue,
+      readingPeriod: this.readingForm.value.readingPeriod || undefined,
+      overrideMonthlyRestriction: this.readingForm.value.overrideMonthlyRestriction || false
     };
 
     console.log('Submitting reading data:', readingData);
     console.log('Selected client:', this.selectedClient);
     console.log('Form value:', this.readingForm.value);
-
     this.readingService.addReading(readingData).subscribe({
       next: (reading) => {
         console.log('Reading added successfully with override:', reading);
@@ -585,6 +611,7 @@ export class ClientsListComponent implements OnInit {
     const readingData: MeterReadingCreateDto = {
       clientId: this.selectedClient?.id || 0,
       currentReading: parseFloat(currentReadingValue),
+      readingPeriod: this.readingForm.value.readingPeriod || undefined,
       overrideMonthlyRestriction: true
     };
 

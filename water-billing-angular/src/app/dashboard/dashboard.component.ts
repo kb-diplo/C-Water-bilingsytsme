@@ -55,11 +55,16 @@ export class DashboardComponent implements OnInit {
     console.log('Main dashboard component initialized:', {
       user: user,
       userRole: user?.role,
+      currentUrl: this.router.url,
       timestamp: new Date().toISOString()
     });
 
-    // Redirect to role-specific dashboard
-    if (user) {
+    // Only redirect to role-specific dashboard if we're on the root /dashboard path
+    // Don't redirect if user is accessing specific child routes like /dashboard/bills/ongoing
+    const currentUrl = this.router.url;
+    const isRootDashboard = currentUrl === '/dashboard' || currentUrl === '/dashboard/';
+    
+    if (user && isRootDashboard) {
       const dashboardRoute = this.authService.getDashboardRoute();
       console.log('Redirecting from main dashboard to:', dashboardRoute);
 

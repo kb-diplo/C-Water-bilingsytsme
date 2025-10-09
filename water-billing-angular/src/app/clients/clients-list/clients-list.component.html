@@ -306,6 +306,18 @@
             </small>
           </div>
 
+          <div class="form-group mb-3">
+            <label for="readingPeriod">Reading Period</label>
+            <select formControlName="readingPeriod" class="form-control">
+              <option *ngFor="let period of availablePeriods" [value]="period.value">
+                {{ period.label }}
+              </option>
+            </select>
+            <small class="form-text text-muted">
+              Select the billing period for this reading. Default is current month.
+            </small>
+          </div>
+
           <!-- Units Calculation Preview -->
           <div *ngIf="readingForm.get('currentReading')?.value && previousReading !== null" class="alert alert-success">
             <h6><i class="fas fa-calculator"></i> Calculation Preview</h6>
