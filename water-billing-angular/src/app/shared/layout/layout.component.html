@@ -41,8 +41,8 @@
       </li>
 
       <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseBilling" 
-           aria-expanded="true" aria-controls="collapseBilling">
+        <a class="nav-link collapsed" (click)="toggleAdminBillingCollapse($event)" data-bs-toggle="collapse" data-bs-target="#collapseBilling" 
+           aria-expanded="true" aria-controls="collapseBilling" style="cursor: pointer;">
           <i class="fas fa-fw fa-file-invoice-dollar"></i>
           <span>Billing</span>
         </a>
@@ -112,16 +112,16 @@
       <div class="sidebar-heading">My Account</div>
       
       <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseMyBilling" 
-           aria-expanded="true" aria-controls="collapseMyBilling">
+        <a class="nav-link collapsed" (click)="toggleBillingCollapse($event)" data-bs-toggle="collapse" data-bs-target="#collapseMyBilling" 
+           aria-expanded="true" aria-controls="collapseMyBilling" style="cursor: pointer;">
           <i class="fas fa-fw fa-file-invoice-dollar"></i>
           <span>My Bills</span>
         </a>
         <div id="collapseMyBilling" class="collapse" aria-labelledby="headingMyBilling" data-bs-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
             <h6 class="collapse-header">My Billing:</h6>
-            <a class="collapse-item" routerLink="/bills/ongoing">Current Bills</a>
-            <a class="collapse-item" routerLink="/bills/history">Payment History</a>
+            <a class="collapse-item" routerLink="/dashboard/bills/ongoing">Current Bills</a>
+            <a class="collapse-item" routerLink="/dashboard/bills/history">Billing History</a>
           </div>
         </div>
       </li>
@@ -183,13 +183,13 @@
                 </li>
                 <li><hr class="dropdown-divider"></li>
                 <li *ngIf="!isMeterReader()">
-                  <a class="dropdown-item" routerLink="/profile">
+                  <a class="dropdown-item" (click)="navigateToProfile()" style="cursor: pointer;">
                     <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
                     Profile
                   </a>
                 </li>
                 <li *ngIf="isAdmin()">
-                  <a class="dropdown-item" routerLink="/settings">
+                  <a class="dropdown-item" (click)="navigateToSettings()" style="cursor: pointer;">
                     <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
                     Settings
                   </a>

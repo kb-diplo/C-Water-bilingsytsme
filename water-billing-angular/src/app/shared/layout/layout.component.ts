@@ -1,8 +1,9 @@
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { AuthService, User } from '../../core/services/auth.service';
+import { filter } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -26,6 +27,25 @@ export class LayoutComponent implements OnInit {
     this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
     });
+
+    // Close dropdown on navigation
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.showUserDropdown = false;
+    });
+  }
+
+  // Close dropdown when clicking outside
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    const dropdown = document.getElementById('userDropdown');
+    const dropdownMenu = dropdown?.nextElementSibling;
+    
+    if (dropdown && dropdownMenu && !dropdown.contains(target) && !dropdownMenu.contains(target)) {
+      this.showUserDropdown = false;
+    }
   }
 
   toggleSidebar(): void {
@@ -34,6 +54,16 @@ export class LayoutComponent implements OnInit {
 
   toggleUserDropdown(): void {
     this.showUserDropdown = !this.showUserDropdown;
+  }
+
+  navigateToProfile(): void {
+    this.showUserDropdown = false; // Close dropdown
+    this.router.navigate(['/dashboard/profile']);
+  }
+
+  navigateToSettings(): void {
+    this.showUserDropdown = false; // Close dropdown
+    this.router.navigate(['/dashboard/settings']);
   }
 
   logout(): void {
@@ -78,5 +108,35 @@ export class LayoutComponent implements OnInit {
 
   getCurrentYear(): number {
     return new Date().getFullYear();
+  }
+
+  toggleBillingCollapse(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const collapseElement = document.getElementById('collapseMyBilling');
+    if (collapseElement) {
+      // Toggle the collapse manually
+      if (collapseElement.classList.contains('show')) {
+        collapseElement.classList.remove('show');
+      } else {
+        collapseElement.classList.add('show');
+      }
+    }
+  }
+
+  toggleAdminBillingCollapse(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const collapseElement = document.getElementById('collapseBilling');
+    if (collapseElement) {
+      // Toggle the collapse manually
+      if (collapseElement.classList.contains('show')) {
+        collapseElement.classList.remove('show');
+      } else {
+        collapseElement.classList.add('show');
+      }
+    }
   }
 }
