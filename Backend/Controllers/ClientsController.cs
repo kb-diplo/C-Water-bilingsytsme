@@ -17,6 +17,53 @@ namespace MyApi.Controllers
         private readonly IPasswordHasher<Users> _passwordHasher = passwordHasher;
 
         /// <summary>
+        /// Get current client's info (for logged-in clients)
+        /// </summary>
+        [HttpGet("my-info")]
+        [Authorize(Roles = "Client,Customer")]
+        public async Task<ActionResult<object>> GetMyClientInfo()
+        {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+            {
+                return Unauthorized("User not authenticated");
+            }
+
+            // Find the user and their client details
+            var user = await _context.Users
+                .Where(u => u.Username == username && u.IsActive)
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            // Find client details by matching user info
+            var clientDetails = await _context.Clients
+                .Where(c => c.Email == user.Email || c.FirstName + " " + c.LastName == user.FirstName + " " + user.LastName)
+                .FirstOrDefaultAsync();
+
+            if (clientDetails == null)
+            {
+                return NotFound("Client details not found. Please contact administrator.");
+            }
+
+            return Ok(new
+            {
+                id = clientDetails.Id,
+                username = user.Username,
+                email = user.Email,
+                firstName = user.FirstName,
+                lastName = user.LastName,
+                fullName = clientDetails.FullName,
+                meterNumber = clientDetails.MeterNumber,
+                location = clientDetails.Location,
+                connectionStatus = clientDetails.ConnectionStatus
+            });
+        }
+
+        /// <summary>
         /// Get all clients
         /// </summary>
         [HttpGet]
@@ -59,41 +106,6 @@ namespace MyApi.Controllers
             return Ok(result);
         }
 
-        /// <summary>
-        /// Get current client's information - for client dashboard
-        /// </summary>
-        [HttpGet("my-info")]
-        [Authorize(Roles = "Client,Customer")]
-        public async Task<ActionResult<object>> GetMyClientInfo()
-        {
-            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-
-            var client = await _context.Clients
-                .Include(c => c.CreatedBy)
-                .FirstOrDefaultAsync(c => c.CreatedByUserId == currentUserId && c.IsActive);
-
-            if (client == null)
-                return NotFound("Client information not found. Please contact administrator.");
-
-            var result = new {
-                Id = client.Id,
-                Username = client.CreatedBy?.Username,
-                FirstName = client.FirstName,
-                MiddleName = client.MiddleName,
-                LastName = client.LastName,
-                FullName = client.FullName,
-                Email = client.Email,
-                Phone = client.Phone,
-                MeterNumber = client.MeterNumber,
-                Location = client.Location,
-                ConnectionStatus = client.ConnectionStatus,
-                CreatedByUserId = client.CreatedByUserId,
-                CreatedDate = client.CreatedDate,
-                IsActive = client.IsActive
-            };
-
-            return Ok(result);
-        }
 
         /// <summary>
         /// Get client by ID - Admin/MeterReader can view any, Clients can only view their own

@@ -20,7 +20,7 @@ namespace MyApi.Controllers
         /// Get all bills with pagination
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,MeterReader,Client,Customer")]
         public async Task<ActionResult<IEnumerable<BillResponseDto>>> GetAllBills(
             [FromQuery] int page = 1, 
             [FromQuery] int pageSize = 20,
@@ -31,6 +31,23 @@ namespace MyApi.Controllers
                 .Include(b => b.Payments)
                 .Where(b => b.Status != "Deleted") // Exclude deleted bills
                 .AsQueryable();
+
+            // Filter by user role - clients only see their own bills
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (userRole == "Client" || userRole == "Customer")
+            {
+                var username = User.Identity?.Name;
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+                if (user != null)
+                {
+                    var client = await _context.Clients.FirstOrDefaultAsync(c => c.Email == user.Email || 
+                        (c.FirstName + " " + c.LastName) == (user.FirstName + " " + user.LastName));
+                    if (client != null)
+                    {
+                        query = query.Where(b => b.ClientId == client.Id);
+                    }
+                }
+            }
 
             if (!string.IsNullOrEmpty(status))
             {

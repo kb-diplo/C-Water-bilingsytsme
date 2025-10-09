@@ -92,27 +92,21 @@ export class BillsListComponent implements OnInit {
   }
 
   private loadClientSpecificBills(): void {
-    // First get client info, then load their bills
+    // For clients, first get their client ID, then get their specific bills
     this.http.get<any>(`${environment.apiUrl}/clients/my-info`).subscribe({
       next: (clientInfo) => {
         console.log('Client info for bills:', clientInfo);
         const clientId = clientInfo.id;
         
-        // Now load bills for this client
+        // Now get bills for this specific client
         this.billingService.getClientBills(clientId).subscribe({
-          next: (bills) => {
-            console.log('All client bills:', bills);
-            
-            // Filter based on page type (ongoing vs history)
-            if (this.isOngoing) {
-              this.bills = bills.filter(b => b.status !== 'Paid');
-              console.log('Ongoing bills:', this.bills);
-            } else {
-              this.bills = bills.filter(b => b.status === 'Paid');
-              console.log('Paid bills (history):', this.bills);
-            }
-            
+          next: (allBills) => {
+            console.log('All client bills:', allBills);
+            // Filter by status on frontend since we have all bills
+            const status = this.isOngoing ? 'Unpaid' : 'Paid';
+            this.bills = allBills.filter(bill => bill.status === status);
             this.filteredBills = this.bills;
+            console.log(`Filtered ${status} bills:`, this.bills);
             this.loading = false;
           },
           error: (error) => {
@@ -125,9 +119,22 @@ export class BillsListComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading client info:', error);
-        this.bills = [];
-        this.filteredBills = [];
-        this.loading = false;
+        // Fallback to the general endpoint with role-based filtering
+        console.log('Falling back to general bills endpoint with role filtering');
+        const status = this.isOngoing ? 'Unpaid' : 'Paid';
+        this.billingService.getBills({ status }).subscribe({
+          next: (bills) => {
+            this.bills = bills;
+            this.filteredBills = bills;
+            this.loading = false;
+          },
+          error: (fallbackError) => {
+            console.error('Error loading bills with fallback:', fallbackError);
+            this.bills = [];
+            this.filteredBills = [];
+            this.loading = false;
+          }
+        });
       }
     });
   }
@@ -223,14 +230,58 @@ export class BillsListComponent implements OnInit {
         });
       },
       error: (error) => {
-        console.error('Error downloading receipt:', error);
         Swal.fire('Error', 'Failed to download receipt', 'error');
       }
     });
   }
 
+  // Helper methods
+  isAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
+
+  isMeterReader(): boolean {
+    return this.authService.isMeterReader();
+  }
+
+  isClient(): boolean {
+    return this.authService.isClient();
+  }
+
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-KE', {
+      style: 'currency',
+      currency: 'KES'
+    }).format(amount);
+  }
+
+  getBadgeClass(status: string): string {
+    switch (status.toLowerCase()) {
+      case 'paid': return 'badge-success';
+      case 'unpaid': return 'badge-warning';
+      case 'overdue': return 'badge-danger';
+      default: return 'badge-secondary';
+    }
+  }
+
+  isOverdue(bill: Bill): boolean {
+    return new Date(bill.dueDate) < new Date() && bill.balance > 0;
+  }
+
+  formatDate(date: Date | string): string {
+    return new Date(date).toLocaleDateString();
+  }
+
+  getDisplayTitle(): string {
+    if (this.isClient()) {
+      return this.isOngoing ? 'My Ongoing Bills' : 'My Billing History';
+    }
+    return this.pageTitle;
+  }
+
+  // Additional action methods from original
   initiateClientSTKPush(bill: Bill): void {
-    // For clients, show STK Push form instead of record payment form
+    // STK Push functionality for clients
     Swal.fire({
       title: 'Pay via M-Pesa STK Push',
       html: `
@@ -316,42 +367,10 @@ export class BillsListComponent implements OnInit {
     });
   }
 
-  downloadPaymentReceipt(paymentId: number, billNumber: string): void {
-    // Get the payment receipt HTML content and download it
-    this.http.get(`${environment.apiUrl}/payments/${paymentId}/receipt`, { responseType: 'text' }).subscribe({
-      next: (htmlContent) => {
-        // Create a blob with the HTML content
-        const blob = new Blob([htmlContent], { type: 'text/html' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Denkam_Waters_Payment_Receipt_${billNumber}_${new Date().toISOString().split('T')[0]}.html`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        
-        // Show success message
-        Swal.fire({
-          icon: 'success',
-          title: 'Payment Receipt Downloaded',
-          text: 'Your payment receipt has been downloaded successfully.',
-          timer: 3000,
-          showConfirmButton: false
-        });
-      },
-      error: (error) => {
-        console.error('Error downloading payment receipt:', error);
-        Swal.fire('Error', 'Failed to download payment receipt', 'error');
-      }
-    });
-  }
-
   viewBillPayments(bill: Bill): void {
-    // Show payments for this bill using client payments endpoint
+    // Show payments for this bill
     this.http.get<Payment[]>(`${environment.apiUrl}/payments/client/${bill.clientId}`).subscribe({
       next: (allPayments) => {
-        // Filter payments for this specific bill
         const payments = allPayments.filter(p => p.billId === bill.id);
         
         if (payments.length === 0) {
@@ -359,7 +378,6 @@ export class BillsListComponent implements OnInit {
           return;
         }
 
-        // Create HTML content for payments
         let paymentsHtml = '<div class="payments-list" style="max-height: 400px; overflow-y: auto;">';
         payments.forEach((payment, index) => {
           paymentsHtml += `
@@ -396,7 +414,6 @@ export class BillsListComponent implements OnInit {
           showCloseButton: true,
           showConfirmButton: false,
           didOpen: () => {
-            // Add event listeners to download buttons
             const downloadButtons = document.querySelectorAll('.download-payment-btn');
             downloadButtons.forEach(button => {
               button.addEventListener('click', (e) => {
@@ -411,8 +428,34 @@ export class BillsListComponent implements OnInit {
         });
       },
       error: (error) => {
-        console.error('Error loading payments:', error);
         Swal.fire('Error', 'Failed to load payments', 'error');
+      }
+    });
+  }
+
+  downloadPaymentReceipt(paymentId: number, billNumber: string): void {
+    this.http.get(`${environment.apiUrl}/payments/${paymentId}/receipt`, { responseType: 'text' }).subscribe({
+      next: (htmlContent) => {
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Denkam_Waters_Payment_Receipt_${billNumber}_${new Date().toISOString().split('T')[0]}.html`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Payment Receipt Downloaded',
+          text: 'Your payment receipt has been downloaded successfully.',
+          timer: 3000,
+          showConfirmButton: false
+        });
+      },
+      error: (error) => {
+        Swal.fire('Error', 'Failed to download payment receipt', 'error');
       }
     });
   }
@@ -434,17 +477,15 @@ export class BillsListComponent implements OnInit {
       if (result.isConfirmed) {
         this.billingService.sendBillReminder(bill.id).subscribe({
           next: (response) => {
-            console.log('Bill reminder sent:', response);
             Swal.fire({
               icon: 'success',
               title: 'Email Sent!',
-              text: `Bill reminder sent successfully to ${response.email}`,
+              text: `Bill reminder sent successfully to ${(response as any).email}`,
               timer: 3000,
               showConfirmButton: false
             });
           },
           error: (error) => {
-            console.error('Error sending bill reminder:', error);
             let errorMessage = 'Failed to send bill reminder';
             
             if (error.status === 400) {
@@ -463,13 +504,11 @@ export class BillsListComponent implements OnInit {
   }
 
   deleteBill(bill: Bill): void {
-    // Only admins can delete bills
     if (!this.isAdmin()) {
       Swal.fire('Access Denied', 'Only administrators can delete bills', 'error');
       return;
     }
 
-    // Check if bill has payments (balance < totalAmount means there are payments)
     if (bill.balance < bill.totalAmount) {
       Swal.fire({
         icon: 'warning',
@@ -480,7 +519,6 @@ export class BillsListComponent implements OnInit {
       return;
     }
 
-    // Show detailed confirmation with bill information
     Swal.fire({
       title: 'Delete Bill',
       html: `
@@ -501,27 +539,8 @@ export class BillsListComponent implements OnInit {
       width: '500px'
     }).then((result) => {
       if (result.isConfirmed) {
-        console.log('Attempting to delete bill:', bill.id, 'Bill Number:', bill.billNumber);
-        console.log('Current user role:', this.authService.getCurrentUser()?.role);
-        console.log('Bill details:', bill);
-        
-        // Show loading state
-        Swal.fire({
-          title: 'Deleting Bill...',
-          text: 'Please wait while we delete the bill.',
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          showConfirmButton: false,
-          willOpen: () => {
-            Swal.showLoading();
-          }
-        });
-        
         this.billingService.deleteBill(bill.id).subscribe({
           next: (response) => {
-            console.log('Bill deleted successfully:', response);
-            
-            // Remove bill from local arrays
             this.bills = this.bills.filter(b => b.id !== bill.id);
             this.filteredBills = this.filteredBills.filter(b => b.id !== bill.id);
             
@@ -535,169 +554,21 @@ export class BillsListComponent implements OnInit {
           },
           error: (error) => {
             console.error('Error deleting bill:', error);
-            console.error('Error status:', error.status);
-            console.error('Error details:', error.error);
-            console.error('Full error object:', JSON.stringify(error, null, 2));
-            
             let errorMessage = 'Failed to delete bill';
-            let errorDetails = '';
             
             if (error.status === 400) {
               errorMessage = error.error?.Message || error.error || 'Cannot delete bill with existing payments';
             } else if (error.status === 401) {
               errorMessage = 'Unauthorized: Please log in as an administrator';
-              errorDetails = 'Your session may have expired. Please refresh the page and try again.';
             } else if (error.status === 403) {
               errorMessage = 'Access denied: Only administrators can delete bills';
-              errorDetails = 'Please ensure you are logged in with administrator privileges.';
             } else if (error.status === 404) {
               errorMessage = error.error?.Message || 'Bill not found';
-              errorDetails = 'The bill may have already been deleted or does not exist.';
-            } else if (error.status === 500) {
-              errorMessage = error.error?.Message || 'Server error occurred while deleting bill';
-              errorDetails = 'Please try again later or contact system administrator.';
-            } else if (error.status === 0) {
-              errorMessage = 'Network error - Unable to connect to server';
-              errorDetails = 'Please check your internet connection and try again.';
-            } else if (error.error?.Message) {
-              errorMessage = error.error.Message;
-            } else if (error.error?.message) {
-              errorMessage = error.error.message;
-            } else if (typeof error.error === 'string') {
-              errorMessage = error.error;
             }
             
-            Swal.fire({
-              icon: 'error',
-              title: 'Delete Failed',
-              html: `
-                <div class="text-left">
-                  <p><strong>Error:</strong> ${errorMessage}</p>
-                  ${errorDetails ? `<p><strong>Details:</strong> ${errorDetails}</p>` : ''}
-                  <p><strong>Error Code:</strong> ${error.status || 'Unknown'}</p>
-                </div>
-              `,
-              confirmButtonText: 'OK',
-              width: '500px'
-            });
+            Swal.fire('Error', errorMessage, 'error');
           }
         });
-      }
-    });
-  }
-
-  getBadgeClass(status: string): string {
-    switch (status.toLowerCase()) {
-      case 'paid': return 'badge-success';
-      case 'unpaid': return 'badge-warning';
-      case 'overdue': return 'badge-danger';
-      default: return 'badge-secondary';
-    }
-  }
-
-  isOverdue(bill: Bill): boolean {
-    return new Date(bill.dueDate) < new Date() && bill.balance > 0;
-  }
-
-  formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-KE', {
-      style: 'currency',
-      currency: 'KES'
-    }).format(amount);
-  }
-
-  formatDate(date: Date | string): string {
-    return new Date(date).toLocaleDateString();
-  }
-
-  isAdmin(): boolean {
-    return this.authService.isAdmin();
-  }
-
-  isMeterReader(): boolean {
-    return this.authService.isMeterReader();
-  }
-
-  isClient(): boolean {
-    return this.authService.isClient();
-  }
-
-  getDisplayTitle(): string {
-    if (this.isClient()) {
-      return this.isOngoing ? 'My Ongoing Bills' : 'My Billing History';
-    }
-    return this.pageTitle;
-  }
-
-  // STK Push functionality
-  isValidPhoneNumber(phone: string): boolean {
-    const phoneRegex = /^254[0-9]{9}$/;
-    return phoneRegex.test(phone);
-  }
-
-  sendSTKPush(): void {
-    if (!this.selectedBill || !this.isValidPhoneNumber(this.stkPhoneNumber)) {
-      Swal.fire('Error', 'Please enter a valid phone number in format 254XXXXXXXXX', 'error');
-      return;
-    }
-
-    Swal.fire({
-      title: 'Send STK Push?',
-      html: `
-        <div class="text-left">
-          <p><strong>Bill:</strong> ${this.selectedBill.billNumber}</p>
-          <p><strong>Amount:</strong> KSh ${this.selectedBill.balance.toLocaleString()}</p>
-          <p><strong>Phone:</strong> ${this.stkPhoneNumber}</p>
-          <br>
-          <p class="text-info">The client will receive an M-Pesa prompt on their phone.</p>
-        </div>
-      `,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#ffc107',
-      confirmButtonText: 'Send STK Push',
-      cancelButtonText: 'Cancel'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.processSTKPush();
-      }
-    });
-  }
-
-  private processSTKPush(): void {
-    if (!this.selectedBill) return;
-
-    this.stkLoading = true;
-    
-    const stkData = {
-      BillId: this.selectedBill.id,
-      PhoneNumber: this.stkPhoneNumber,
-      Amount: this.selectedBill.balance
-    };
-
-    // Call the STK Push service (you'll need to add this to BillingService)
-    this.billingService.sendSTKPush(stkData).subscribe({
-      next: (response) => {
-        this.stkLoading = false;
-        Swal.fire({
-          icon: 'success',
-          title: 'STK Push Sent!',
-          html: `
-            <div class="text-left">
-              <p>STK push request sent successfully to <strong>${this.stkPhoneNumber}</strong></p>
-              <p class="text-info">The client should receive an M-Pesa prompt shortly.</p>
-              <p class="text-muted">Payment will be processed automatically once completed.</p>
-            </div>
-          `,
-          timer: 5000
-        });
-        this.stkPhoneNumber = '';
-      },
-      error: (error) => {
-        this.stkLoading = false;
-        console.error('STK Push error:', error);
-        const errorMessage = error.error?.Message || error.error?.message || 'Failed to send STK push';
-        Swal.fire('Error', errorMessage, 'error');
       }
     });
   }
@@ -785,5 +656,21 @@ export class BillsListComponent implements OnInit {
         Swal.fire('Success', `${count} bill(s) exported successfully`, 'success');
       }, 250);
     }
+  }
+
+  // Missing methods for STK Push functionality
+  sendSTKPush(): void {
+    if (!this.isValidPhoneNumber(this.stkPhoneNumber)) {
+      Swal.fire('Error', 'Please enter a valid phone number (254XXXXXXXXX)', 'error');
+      return;
+    }
+
+    // Implementation for STK Push
+    Swal.fire('Info', 'STK Push functionality will be implemented soon', 'info');
+  }
+
+  isValidPhoneNumber(phoneNumber: string): boolean {
+    const phoneRegex = /^254[0-9]{9}$/;
+    return phoneRegex.test(phoneNumber);
   }
 }
