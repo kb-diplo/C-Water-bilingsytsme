@@ -50,14 +50,17 @@ export class ClientDashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    console.log('ClientDashboardComponent initialized');
+    console.log('Current stats on init:', this.stats);
+    
     const user = this.authService.getCurrentUser();
-    console.log('Client dashboard initialized for user:', user);
-
     if (!user) {
-      console.log('No user found, redirecting to login');
+      console.error('No authenticated user found');
       this.authService.logout();
       return;
     }
+
+    console.log('Current user:', user);
 
     // More flexible role checking (case-insensitive, handle both Client and Customer)
     const userRole = user.role?.toLowerCase();
@@ -73,6 +76,12 @@ export class ClientDashboardComponent implements OnInit {
     this.loadDashboardData();
   }
 
+  // Add a manual refresh method for debugging
+  refreshData(): void {
+    console.log('Manual refresh triggered');
+    this.loadDashboardData();
+  }
+
   loadDashboardData(): void {
     const user = this.authService.getCurrentUser();
     if (!user) {
@@ -82,29 +91,61 @@ export class ClientDashboardComponent implements OnInit {
     }
 
     console.log('Loading dashboard data for user:', user.id, user.username);
+    console.log('API URL:', this.apiUrl);
     this.loading = true;
 
+    // Reset stats to ensure we see changes
+    this.stats = {
+      unpaidBills: 0,
+      totalOwed: 0,
+      totalPaidThisYear: 0,
+      paymentCount: 0,
+      averageMonthlyBill: 0
+    };
+
     // Get the current client's information
+    console.log('Calling:', `${this.apiUrl}/clients/my-info`);
     this.http.get<any>(`${this.apiUrl}/clients/my-info`).subscribe({
       next: (clientInfo) => {
-        console.log('Client info response:', clientInfo);
+        console.log('✅ Client Info API Success - Response:', clientInfo);
         const clientId = clientInfo.id;
-        console.log('Found client ID:', clientId, 'for user:', user.username);
+        console.log('✅ Found client ID:', clientId, 'for user:', user.username);
 
         // Load bills for this client
+        console.log('Calling:', `${this.apiUrl}/bills/client/${clientId}`);
         this.http.get<any[]>(`${this.apiUrl}/bills/client/${clientId}`).subscribe({
           next: (bills) => {
-            console.log('Bills response:', bills);
-            this.stats.unpaidBills = bills?.filter(b => b.status !== 'Paid').length || 0;
+            console.log('✅ Bills API Success - Response:', bills);
+            console.log('✅ Bills length:', bills?.length);
+            if (bills && bills.length > 0) {
+              console.log('✅ First bill:', bills[0]);
+              console.log('✅ Bill statuses:', bills.map(b => b.status));
+            } else {
+              console.warn('⚠️ No bills returned from API');
+            }
+            
+            const unpaidBills = bills?.filter(b => b.status !== 'Paid') || [];
+            console.log('Unpaid bills:', unpaidBills.length);
+            
+            this.stats.unpaidBills = unpaidBills.length;
             // Use balance for accurate outstanding amount calculation
-            this.stats.totalOwed = bills?.filter(b => b.status !== 'Paid')
-              .reduce((sum, bill) => sum + (bill.balance || bill.totalAmount - (bill.amountPaid || 0)), 0) || 0;
+            this.stats.totalOwed = unpaidBills
+              .reduce((sum, bill) => {
+                const owed = bill.balance || bill.totalAmount - (bill.amountPaid || 0);
+                console.log(`Bill ${bill.billNumber}: balance=${bill.balance}, totalAmount=${bill.totalAmount}, amountPaid=${bill.amountPaid}, owed=${owed}`);
+                return sum + owed;
+              }, 0);
             this.recentBills = bills?.slice(0, 5) || [];
-            console.log('Bills stats:', this.stats);
+            console.log('Final bills stats:', this.stats);
+            
+            // Force change detection
+            this.stats = { ...this.stats };
             this.loading = false; // Set loading to false after bills are loaded
           },
           error: (err) => {
-            console.error('Error loading bills:', err);
+            console.error('❌ Bills API Error:', err);
+            console.error('❌ Error status:', err.status);
+            console.error('❌ Error message:', err.message);
             this.stats.unpaidBills = 0;
             this.stats.totalOwed = 0;
             this.recentBills = [];
@@ -113,15 +154,23 @@ export class ClientDashboardComponent implements OnInit {
         });
 
         // Load payments for this client
+        console.log('Calling:', `${this.apiUrl}/payments/client/${clientId}`);
         this.http.get<any[]>(`${this.apiUrl}/payments/client/${clientId}`).subscribe({
           next: (payments) => {
             console.log('Payments response:', payments);
+            console.log('Payments length:', payments?.length);
+            if (payments && payments.length > 0) {
+              console.log('First payment:', payments[0]);
+            }
             this.stats.totalPaidThisYear = payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
             this.stats.paymentCount = payments?.length || 0;
             this.stats.averageMonthlyBill = this.stats.paymentCount > 0 ?
               Math.round(this.stats.totalPaidThisYear / 12) : 0;
             this.paymentHistory = payments?.slice(0, 5) || [];
-            console.log('Payment stats:', this.stats);
+            console.log('Final payment stats:', this.stats);
+            
+            // Force change detection
+            this.stats = { ...this.stats };
           },
           error: (err) => {
             console.error('Error loading payments:', err);
@@ -133,8 +182,9 @@ export class ClientDashboardComponent implements OnInit {
         });
       },
       error: (err) => {
-        console.error('Error loading client info:', err);
-        console.error('Error details:', err.error);
+        console.error('❌ Client Info API Error:', err);
+        console.error('❌ Error status:', err.status);
+        console.error('❌ Error details:', err.error);
         
         // Handle different error scenarios more gracefully
         if (err.status === 404) {
@@ -403,9 +453,9 @@ export class ClientDashboardComponent implements OnInit {
             }
 
             const stkPushData = {
-              billId: unpaidBill.id,
-              phoneNumber: phoneNumber,
-              amount: amount
+              BillId: unpaidBill.id,
+              PhoneNumber: phoneNumber,
+              Amount: amount
             };
 
             console.log('Initiating STK Push with data:', stkPushData);
@@ -413,26 +463,33 @@ export class ClientDashboardComponent implements OnInit {
             this.http.post(`${this.apiUrl}/payments/mpesa/stkpush`, stkPushData).subscribe({
               next: (response: any) => {
                 this.paymentLoading = false;
-                console.log('STK Push initiated:', response);
+                console.log('STK Push response:', response);
                 
-                Swal.fire({
-                  icon: 'success',
-                  title: 'Payment Request Sent!',
-                  html: `
-                    <div class="text-left">
-                      <p>✅ M-Pesa payment request has been sent to <strong>${phoneNumber}</strong></p>
-                      <p>💰 Amount: <strong>KSh ${amount}</strong></p>
-                      <p>📱 Please check your phone and enter your M-Pesa PIN to complete the payment.</p>
-                      <p class="text-muted">The payment will be processed automatically once confirmed.</p>
-                    </div>
-                  `,
-                  confirmButtonText: 'OK',
-                  timer: 10000
-                }).then(() => {
-                  // Reset form and reload dashboard data
-                  this.paymentForm.reset();
-                  this.loadDashboardData();
-                });
+                if (response.responseCode === '0') {
+                  Swal.fire({
+                    icon: 'success',
+                    title: 'Payment Request Sent!',
+                    html: `
+                      <div class="text-left">
+                        <p>✅ M-Pesa payment request has been sent to <strong>${phoneNumber}</strong></p>
+                        <p>💰 Amount: <strong>KSh ${amount}</strong></p>
+                        <p>📱 Please check your phone and enter your M-Pesa PIN to complete the payment.</p>
+                        <p class="text-muted">The payment will be processed automatically once confirmed.</p>
+                      </div>
+                    `,
+                    timer: 15000,
+                    showConfirmButton: true
+                  }).then(() => {
+                    this.loadDashboardData();
+                  });
+                } else {
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'STK Push Failed',
+                    text: response.responseDescription || 'Failed to initiate payment request',
+                    showConfirmButton: true
+                  });
+                }
               },
               error: (error) => {
                 this.paymentLoading = false;

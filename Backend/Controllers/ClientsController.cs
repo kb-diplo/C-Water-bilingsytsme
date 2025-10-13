@@ -39,10 +39,19 @@ namespace MyApi.Controllers
                 return NotFound("User not found");
             }
 
-            // Find client details by matching user info
+            // Find client details by matching user info - try multiple approaches
             var clientDetails = await _context.Clients
-                .Where(c => c.Email == user.Email || c.FirstName + " " + c.LastName == user.FirstName + " " + user.LastName)
+                .Where(c => c.CreatedByUserId == user.Id && c.IsActive)
                 .FirstOrDefaultAsync();
+
+            // Fallback: try matching by email or name if direct user ID match fails
+            if (clientDetails == null)
+            {
+                clientDetails = await _context.Clients
+                    .Where(c => c.IsActive && (c.Email == user.Email || 
+                        (c.FirstName + " " + c.LastName) == (user.FirstName + " " + user.LastName)))
+                    .FirstOrDefaultAsync();
+            }
 
             if (clientDetails == null)
             {
