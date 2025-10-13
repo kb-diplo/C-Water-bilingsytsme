@@ -44,6 +44,36 @@ export class LayoutComponent implements OnInit {
     this.showUserDropdown = !this.showUserDropdown;
   }
 
+  // Toggle billing collapse for clients
+  toggleBillingCollapse(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const collapseElement = document.getElementById('collapseMyBilling');
+    if (collapseElement) {
+      if (collapseElement.classList.contains('show')) {
+        collapseElement.classList.remove('show');
+      } else {
+        collapseElement.classList.add('show');
+      }
+    }
+  }
+
+  // Toggle admin billing collapse
+  toggleAdminBillingCollapse(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const collapseElement = document.getElementById('collapseBilling');
+    if (collapseElement) {
+      if (collapseElement.classList.contains('show')) {
+        collapseElement.classList.remove('show');
+      } else {
+        collapseElement.classList.add('show');
+      }
+    }
+  }
+
   logout(): void {
     // Simple, instant logout - no confirmation needed
     this.authService.logout();

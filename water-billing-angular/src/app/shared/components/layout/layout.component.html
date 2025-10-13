@@ -35,12 +35,11 @@
       </li>
 
       <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseBilling" 
-           aria-expanded="true" aria-controls="collapseBilling">
+        <a class="nav-link collapsed" (click)="toggleAdminBillingCollapse($event)" style="cursor: pointer;">
           <i class="fas fa-fw fa-file-invoice-dollar"></i>
           <span>Billing</span>
         </a>
-        <div id="collapseBilling" class="collapse" aria-labelledby="headingBilling" data-parent="#accordionSidebar">
+        <div id="collapseBilling" class="collapse" aria-labelledby="headingBilling">
           <div class="bg-white py-2 collapse-inner rounded">
             <h6 class="collapse-header">Billing Sections:</h6>
             <a class="collapse-item" routerLink="/bills/ongoing" (click)="closeSidebarOnMobile()">Ongoing Bills</a>
@@ -108,12 +107,11 @@
       <div class="sidebar-heading">My Account</div>
       
       <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMyBilling" 
-           aria-expanded="true" aria-controls="collapseMyBilling">
+        <a class="nav-link collapsed" (click)="toggleBillingCollapse($event)" style="cursor: pointer;">
           <i class="fas fa-fw fa-file-invoice-dollar"></i>
           <span>My Bills</span>
         </a>
-        <div id="collapseMyBilling" class="collapse" aria-labelledby="headingMyBilling" data-parent="#accordionSidebar">
+        <div id="collapseMyBilling" class="collapse" aria-labelledby="headingMyBilling">
           <div class="bg-white py-2 collapse-inner rounded">
             <h6 class="collapse-header">Billing Sections:</h6>
             <a class="collapse-item" routerLink="/bills/ongoing" (click)="closeSidebarOnMobile()">Ongoing Bills</a>
