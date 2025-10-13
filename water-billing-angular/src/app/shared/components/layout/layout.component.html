@@ -14,7 +14,7 @@
 
     <!-- Nav Item - Dashboard -->
     <li class="nav-item">
-      <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">
+      <a class="nav-link" routerLink="/dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
         <i class="fas fa-fw fa-tachometer-alt"></i>
         <span>Dashboard</span>
       </a>
@@ -28,7 +28,7 @@
       <div class="sidebar-heading">Management</div>
       
       <li class="nav-item">
-        <a class="nav-link" routerLink="/clients" routerLinkActive="active">
+        <a class="nav-link" routerLink="/clients" routerLinkActive="active" (click)="closeSidebarOnMobile()">
           <i class="fas fa-fw fa-users"></i>
           <span>Clients</span>
         </a>
@@ -43,9 +43,9 @@
         <div id="collapseBilling" class="collapse" aria-labelledby="headingBilling" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
             <h6 class="collapse-header">Billing Sections:</h6>
-            <a class="collapse-item" routerLink="/bills/ongoing">Ongoing Bills</a>
-            <a class="collapse-item" routerLink="/bills/history">Billing History</a>
-            <a class="collapse-item" routerLink="/bills/record-payment">
+            <a class="collapse-item" routerLink="/bills/ongoing" (click)="closeSidebarOnMobile()">Ongoing Bills</a>
+            <a class="collapse-item" routerLink="/bills/history" (click)="closeSidebarOnMobile()">Billing History</a>
+            <a class="collapse-item" routerLink="/bills/record-payment" (click)="closeSidebarOnMobile()">
               <i class="fas fa-money-bill-wave fa-sm fa-fw mr-2"></i>Record Payment
             </a>
           </div>
@@ -108,16 +108,16 @@
       <div class="sidebar-heading">My Account</div>
       
       <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseBilling" 
-           aria-expanded="true" aria-controls="collapseBilling">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMyBilling" 
+           aria-expanded="true" aria-controls="collapseMyBilling">
           <i class="fas fa-fw fa-file-invoice-dollar"></i>
           <span>My Bills</span>
         </a>
-        <div id="collapseBilling" class="collapse" aria-labelledby="headingBilling" data-parent="#accordionSidebar">
+        <div id="collapseMyBilling" class="collapse" aria-labelledby="headingMyBilling" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
             <h6 class="collapse-header">Billing Sections:</h6>
-            <a class="collapse-item" routerLink="/bills/ongoing">Ongoing Bills</a>
-            <a class="collapse-item" routerLink="/bills/history">Billing History</a>
+            <a class="collapse-item" routerLink="/bills/ongoing" (click)="closeSidebarOnMobile()">Ongoing Bills</a>
+            <a class="collapse-item" routerLink="/bills/history" (click)="closeSidebarOnMobile()">Billing History</a>
           </div>
         </div>
       </li>
