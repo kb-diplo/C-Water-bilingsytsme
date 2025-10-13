@@ -38,6 +38,8 @@ namespace MyApi.Services
         {
             try
             {
+                _logger.LogInformation("Starting password reset email process for {Email}", toEmail);
+                
                 // Log email configuration (without password)
                 _logger.LogInformation("Email Configuration - Server: {Server}, Port: {Port}, Sender: {Sender}", 
                     _emailSettings.SmtpServer, _emailSettings.SmtpPort, _emailSettings.SenderEmail);
@@ -48,9 +50,12 @@ namespace MyApi.Services
                     return false;
                 }
 
-                var resetLink = $"https://my-angular-app/reset-password?token={resetToken}";
+                var resetLink = $"http://localhost:4200/reset-password?token={resetToken}";
                 var subject = "Water Billing System - Password Reset Request";
                 var htmlBody = GetPasswordResetEmailTemplate(firstName, resetLink);
+
+                _logger.LogInformation("Prepared email - To: {Email}, Subject: {Subject}, ResetLink: {ResetLink}", 
+                    toEmail, subject, resetLink);
 
                 using var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort)
                 {
@@ -68,6 +73,7 @@ namespace MyApi.Services
 
                 mailMessage.To.Add(toEmail);
 
+                _logger.LogInformation("Attempting to send email via SMTP...");
                 await client.SendMailAsync(mailMessage);
                 _logger.LogInformation("Password reset email sent successfully to {Email}", toEmail);
                 return true;
