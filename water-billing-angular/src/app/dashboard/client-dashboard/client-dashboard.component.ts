@@ -386,7 +386,7 @@ export class ClientDashboardComponent implements OnInit {
           <p><strong>Office Hours:</strong> Monday - Friday, 8:00 AM - 5:00 PM</p>
           <p><strong>Phone:</strong> 0743683868 / 0757690915</p>
           <p><strong>Email:</strong> support@denkamwaters.com</p>
-          <p><strong>Location:</strong> Kiambu, Kahawa Wendani</p>
+          <p><strong>Location:</strong> Kiambu, Ikinu</p>
         </div>
       `,
       confirmButtonText: 'OK',
