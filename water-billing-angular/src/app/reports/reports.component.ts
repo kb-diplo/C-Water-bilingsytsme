@@ -215,31 +215,27 @@ export class ReportsComponent implements OnInit, AfterViewInit {
     console.log('Downloading PDF report...');
     console.log('API URL:', this.apiUrl);
     
-    // Get the HTML report and open it in a new window for printing as PDF
     this.http.get(`${this.apiUrl}/reports/financial?export=pdf`, { responseType: 'text' }).subscribe({
       next: (htmlContent) => {
-        console.log('PDF content received, length:', htmlContent.length);
+        console.log('HTML content received, length:', htmlContent.length);
         
-        // Open in new window for printing
-        const printWindow = window.open('', '_blank', 'width=1200,height=800');
-        if (printWindow) {
-          printWindow.document.write(htmlContent);
-          printWindow.document.close();
-          printWindow.focus();
-          
-          // Automatically trigger print dialog after content loads
-          setTimeout(() => {
-            printWindow.print();
-          }, 1000);
-        }
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Financial_Report_${new Date().toISOString().split('T')[0]}.html`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
         
-        console.log('PDF report opened for printing');
+        console.log('Financial report downloaded successfully as HTML');
       },
       error: (error) => {
-        console.error('Error downloading PDF:', error);
+        console.error('Error downloading report:', error);
         console.error('Error details:', error.error);
         console.error('Error status:', error.status);
-        alert(`Error downloading PDF report: ${error.status} - ${error.message}`);
+        alert(`Error downloading report: ${error.status} - ${error.message}`);
       }
     });
   }
