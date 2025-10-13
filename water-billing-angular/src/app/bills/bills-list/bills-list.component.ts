@@ -206,11 +206,8 @@ export class BillsListComponent implements OnInit {
   }
 
   downloadBillReceipt(bill: Bill): void {
-    // Get the HTML content and download it as a PDF-ready HTML file
-    this.http.get(`${environment.apiUrl}/payments/bill/${bill.id}/receipt`, { responseType: 'text' }).subscribe({
-      next: (htmlContent) => {
-        // Create a blob with the HTML content
-        const blob = new Blob([htmlContent], { type: 'text/html' });
+    this.http.get(`${environment.apiUrl}/payments/bill/${bill.id}/receipt`, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -220,11 +217,10 @@ export class BillsListComponent implements OnInit {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
         
-        // Show success message
         Swal.fire({
           icon: 'success',
-          title: 'Bill Downloaded',
-          text: 'Your bill has been downloaded successfully. You can open it in your browser and print as PDF.',
+          title: 'Bill Receipt Downloaded',
+          text: 'Your bill receipt has been downloaded successfully.',
           timer: 3000,
           showConfirmButton: false
         });
@@ -434,9 +430,8 @@ export class BillsListComponent implements OnInit {
   }
 
   downloadPaymentReceipt(paymentId: number, billNumber: string): void {
-    this.http.get(`${environment.apiUrl}/payments/${paymentId}/receipt`, { responseType: 'text' }).subscribe({
-      next: (htmlContent) => {
-        const blob = new Blob([htmlContent], { type: 'text/html' });
+    this.http.get(`${environment.apiUrl}/payments/${paymentId}/receipt`, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -645,28 +640,84 @@ export class BillsListComponent implements OnInit {
       </html>
     `;
 
-    const printWindow = window.open('', '', 'width=1000,height=600');
-    if (printWindow) {
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
-      printWindow.focus();
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-        Swal.fire('Success', `${count} bill(s) exported successfully`, 'success');
-      }, 250);
-    }
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    Swal.fire('Success', `${count} bill(s) exported successfully`, 'success');
   }
 
-  // Missing methods for STK Push functionality
   sendSTKPush(): void {
     if (!this.isValidPhoneNumber(this.stkPhoneNumber)) {
       Swal.fire('Error', 'Please enter a valid phone number (254XXXXXXXXX)', 'error');
       return;
     }
 
-    // Implementation for STK Push
-    Swal.fire('Info', 'STK Push functionality will be implemented soon', 'info');
+    if (!this.selectedBill) {
+      Swal.fire('Error', 'No bill selected for payment', 'error');
+      return;
+    }
+
+    const amount = this.selectedBill.balance || this.selectedBill.totalAmount;
+    
+    Swal.fire({
+      title: 'Confirm STK Push',
+      html: `
+        <div class="text-left">
+          <p><strong>Bill:</strong> ${this.selectedBill.billNumber}</p>
+          <p><strong>Client:</strong> ${this.selectedBill.clientName}</p>
+          <p><strong>Phone:</strong> ${this.stkPhoneNumber}</p>
+          <p><strong>Amount:</strong> KSh ${amount.toFixed(2)}</p>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Send STK Push',
+      confirmButtonColor: '#28a745'
+    }).then((result) => {
+      if (result.isConfirmed && this.selectedBill) {
+        this.processAdminSTKPush(this.selectedBill, this.stkPhoneNumber, amount);
+      }
+    });
+  }
+
+  private processAdminSTKPush(bill: Bill, phoneNumber: string, amount: number): void {
+    const stkData = {
+      BillId: bill.id,
+      PhoneNumber: phoneNumber,
+      Amount: amount
+    };
+
+    this.http.post(`${environment.apiUrl}/payments/mpesa/stkpush`, stkData).subscribe({
+      next: (response) => {
+        Swal.fire({
+          icon: 'success',
+          title: 'STK Push Sent!',
+          html: `
+            <div class="text-left">
+              <p>✅ M-Pesa payment request sent to <strong>${phoneNumber}</strong></p>
+              <p>💰 Amount: <strong>KSh ${amount.toFixed(2)}</strong></p>
+              <p>📱 Please ask the client to check their phone and enter M-Pesa PIN.</p>
+              <p class="text-muted">The payment will be processed automatically once confirmed.</p>
+            </div>
+          `,
+          timer: 15000,
+          showConfirmButton: true
+        }).then(() => {
+          this.loadBills();
+        });
+      },
+      error: (error) => {
+        console.error('STK Push error:', error);
+        Swal.fire('Error', 'Failed to send STK Push. Please try again.', 'error');
+      }
+    });
   }
 
   isValidPhoneNumber(phoneNumber: string): boolean {
