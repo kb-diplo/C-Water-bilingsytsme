@@ -11,12 +11,13 @@ namespace MyApi.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class PaymentsController(WaterBillingDbContext context, IMpesaService mpesaService, IReceiptService receiptService, IEmailService emailService) : ControllerBase
+    public class PaymentsController(WaterBillingDbContext context, IMpesaService mpesaService, IReceiptService receiptService, IEmailService emailService, ILogger<PaymentsController> logger) : ControllerBase
     {
         private readonly WaterBillingDbContext _context = context;
         private readonly IMpesaService _mpesaService = mpesaService;
         private readonly IReceiptService _receiptService = receiptService;
         private readonly IEmailService _emailService = emailService;
+        private readonly ILogger<PaymentsController> _logger = logger;
 
         /// <summary>
         /// Record payment with validation
@@ -226,13 +227,19 @@ namespace MyApi.Controllers
         [Authorize(Roles = "Client,Admin")]
         public async Task<ActionResult<MpesaStkPushResponse>> InitiateMpesaPayment(MpesaStkPushDto dto)
         {
+            _logger.LogInformation("STK Push request received: BillId={BillId}, PhoneNumber={PhoneNumber}, Amount={Amount}", 
+                dto.BillId, dto.PhoneNumber, dto.Amount);
+                
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("STK Push request validation failed: {ModelState}", ModelState);
                 return BadRequest(ModelState);
             }
 
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+            
+            _logger.LogInformation("STK Push initiated by UserId={UserId}, Role={Role}", userId, userRole);
 
             // Validate bill exists and user has access
             var bill = await _context.Bills

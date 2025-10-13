@@ -251,7 +251,7 @@ export class UsersComponent implements OnInit, OnDestroy {
       Username: this.editUser.username,
       Email: this.editUser.email,
       Role: this.editUser.role,
-      IsActive: this.editUser.isActive
+      IsActive: Boolean(this.editUser.isActive)
     };
 
     if (this.editUser.password && this.editUser.password.trim() !== '') {

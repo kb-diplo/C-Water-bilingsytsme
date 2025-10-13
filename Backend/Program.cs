@@ -154,15 +154,17 @@ public partial class Program
                     )
                       .AllowAnyHeader()
                       .AllowAnyMethod()
-                      .AllowCredentials();
+                      .AllowCredentials()
+                      .SetIsOriginAllowedToAllowWildcardSubdomains();
             });
             
-            // Temporary permissive policy for debugging
+            // Enhanced permissive policy for local development
             options.AddPolicy("AllowAll", policy =>
             {
                 policy.AllowAnyOrigin()
                       .AllowAnyHeader()
-                      .AllowAnyMethod();
+                      .AllowAnyMethod()
+                      .SetPreflightMaxAge(TimeSpan.FromMinutes(10));
             });
         });
 
