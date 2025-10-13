@@ -30,23 +30,33 @@ namespace MyApi.Services
         {
             try
             {
+                _logger.LogInformation("Getting M-Pesa access token...");
+                _logger.LogInformation("Consumer Key: {ConsumerKey}", _mpesaSettings.ConsumerKey?.Substring(0, 5) + "...");
+                _logger.LogInformation("Base URL: {BaseUrl}", _mpesaSettings.BaseUrl);
+                
                 var credentials = Convert.ToBase64String(
                     Encoding.UTF8.GetBytes($"{_mpesaSettings.ConsumerKey}:{_mpesaSettings.ConsumerSecret}"));
 
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Basic {credentials}");
 
-                var response = await _httpClient.GetAsync(
-                    $"{_mpesaSettings.BaseUrl}/oauth/v1/generate?grant_type=client_credentials");
+                var tokenUrl = $"{_mpesaSettings.BaseUrl}/oauth/v1/generate?grant_type=client_credentials";
+                _logger.LogInformation("Token URL: {TokenUrl}", tokenUrl);
+                
+                var response = await _httpClient.GetAsync(tokenUrl);
+                var content = await response.Content.ReadAsStringAsync();
+                
+                _logger.LogInformation("Token response status: {StatusCode}", response.StatusCode);
+                _logger.LogInformation("Token response content: {Content}", content);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var content = await response.Content.ReadAsStringAsync();
                     var tokenResponse = JsonSerializer.Deserialize<MpesaAccessTokenResponse>(content);
+                    _logger.LogInformation("Access token obtained successfully");
                     return tokenResponse?.access_token ?? string.Empty;
                 }
 
-                _logger.LogError("Failed to get Mpesa access token. Status: {StatusCode}", response.StatusCode);
+                _logger.LogError("Failed to get Mpesa access token. Status: {StatusCode}, Content: {Content}", response.StatusCode, content);
                 return string.Empty;
             }
             catch (Exception ex)
