@@ -10,6 +10,8 @@ using System.Text.Json;
 using MyApi.Data;
 using MyApi.Models;
 using MyApi.Services;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 namespace MyApi;
 
@@ -139,6 +141,48 @@ public partial class Program
 
         // Register Price Service
         builder.Services.AddScoped<IPriceService, PriceService>();
+
+        // ============ ENTERPRISE OPTIMIZATIONS ============
+        
+        // Memory Caching
+        builder.Services.AddMemoryCache(options =>
+        {
+            options.SizeLimit = 1024; // Limit cache size
+        });
+
+        // Redis Caching (if connection string provided)
+        var redisConnection = builder.Configuration.GetConnectionString("Redis");
+        if (!string.IsNullOrEmpty(redisConnection))
+        {
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConnection;
+                options.InstanceName = "WaterBillingSystem";
+            });
+        }
+        else
+        {
+            // Fallback to in-memory distributed cache
+            builder.Services.AddDistributedMemoryCache();
+        }
+
+        // Register Cache Service
+        builder.Services.AddScoped<ICacheService, CacheService>();
+
+        // Token Service for JWT Refresh
+        builder.Services.AddScoped<ITokenService, TokenService>();
+
+        // Response Caching
+        builder.Services.AddResponseCaching(options =>
+        {
+            options.MaximumBodySize = 1024 * 1024; // 1MB
+            options.UseCaseSensitivePaths = false;
+        });
+
+
+        // Health Checks
+        builder.Services.AddHealthChecks()
+            .AddCheck("self", () => HealthCheckResult.Healthy());
 
         // Add CORS
         builder.Services.AddCors(options =>
@@ -463,6 +507,34 @@ public partial class Program
         
         // Use CORS (must be before Swagger) - temporarily using AllowAll for debugging
         app.UseCors("AllowAll");
+
+        // ============ ENTERPRISE MIDDLEWARE ============
+        
+        
+        // Response Caching
+        app.UseResponseCaching();
+        
+        // Health Checks
+        app.UseHealthChecks("/health", new HealthCheckOptions
+        {
+            ResponseWriter = async (context, report) =>
+            {
+                context.Response.ContentType = "application/json";
+                var response = new
+                {
+                    status = report.Status.ToString(),
+                    checks = report.Entries.Select(x => new
+                    {
+                        name = x.Key,
+                        status = x.Value.Status.ToString(),
+                        exception = x.Value.Exception?.Message,
+                        duration = x.Value.Duration.ToString()
+                    }),
+                    totalDuration = report.TotalDuration.ToString()
+                };
+                await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response));
+            }
+        });
 
         // Enable Swagger in all environments (after CORS, before Auth)
         try
