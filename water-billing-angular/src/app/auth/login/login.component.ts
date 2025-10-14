@@ -79,10 +79,20 @@ export class LoginComponent implements OnInit {
           });
         }
         
-        // Small delay to ensure user is fully set before redirect
+        // Increased delay to ensure user is fully set before redirect
         setTimeout(() => {
-          this.authService.redirectToDashboard();
-        }, 50);
+          const currentUser = this.authService.getCurrentUser();
+          if (currentUser) {
+            console.log('✅ User confirmed before redirect:', currentUser);
+            this.authService.redirectToDashboard();
+          } else {
+            console.error('❌ No user found after login, retrying...');
+            // Retry after another delay
+            setTimeout(() => {
+              this.authService.redirectToDashboard();
+            }, 200);
+          }
+        }, 150);
       },
       error: (error) => {
         this.loading = false;

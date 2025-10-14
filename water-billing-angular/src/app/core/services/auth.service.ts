@@ -292,7 +292,18 @@ export class AuthService {
       }
 
       if (currentUser) {
-        this.router.navigate([finalRoute], { replaceUrl: true });
+        console.log('🚀 Navigating to:', finalRoute);
+        this.router.navigate([finalRoute], { replaceUrl: true }).then(
+          (success) => {
+            if (success) {
+              console.log('✅ Navigation successful to:', finalRoute);
+            } else {
+              console.error('❌ Navigation failed to:', finalRoute);
+            }
+          }
+        ).catch(error => {
+          console.error('❌ Navigation error:', error);
+        });
       } else {
         console.error('🚨 User lost during redirect delay!');
         this.router.navigate(['/login']);
