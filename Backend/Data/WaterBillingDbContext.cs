@@ -32,6 +32,8 @@ namespace MyApi.Data
                 entity.Property(e => e.Location).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.ConnectionStatus).HasMaxLength(20);
                 entity.Property(e => e.InitialReading).HasPrecision(10, 2);
+                // Map UserId property to the correct database column name
+                entity.Property(e => e.UserId).HasColumnName("users_id");
             });
 
             // MeterReading configuration
