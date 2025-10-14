@@ -46,7 +46,7 @@ A comprehensive water billing management system built with **Angular 17** fronte
 - **Authentication**: JWT tokens with role-based policies
 - **Payments**: M-Pesa Daraja API integration
 - **Email**: SMTP with professional templates
-- **Deployment**: Netlify (Frontend) + Render (Backend)
+- **Deployment**: Vercel (Frontend) + Render (Backend)
 - **API Documentation**: Swagger/OpenAPI integration
 
 ### 📚 Documentation

@@ -17,7 +17,7 @@ The Water Billing System is a full-stack web application built with modern techn
 - **Backend**: ASP.NET Core 8 with C#
 - **Database**: PostgreSQL (Production) / SQL Server (Development)
 - **Authentication**: JWT tokens with role-based access control
-- **Deployment**: Netlify (Frontend) + Render (Backend)
+- **Deployment**: Vercel (Frontend) + Render (Backend)
 
 ## 🏛️ Architecture Patterns
 
@@ -186,15 +186,16 @@ services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 ## 🚀 Deployment Strategy
 
-### Frontend (Netlify)
-```toml
-# netlify.toml
-[build]
-  base = "water-billing-angular"
-  publish = "dist/water-billing-angular/browser"
-  command = "npm ci && npm run build"
-
-[[redirects]]
+### Frontend (Vercel)
+```json
+// vercel.json
+{
+  "build": {
+    "base": "water-billing-angular",
+    "publish": "dist/water-billing-angular/browser",
+    "command": "npm ci && npm run build"
+  }
+}
   from = "/*"
   to = "/index.html"
   status = 200

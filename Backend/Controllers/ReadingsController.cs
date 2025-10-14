@@ -40,7 +40,7 @@ namespace MyApi.Controllers
 
             // Update client with initial reading information
             client.InitialReading = dto.InitialReading;
-            client.HasInitialReading = true;
+            // client.HasInitialReading = true; // TEMPORARILY COMMENTED OUT DUE TO DB SCHEMA MISMATCH
             client.InitialReadingDate = DateTime.UtcNow;
             client.InitialReadingSetByUserId = userId;
 

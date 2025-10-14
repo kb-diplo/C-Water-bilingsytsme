@@ -185,29 +185,43 @@ public partial class Program
         builder.Services.AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy());
 
-        // Add CORS - Explicit configuration for debugging
+        // Add CORS - Handle Vercel preview URLs and production
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowAngularApp", policy =>
             {
-                policy.WithOrigins(
-                        "http://localhost:4200",
-                        "https://denkamwaterskenya.vercel.app"
-                    )
+                policy.SetIsOriginAllowed(origin =>
+                    {
+                        // Allow localhost for development
+                        if (origin.StartsWith("http://localhost:"))
+                            return true;
+                        
+                        // Allow production Vercel domain
+                        if (origin == "https://denkamwaterskenya.vercel.app")
+                            return true;
+                        
+                        // Allow Vercel preview URLs (format: https://denkamwaterskenya-*.vercel.app)
+                        if (origin.StartsWith("https://denkamwaterskenya-") && origin.EndsWith(".vercel.app"))
+                            return true;
+                        
+                        // Allow Vercel project preview URLs (format: https://denkamwaterskenya-*-kb-diplos-projects.vercel.app)
+                        if (origin.StartsWith("https://denkamwaterskenya-") && origin.Contains("-kb-diplos-projects.vercel.app"))
+                            return true;
+                        
+                        return false;
+                    })
                       .AllowAnyHeader()
                       .AllowAnyMethod()
                       .AllowCredentials()
-                      .WithExposedHeaders("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With")
                       .SetPreflightMaxAge(TimeSpan.FromMinutes(10));
             });
             
-            // Add a more permissive policy for debugging
+            // Keep permissive policy for emergency debugging
             options.AddPolicy("AllowAll", policy =>
             {
                 policy.AllowAnyOrigin()
                       .AllowAnyHeader()
-                      .AllowAnyMethod()
-                      .SetPreflightMaxAge(TimeSpan.FromMinutes(10));
+                      .AllowAnyMethod();
             });
         });
 
@@ -504,9 +518,9 @@ public partial class Program
             app.UseHttpsRedirection();
         }
         
-        // Use CORS (must be before Swagger) - temporarily use permissive policy for debugging
-        app.UseCors("AllowAll");
-        Console.WriteLine("[CORS] Using permissive 'AllowAll' policy for debugging");
+        // Use CORS (must be before Swagger) - using smart policy for Vercel URLs
+        app.UseCors("AllowAngularApp");
+        Console.WriteLine("[CORS] Using 'AllowAngularApp' policy with Vercel URL support");
         
         // Add CORS debugging middleware in development
         if (!app.Environment.IsProduction())

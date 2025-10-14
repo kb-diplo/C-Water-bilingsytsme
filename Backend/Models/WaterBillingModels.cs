@@ -23,7 +23,7 @@ namespace MyApi.Models
         public string Location { get; set; } = string.Empty;
         public string ConnectionStatus { get; set; } = "Pending"; // Connected, Disconnected, Pending
         public decimal InitialReading { get; set; } = 0; // Initial meter reading set by admin
-        public bool HasInitialReading { get; set; } = false; // Flag to track if initial reading is set
+        // public bool HasInitialReading { get; set; } = false; // Flag to track if initial reading is set - TEMPORARILY COMMENTED OUT DUE TO DB SCHEMA MISMATCH
         public DateTime? InitialReadingDate { get; set; } // When initial reading was set
         public int? InitialReadingSetByUserId { get; set; } // Who set the initial reading
         public bool IsActive { get; set; } = true;
