@@ -102,34 +102,19 @@ export class ClientsListComponent implements OnInit {
 
   loadClients(): void {
     this.loading = true;
-    console.log('🔄 ClientsList - Loading clients...');
-    console.log('🔄 ClientsList - API URL from service:', this.clientService['apiUrl']);
     
     this.clientService.getClients({
       page: this.currentPage,
       limit: this.itemsPerPage
     }).subscribe({
       next: (clients) => {
-        console.log('Clients response:', clients);
         const validClients = clients.filter(client => client.id && client.id > 0);
         this.clients = validClients;
         this.filteredClients = validClients;
         this.totalItems = validClients.length;
         this.loading = false;
-        
-        if (validClients.length !== clients.length) {
-          console.warn('Filtered out clients with invalid IDs:', clients.length - validClients.length);
-        }
       },
       error: (error) => {
-        console.error('❌ ClientsList - Error loading clients:', error);
-        console.error('❌ ClientsList - Error details:', {
-          status: error.status,
-          statusText: error.statusText,
-          error: error.error,
-          message: error.message,
-          url: error.url
-        });
         
         this.clients = [];
         this.filteredClients = [];

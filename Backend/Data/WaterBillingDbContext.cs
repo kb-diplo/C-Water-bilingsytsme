@@ -116,6 +116,13 @@ namespace MyApi.Data
                 .HasForeignKey(c => c.CreatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
                 
+            // Configure Client-User relationship
+            modelBuilder.Entity<Client>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
             // Configure MeterReading relationships
             modelBuilder.Entity<MeterReading>()
                 .HasOne(r => r.RecordedByUser)

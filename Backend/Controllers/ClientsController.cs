@@ -124,26 +124,27 @@ namespace MyApi.Controllers
                     return Forbid("Insufficient permissions");
                 }
 
-                // Query Clients table with User information
+                // Query Clients table with User information - handle potential null User relationships
                 var clients = await _context.Clients
+                    .Where(c => c.IsActive)
                     .Include(c => c.User)
                     .AsNoTracking()
-                    .OrderBy(c => c.User.Username)
+                    .OrderBy(c => c.Id)
                     .ToListAsync();
 
                 var clientDtos = clients.Select(c => new
                 {
                     id = c.Id,
                     userId = c.UserId,
-                    name = c.User != null ? c.User.Username : "N/A",
-                    email = c.User != null ? c.User.Email : "No Email",
+                    name = c.User?.Username ?? c.FullName ?? "N/A",
+                    email = c.User?.Email ?? c.Email ?? "No Email",
                     phone = c.Phone ?? "Not provided",
                     location = c.Location ?? "Not specified",
                     connectionStatus = c.ConnectionStatus ?? "Pending",
                     isActive = c.IsActive,
                     createdDate = c.CreatedDate,
-                    // Note: InitialReading is not included in client list as per requirements
-                    // Only admins can view/set initial readings through separate endpoints
+                    meterNumber = c.MeterNumber ?? "Not assigned",
+                    fullName = c.FullName
                 }).ToList();
 
                 _logger.LogInformation("Successfully retrieved {Count} clients", clientDtos.Count);
