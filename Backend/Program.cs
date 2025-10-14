@@ -185,7 +185,7 @@ public partial class Program
         builder.Services.AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy());
 
-        // Add CORS with proper origin handling
+        // Add CORS - Explicit configuration for debugging
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowAngularApp", policy =>
@@ -201,7 +201,7 @@ public partial class Program
                       .SetPreflightMaxAge(TimeSpan.FromMinutes(10));
             });
             
-            // Enhanced permissive policy for local development
+            // Add a more permissive policy for debugging
             options.AddPolicy("AllowAll", policy =>
             {
                 policy.AllowAnyOrigin()
@@ -504,9 +504,9 @@ public partial class Program
             app.UseHttpsRedirection();
         }
         
-        // Use CORS (must be before Swagger) - using specific policy for security
-        app.UseCors("AllowAngularApp");
-        Console.WriteLine("[CORS] CORS policy 'AllowAngularApp' applied");
+        // Use CORS (must be before Swagger) - temporarily use permissive policy for debugging
+        app.UseCors("AllowAll");
+        Console.WriteLine("[CORS] Using permissive 'AllowAll' policy for debugging");
         
         // Add CORS debugging middleware in development
         if (!app.Environment.IsProduction())
