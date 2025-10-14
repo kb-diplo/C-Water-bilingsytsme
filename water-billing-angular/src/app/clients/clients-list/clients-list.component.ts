@@ -102,6 +102,9 @@ export class ClientsListComponent implements OnInit {
 
   loadClients(): void {
     this.loading = true;
+    console.log('🔄 ClientsList - Loading clients...');
+    console.log('🔄 ClientsList - API URL from service:', this.clientService['apiUrl']);
+    
     this.clientService.getClients({
       page: this.currentPage,
       limit: this.itemsPerPage
@@ -119,12 +122,13 @@ export class ClientsListComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Error loading clients:', error);
-        console.error('Error details:', {
+        console.error('❌ ClientsList - Error loading clients:', error);
+        console.error('❌ ClientsList - Error details:', {
           status: error.status,
           statusText: error.statusText,
           error: error.error,
-          message: error.message
+          message: error.message,
+          url: error.url
         });
         
         this.clients = [];
@@ -133,15 +137,33 @@ export class ClientsListComponent implements OnInit {
         this.loading = false;
         
         let errorMessage = 'Failed to load clients';
-        if (error.status === 401 || error.status === 403) {
+        if (error.status === 404) {
+          errorMessage = 'API endpoint not found. The backend may still be deploying. Please wait a moment and refresh.';
+        } else if (error.status === 401 || error.status === 403) {
           errorMessage = 'You do not have permission to view clients';
         } else if (error.status === 500) {
           errorMessage = 'Server error. Please try again later.';
+        } else if (error.status === 0) {
+          errorMessage = 'Cannot connect to server. Please check your internet connection.';
         } else if (error.error?.message) {
           errorMessage = error.error.message;
         }
         
-        Swal.fire('Error', errorMessage, 'error');
+        Swal.fire({
+          title: 'Error Loading Clients',
+          text: errorMessage,
+          icon: 'error',
+          showCancelButton: true,
+          confirmButtonText: 'Retry',
+          cancelButtonText: 'Close'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Retry loading clients after a short delay
+            setTimeout(() => {
+              this.loadClients();
+            }, 2000);
+          }
+        });
       }
     });
   }

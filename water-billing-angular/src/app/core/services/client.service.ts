@@ -36,6 +36,8 @@ export class ClientService {
 
   // Get all clients (Admin/MeterReader only)
   getClients(params?: ClientSearchParams): Observable<ClientDto[]> {
+    console.log('📞 ClientService - Making API call to:', this.apiUrl);
+    console.log('📞 ClientService - Full environment API URL:', environment.apiUrl);
     return this.http.get<ClientDto[]>(this.apiUrl);
   }
 
