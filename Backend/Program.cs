@@ -185,24 +185,66 @@ public partial class Program
         builder.Services.AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy());
 
-        // Add CORS
+        // Add CORS with proper origin handling
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowAngularApp", policy =>
             {
-                policy.WithOrigins(
-                        "http://localhost:4200", 
-                        "http://localhost:4201", 
-                        "http://localhost:4202",
-                        "https://denkamwaterskenya.vercel.app",
-                        "https://c-water-bilingsytsme-git-master-kb-diplos-projects.vercel.app",
-                        "https://c-water-bilingsytsme.vercel.app",
-                        "https://c-water-bilingsytsme.onrender.com"
-                    )
+                policy.SetIsOriginAllowed(origin =>
+                    {
+                        // Log the origin for debugging
+                        Console.WriteLine($"[CORS] Checking origin: {origin}");
+                        
+                        // Allow localhost for development
+                        if (origin.StartsWith("http://localhost:") || origin.StartsWith("https://localhost:"))
+                        {
+                            Console.WriteLine($"[CORS] Allowed localhost: {origin}");
+                            return true;
+                        }
+                        
+                        // Allow specific Vercel domains
+                        var allowedDomains = new[]
+                        {
+                            "https://denkamwaterskenya.vercel.app",
+                            "https://c-water-bilingsytsme.vercel.app",
+                            "https://c-water-bilingsytsme-git-master-kb-diplos-projects.vercel.app"
+                        };
+                        
+                        if (allowedDomains.Contains(origin))
+                        {
+                            Console.WriteLine($"[CORS] Allowed specific domain: {origin}");
+                            return true;
+                        }
+                        
+                        // Allow any Vercel preview deployments for this project
+                        if (origin.StartsWith("https://c-water-bilingsytsme-") && origin.EndsWith(".vercel.app"))
+                        {
+                            Console.WriteLine($"[CORS] Allowed Vercel preview: {origin}");
+                            return true;
+                        }
+                        
+                        // Allow any denkam-related Vercel deployments
+                        if (origin.StartsWith("https://denkam") && origin.EndsWith(".vercel.app"))
+                        {
+                            Console.WriteLine($"[CORS] Allowed denkam Vercel domain: {origin}");
+                            return true;
+                        }
+                        
+                        // Allow Render backend (for internal calls)
+                        if (origin == "https://c-water-bilingsytsme.onrender.com")
+                        {
+                            Console.WriteLine($"[CORS] Allowed Render backend: {origin}");
+                            return true;
+                        }
+                        
+                        Console.WriteLine($"[CORS] BLOCKED origin: {origin}");
+                        return false;
+                    })
                       .AllowAnyHeader()
                       .AllowAnyMethod()
                       .AllowCredentials()
-                      .SetIsOriginAllowedToAllowWildcardSubdomains();
+                      .WithExposedHeaders("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With")
+                      .SetPreflightMaxAge(TimeSpan.FromMinutes(10));
             });
             
             // Enhanced permissive policy for local development
@@ -510,6 +552,20 @@ public partial class Program
         
         // Use CORS (must be before Swagger) - using specific policy for security
         app.UseCors("AllowAngularApp");
+        
+        // Add CORS debugging middleware in development
+        if (!app.Environment.IsProduction())
+        {
+            app.Use(async (context, next) =>
+            {
+                var origin = context.Request.Headers["Origin"].FirstOrDefault();
+                if (!string.IsNullOrEmpty(origin))
+                {
+                    Console.WriteLine($"[CORS DEBUG] Request from origin: {origin}");
+                }
+                await next();
+            });
+        }
 
         // ============ ENTERPRISE MIDDLEWARE ============
         
