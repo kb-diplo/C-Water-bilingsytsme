@@ -2,13 +2,20 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { ReactiveFormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-reset-password',
   templateUrl: './reset-password.html',
-  styleUrls: ['./reset-password.scss']
+  styleUrls: ['./reset-password.scss'],
+  standalone: true,
+  imports: [
+    ReactiveFormsModule,
+    RouterModule
+  ]
 })
 export class ResetPasswordComponent implements OnInit {
   resetForm: FormGroup;
