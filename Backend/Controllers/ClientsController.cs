@@ -125,8 +125,8 @@ namespace MyApi.Controllers
                 {
                     id = c.Id,
                     userId = c.UserId,
-                    name = c.User?.Username ?? "N/A",
-                    email = c.User?.Email ?? "No Email",
+                    name = c.User != null ? c.User.Username : "N/A",
+                    email = c.User != null ? c.User.Email : "No Email",
                     phone = c.Phone ?? "Not provided",
                     location = c.Location ?? "Not specified",
                     connectionStatus = c.ConnectionStatus ?? "Pending",

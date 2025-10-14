@@ -7,6 +7,7 @@ namespace MyApi.Models
     public class Client
     {
         public int Id { get; set; }
+        public int UserId { get; set; } // Foreign key to Users table
         [Required]
         public string FirstName { get; set; } = string.Empty;
         public string? MiddleName { get; set; }

@@ -172,7 +172,7 @@ namespace MyApi.Controllers
                 {
                     id = p.Id,
                     billId = p.BillId,
-                    clientName = p.Bill?.Client?.User?.Username ?? "Unknown Client",
+                    clientName = p.Bill != null && p.Bill.Client != null && p.Bill.Client.User != null ? p.Bill.Client.User.Username : "Unknown Client",
                     amount = p.Amount,
                     paymentDate = p.PaymentDate,
                     paymentMethod = p.PaymentMethod ?? "Cash",

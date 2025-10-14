@@ -61,7 +61,7 @@ namespace MyApi.Controllers
                     {
                         id = b.Id,
                         clientId = b.ClientId,
-                        clientName = b.Client?.User?.Username ?? "Unknown Client",
+                        clientName = b.Client != null && b.Client.User != null ? b.Client.User.Username : "Unknown Client",
                         billNumber = b.BillNumber,
                         unitsUsed = b.UnitsUsed,
                         ratePerUnit = b.RatePerUnit,
