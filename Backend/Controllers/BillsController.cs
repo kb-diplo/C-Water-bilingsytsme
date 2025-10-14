@@ -30,6 +30,8 @@ namespace MyApi.Controllers
             {
                 // Simple, clean query - avoid problematic Client table for now
                 var query = _context.Bills
+                    .Include(b => b.Client)
+                    .ThenInclude(c => c.User)
                     .AsNoTracking()
                     .Where(b => b.Status != "Deleted") // Exclude deleted bills
                     .AsQueryable();
@@ -42,11 +44,7 @@ namespace MyApi.Controllers
                     var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
                     if (user != null)
                     {
-                        // For now, show placeholder message for clients
-                        return Ok(new[] { new {
-                            message = "Client bills will be available once database schema is updated",
-                            username = user.Username
-                        }});
+                        query = query.Where(b => b.ClientId == user.Id);
                     }
                 }
 
@@ -64,19 +62,17 @@ namespace MyApi.Controllers
                     {
                         id = b.Id,
                         clientId = b.ClientId,
-                        billNumber = b.BillNumber ?? "N/A",
-                        unitsUsed = b.UnitsUsed,
-                        ratePerUnit = b.RatePerUnit,
-                        amount = b.Amount,
-                        penaltyAmount = b.PenaltyAmount,
-                        totalAmount = b.TotalAmount,
+                        clientName = b.Client?.User?.Username ?? "Unknown Client",
                         billDate = b.BillDate,
                         dueDate = b.DueDate,
+                        previousReading = b.PreviousReading,
+                        currentReading = b.CurrentReading,
+                        consumption = b.Consumption,
+                        amount = b.Amount,
                         status = b.Status ?? "Pending",
-                        // Placeholder values until Client table is fixed
-                        clientName = "Client TBD",
-                        amountPaid = 0m,
-                        balance = b.TotalAmount
+                        isPaid = b.IsPaid,
+                        paidDate = b.PaidDate,
+                        createdDate = b.CreatedDate
                     })
                     .ToListAsync();
 

@@ -138,52 +138,58 @@ namespace MyApi.Controllers
         /// Get all payments with pagination - Clean CRUD pattern like Users
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<IEnumerable<object>>> GetPayments(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 20,
-            [FromQuery] string? paymentMethod = null)
+        [Authorize(Policy = "RequireAdminOrMeterReader")]
+        public async Task<IActionResult> GetPayments()
         {
             try
             {
-                // Simple, clean query - avoid problematic Client table joins for now
-                var query = _context.Payments
-                    .AsNoTracking()
-                    .AsQueryable();
-
-                if (!string.IsNullOrEmpty(paymentMethod))
+                var currentUsername = User.Identity?.Name ?? "Unknown";
+                var currentUserRole = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "No Role";
+                
+                _logger.LogInformation("GetPayments called by {Username} (Role: {Role})", currentUsername, currentUserRole);
+                
+                var userRoles = User.FindAll(ClaimTypes.Role)
+                    .Select(c => c.Value.ToLowerInvariant())
+                    .ToHashSet();
+                
+                if (!userRoles.Contains("admin") && !userRoles.Contains("meterreader"))
                 {
-                    query = query.Where(p => p.PaymentMethod == paymentMethod);
+                    _logger.LogWarning("Unauthorized access attempt by {Username}. User roles: {UserRoles}", 
+                        currentUsername, string.Join(", ", userRoles));
+                    return Forbid("Insufficient permissions");
                 }
 
-                // Simple payment data without Client table joins
-                var payments = await query
+                // Query Payments with Bill and Client information
+                var payments = await _context.Payments
+                    .Include(p => p.Bill)
+                    .ThenInclude(b => b.Client)
+                    .ThenInclude(c => c.User)
+                    .AsNoTracking()
                     .OrderByDescending(p => p.PaymentDate)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .Select(p => new
-                    {
-                        id = p.Id,
-                        billId = p.BillId,
-                        amount = p.Amount,
-                        paymentDate = p.PaymentDate,
-                        paymentMethod = p.PaymentMethod ?? "Unknown",
-                        reference = p.Reference ?? "N/A",
-                        recordedByUserId = p.RecordedByUserId,
-                        // Placeholder values until Client/Bill tables are fixed
-                        billNumber = "Bill TBD",
-                        clientName = "Client TBD",
-                        recordedByUsername = "User TBD"
-                    })
                     .ToListAsync();
 
-                return Ok(payments);
+                var paymentDtos = payments.Select(p => new
+                {
+                    id = p.Id,
+                    billId = p.BillId,
+                    clientName = p.Bill?.Client?.User?.Username ?? "Unknown Client",
+                    amount = p.Amount,
+                    paymentDate = p.PaymentDate,
+                    paymentMethod = p.PaymentMethod ?? "Cash",
+                    transactionReference = p.TransactionReference ?? "N/A",
+                    status = "Completed", // Payments in the system are completed
+                    createdDate = p.CreatedDate
+                }).ToList();
+
+                _logger.LogInformation("Successfully retrieved {Count} payments", paymentDtos.Count);
+                return Ok(paymentDtos);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error retrieving payments. Error: {ErrorMessage}", ex.Message);
                 return StatusCode(
-                    StatusCodes.Status500InternalServerError,
-                    $"Error retrieving payments: {ex.Message}");
+                    StatusCodes.Status500InternalServerError, 
+                    "An error occurred while retrieving payments. Please try again later.");
             }
         }
 

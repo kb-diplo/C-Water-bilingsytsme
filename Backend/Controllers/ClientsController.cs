@@ -91,49 +91,61 @@ namespace MyApi.Controllers
         /// <summary>
         /// Get all clients - Clean CRUD pattern like Users
         /// </summary>
-        [HttpGet]
-        [Authorize(Roles = "Admin,MeterReader")]
-        public async Task<ActionResult<IEnumerable<object>>> GetAllClients()
+        [HttpGet("all")]
+        [Authorize(Policy = "RequireAdminOrMeterReader")]
+        public async Task<IActionResult> GetAllClients()
         {
             try
             {
-                // Simple, clean query - avoid problematic Client table for now
-                // Get all users with Client role (this works like Users endpoint)
-                var clientUsers = await _context.Users
+                var currentUsername = User.Identity?.Name ?? "Unknown";
+                var currentUserRole = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "No Role";
+                
+                _logger.LogInformation("GetAllClients called by {Username} (Role: {Role})", currentUsername, currentUserRole);
+                
+                var userRoles = User.FindAll(ClaimTypes.Role)
+                    .Select(c => c.Value.ToLowerInvariant())
+                    .ToHashSet();
+                
+                if (!userRoles.Contains("admin") && !userRoles.Contains("meterreader"))
+                {
+                    _logger.LogWarning("Unauthorized access attempt by {Username}. User roles: {UserRoles}", 
+                        currentUsername, string.Join(", ", userRoles));
+                    return Forbid("Insufficient permissions");
+                }
+
+                // Query Clients table with User information
+                var clients = await _context.Clients
+                    .Include(c => c.User)
                     .AsNoTracking()
-                    .Where(u => u.Role == "Client" && u.IsActive)
-                    .OrderBy(u => u.Username)
+                    .OrderBy(c => c.User.Username)
                     .ToListAsync();
 
-                // Map to clean response format
-                var result = clientUsers.Select(u => new
+                var clientDtos = clients.Select(c => new
                 {
-                    id = u.Id,
-                    username = u.Username ?? "N/A",
-                    email = u.Email ?? "No Email",
-                    firstName = u.FirstName ?? "N/A",
-                    lastName = u.LastName ?? "N/A",
-                    fullName = $"{u.FirstName ?? ""} {u.LastName ?? ""}".Trim(),
-                    role = u.Role,
-                    isActive = u.IsActive,
-                    createdDate = u.CreatedDate,
-                    // Placeholder values until Client table is fixed
-                    meterNumber = "TBD",
-                    location = "TBD",
-                    connectionStatus = "Pending",
-                    phone = "TBD"
+                    id = c.Id,
+                    userId = c.UserId,
+                    name = c.User?.Username ?? "N/A",
+                    email = c.User?.Email ?? "No Email",
+                    phone = c.Phone ?? "Not provided",
+                    location = c.Location ?? "Not specified",
+                    connectionStatus = c.ConnectionStatus ?? "Pending",
+                    isActive = c.IsActive,
+                    createdDate = c.CreatedDate,
+                    // Note: InitialReading is not included in client list as per requirements
+                    // Only admins can view/set initial readings through separate endpoints
                 }).ToList();
 
-                return Ok(result);
+                _logger.LogInformation("Successfully retrieved {Count} clients", clientDtos.Count);
+                return Ok(clientDtos);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error retrieving clients. Error: {ErrorMessage}", ex.Message);
                 return StatusCode(
-                    StatusCodes.Status500InternalServerError,
-                    $"Error retrieving clients: {ex.Message}");
+                    StatusCodes.Status500InternalServerError, 
+                    "An error occurred while retrieving clients. Please try again later.");
             }
         }
-
 
         /// <summary>
         /// Get client by ID - Admin/MeterReader can view any, Clients can only view their own
