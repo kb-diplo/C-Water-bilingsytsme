@@ -90,6 +90,16 @@ namespace MyApi.Controllers
         }
 
         /// <summary>
+        /// Get all clients - Backward compatibility endpoint
+        /// </summary>
+        [HttpGet]
+        [Authorize(Policy = "RequireAdminOrMeterReader")]
+        public async Task<IActionResult> GetClients()
+        {
+            return await GetAllClients();
+        }
+
+        /// <summary>
         /// Get all clients - Clean CRUD pattern like Users
         /// </summary>
         [HttpGet("all")]

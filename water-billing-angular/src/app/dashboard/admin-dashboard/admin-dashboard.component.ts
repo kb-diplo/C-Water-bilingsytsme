@@ -157,7 +157,11 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   loadDashboardData(): void {
+    console.log('🔄 Admin Dashboard - Starting to load dashboard data...');
+    console.log('🔄 API URL:', this.apiUrl);
+    
     // Load clients count - use same endpoint as clients list for consistency
+    console.log('📞 Making API call to:', `${this.apiUrl}/clients`);
     this.http.get<any[]>(`${this.apiUrl}/clients`).subscribe({
       next: (clients) => {
         console.log('Admin Dashboard - Clients loaded:', clients?.length);
@@ -170,14 +174,16 @@ export class AdminDashboardComponent implements OnInit {
         }
       },
       error: (error) => {
-        if (!environment.production) {
-          console.error('Error loading clients:', error);
-        }
+        console.error('❌ Admin Dashboard - Error loading clients:', error);
+        console.error('❌ Error status:', error.status);
+        console.error('❌ Error message:', error.message);
+        console.error('❌ Full error object:', error);
         this.stats.clients = 0;
       }
     });
 
     // Load bills data
+    console.log('📞 Making API call to:', `${this.apiUrl}/bills`);
     this.http.get<any[]>(`${this.apiUrl}/bills`).subscribe({
       next: (bills) => {
         this.stats.bills = bills?.length || 0;
@@ -201,9 +207,9 @@ export class AdminDashboardComponent implements OnInit {
           .reduce((sum, bill) => sum + (bill.balance || bill.totalAmount || 0), 0) || 0;
       },
       error: (error) => {
-        if (!environment.production) {
-          console.error('Error loading bills:', error);
-        }
+        console.error('❌ Admin Dashboard - Error loading bills:', error);
+        console.error('❌ Bills error status:', error.status);
+        console.error('❌ Bills error message:', error.message);
         this.stats.bills = 0;
         this.stats.paidBillsCount = 0;
         this.stats.pendingBillsCount = 0;
@@ -214,25 +220,30 @@ export class AdminDashboardComponent implements OnInit {
     });
 
     // Load payments data
+    console.log('📞 Making API call to:', `${this.apiUrl}/payments`);
     this.http.get<any[]>(`${this.apiUrl}/payments`).subscribe({
       next: (payments) => {
         this.stats.totalRevenue = payments?.reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0;
       },
       error: (error) => {
-        if (!environment.production) {
-          console.error('Error loading payments:', error);
-        }
+        console.error('❌ Admin Dashboard - Error loading payments:', error);
+        console.error('❌ Payments error status:', error.status);
+        console.error('❌ Payments error message:', error.message);
         this.stats.totalRevenue = 0;
       }
     });
 
     // Load users count (for meter readers)
+    console.log('📞 Making API call to:', `${this.apiUrl}/auth/users`);
     this.http.get<any[]>(`${this.apiUrl}/auth/users`).subscribe({
       next: (users) => {
         this.stats.meterReadersCount = users.filter(u => u.role === 'MeterReader').length;
         this.loading = false;
       },
       error: (error) => {
+        console.error('❌ Admin Dashboard - Error loading users:', error);
+        console.error('❌ Users error status:', error.status);
+        console.error('❌ Users error message:', error.message);
         this.stats.meterReadersCount = 0;
         this.loading = false;
       }

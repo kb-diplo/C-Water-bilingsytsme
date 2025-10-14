@@ -42,16 +42,14 @@ public partial class Program
             var renderDatabaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
             var configConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             
-            Console.WriteLine($"Environment: {(isProduction ? "Production" : "Development")}");
-            Console.WriteLine($"DATABASE_URL exists: {!string.IsNullOrEmpty(renderDatabaseUrl)}");
-            Console.WriteLine($"Config connection string exists: {!string.IsNullOrEmpty(configConnectionString)}");
+            // Database configuration logging removed for production security
             
             if (isProduction && !string.IsNullOrEmpty(renderDatabaseUrl))
             {
                 // Production: Use PostgreSQL from Render DATABASE_URL
-                Console.WriteLine("[INFO] Converting Render DATABASE_URL to connection string...");
+                // Converting Render DATABASE_URL to connection string
                 var npgsqlConnectionString = ConvertRenderPostgresUrl(renderDatabaseUrl);
-                Console.WriteLine("[INFO] Using PostgreSQL for production");
+                // Using PostgreSQL for production
                 
                 builder.Services.AddDbContext<WaterBillingDbContext>(options =>
                     options.UseNpgsql(npgsqlConnectionString, npgsqlOptions =>

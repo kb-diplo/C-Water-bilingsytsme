@@ -266,46 +266,37 @@ namespace MyApi.Controllers
         {
             try
             {
-                Console.WriteLine($"[DELETE BILL] Attempting to delete bill with ID: {id}");
-                
                 var bill = await _context.Bills
                     .Include(b => b.Payments)
                     .FirstOrDefaultAsync(b => b.Id == id);
-                    
+                
                 if (bill == null)
                 {
-                    Console.WriteLine($"[DELETE BILL] Bill with ID {id} not found");
-                    return NotFound(new { Message = $"Bill with ID {id} not found" });
+                    return NotFound("Bill not found");
                 }
-
-                Console.WriteLine($"[DELETE BILL] Found bill: {bill.BillNumber}, Status: {bill.Status}, Payments: {bill.Payments?.Count ?? 0}");
-
+                
                 // Check if bill has payments
                 if (bill.Payments != null && bill.Payments.Any())
                 {
-                    Console.WriteLine($"[DELETE BILL] Cannot delete bill {bill.BillNumber} - has {bill.Payments.Count} payments");
-                    return BadRequest(new { Message = "Cannot delete bill with existing payments. Please delete payments first or contact system administrator." });
+                    return BadRequest($"Cannot delete bill {bill.BillNumber} because it has {bill.Payments.Count} payment(s). Please delete the payments first.");
                 }
-
-                // Soft delete - set status to "Deleted" instead of removing from database
+                
+                // Soft delete: change status to "Deleted" instead of removing from database
                 var oldStatus = bill.Status;
                 bill.Status = "Deleted";
                 
                 await _context.SaveChangesAsync();
                 
-                Console.WriteLine($"[DELETE BILL] Successfully deleted bill {bill.BillNumber} (changed status from {oldStatus} to Deleted)");
-                
-                return Ok(new { 
-                    Message = "Bill deleted successfully", 
-                    BillId = id,
-                    BillNumber = bill.BillNumber,
-                    PreviousStatus = oldStatus
+                return Ok(new 
+                { 
+                    message = $"Bill {bill.BillNumber} has been deleted successfully",
+                    billNumber = bill.BillNumber,
+                    previousStatus = oldStatus,
+                    newStatus = "Deleted"
                 });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[DELETE BILL] Error deleting bill {id}: {ex.Message}");
-                Console.WriteLine($"[DELETE BILL] Stack trace: {ex.StackTrace}");
                 return StatusCode(500, new { Message = $"Error deleting bill: {ex.Message}" });
             }
         }

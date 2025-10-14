@@ -660,42 +660,41 @@ namespace MyApi.Controllers
         {
             try
             {
-                Console.WriteLine($"UpdateUser endpoint reached for user ID: {id}");
-                Console.WriteLine($"Request data: {System.Text.Json.JsonSerializer.Serialize(requestData)}");
+                _logger.LogInformation("UpdateUser endpoint reached for user ID: {UserId}", id);
                 
                 var user = await _context.Users.FindAsync(id);
                 if (user == null)
                 {
-                    Console.WriteLine($"User with ID {id} not found");
+                    _logger.LogWarning("User with ID {UserId} not found", id);
                     return NotFound("User not found");
                 }
 
-                Console.WriteLine($"Found user: {user.Username}");
+                _logger.LogDebug("Found user: {Username}", user.Username);
 
                 // Parse the JsonElement directly
                 
                 if (requestData.TryGetProperty("Username", out var usernameElement))
                 {
                     user.Username = usernameElement.GetString() ?? user.Username;
-                    Console.WriteLine($"Updated username to: {user.Username}");
+                    _logger.LogDebug("Updated username to: {Username}", user.Username);
                 }
                 
                 if (requestData.TryGetProperty("Email", out var emailElement))
                 {
                     user.Email = emailElement.GetString() ?? user.Email;
-                    Console.WriteLine($"Updated email to: {user.Email}");
+                    _logger.LogDebug("Updated email to: {Email}", user.Email);
                 }
                 
                 if (requestData.TryGetProperty("Role", out var roleElement))
                 {
                     user.Role = roleElement.GetString() ?? user.Role;
-                    Console.WriteLine($"Updated role to: {user.Role}");
+                    _logger.LogDebug("Updated role to: {Role}", user.Role);
                 }
                 
                 if (requestData.TryGetProperty("IsActive", out var isActiveElement))
                 {
                     user.IsActive = isActiveElement.GetBoolean();
-                    Console.WriteLine($"Updated isActive to: {user.IsActive}");
+                    _logger.LogDebug("Updated isActive to: {IsActive}", user.IsActive);
                 }
 
                 // Update password if provided
@@ -704,20 +703,19 @@ namespace MyApi.Controllers
                     var password = passwordElement.GetString();
                     if (!string.IsNullOrEmpty(password))
                     {
-                        Console.WriteLine("Updating password for user");
+                        _logger.LogDebug("Updating password for user");
                         user.PasswordHash = _passwordHasher.HashPassword(user, password);
                     }
                 }
 
                 await _context.SaveChangesAsync();
-                Console.WriteLine("User updated successfully in database");
+                _logger.LogInformation("User updated successfully in database");
 
                 return Ok(new { message = "User updated successfully" });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error updating user: {ex.Message}");
-                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                _logger.LogError(ex, "Error updating user: {ErrorMessage}", ex.Message);
                 return BadRequest($"Error updating user: {ex.Message}");
             }
         }

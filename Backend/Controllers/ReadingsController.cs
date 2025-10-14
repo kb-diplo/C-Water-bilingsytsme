@@ -97,13 +97,13 @@ namespace MyApi.Controllers
                                $"Current Reading: {existingReadingThisPeriod.CurrentReading}, " +
                                $"Recorded By: {existingReadingThisPeriod.RecordedByUserId}";
                 
-                Console.WriteLine($"Period reading validation failed for Client {dto.ClientId}: {debugInfo}");
+                // Period reading validation failed - this is expected behavior for duplicate readings
                 
                 // Check if admin is overriding the monthly restriction
                 var currentUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
                 if (dto.OverrideMonthlyRestriction && currentUserRole == "Admin")
                 {
-                    Console.WriteLine($"Admin override applied for Client {dto.ClientId} by user {userId}");
+                    // Admin override applied - allowing duplicate reading for this period
                     // Continue with reading creation - skip the period restriction
                 }
                 else
@@ -293,7 +293,7 @@ namespace MyApi.Controllers
             if (existingBill != null)
             {
                 // Log the issue but don't throw exception to avoid breaking the reading process
-                Console.WriteLine($"Warning: Bill already exists for Client {reading.ClientId} in period {reading.BillingPeriod}. Skipping bill generation.");
+                // Bill already exists for this period - skipping bill generation
                 return;
             }
 
@@ -338,46 +338,31 @@ namespace MyApi.Controllers
         {
             try
             {
-                Console.WriteLine($"Attempting to delete reading with ID: {id}");
-                
                 var reading = await _context.MeterReadings.FindAsync(id);
                 if (reading == null)
                 {
-                    Console.WriteLine($"Reading with ID {id} not found");
                     return NotFound("Reading not found");
                 }
-
-                Console.WriteLine($"Found reading: Client {reading.ClientId}, Date {reading.ReadingDate}");
 
                 // Check if this reading has generated bills and auto-delete them
                 var associatedBills = await _context.Bills
                     .Where(b => b.MeterReadingId == id)
                     .ToListAsync();
 
-                Console.WriteLine($"Found {associatedBills.Count} associated bills");
-
                 if (associatedBills.Any())
                 {
-                    var billNumbers = string.Join(", ", associatedBills.Select(b => b.BillNumber));
-                    Console.WriteLine($"Auto-deleting associated bills: {billNumbers}");
-                    
                     // Automatically delete associated bills first
                     _context.Bills.RemoveRange(associatedBills);
                     await _context.SaveChangesAsync();
-                    Console.WriteLine($"Successfully deleted {associatedBills.Count} associated bills");
                 }
 
-                Console.WriteLine("No associated bills found, proceeding with deletion");
                 _context.MeterReadings.Remove(reading);
                 await _context.SaveChangesAsync();
-                Console.WriteLine("Reading deleted successfully");
                 
                 return Ok(new { message = "Reading deleted successfully" });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error deleting reading {id}: {ex.Message}");
-                Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 return BadRequest($"Error deleting reading: {ex.Message}");
             }
         }

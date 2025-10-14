@@ -35,7 +35,7 @@ namespace MyApi.Data
                         
                         context.Users.Add(admin);
                         await context.SaveChangesAsync();
-                        Console.WriteLine("Admin user created successfully");
+                        // Bootstrap admin user created successfully
                     }
                 }
                 catch (Exception ex)
