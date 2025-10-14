@@ -15,6 +15,7 @@ namespace MyApi.Data
         public DbSet<PriceHistory> PriceHistory { get; set; }
         public DbSet<Users> Users { get; set; }
         public DbSet<MpesaTransaction> MpesaTransactions { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
