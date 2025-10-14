@@ -57,13 +57,16 @@ namespace MyApi.Data
                 entity.HasOne(e => e.Client)
                     .WithMany(c => c.Bills)
                     .HasForeignKey(e => e.ClientId);
+                entity.HasOne(e => e.MeterReading)
+                    .WithMany()
+                    .HasForeignKey(e => e.MeterReadingId)
+                    .OnDelete(DeleteBehavior.SetNull);
                 entity.Property(e => e.UnitsUsed).HasPrecision(10, 2);
                 entity.Property(e => e.RatePerUnit).HasPrecision(10, 2);
                 entity.Property(e => e.Amount).HasPrecision(10, 2);
                 entity.Property(e => e.PenaltyAmount).HasPrecision(10, 2);
                 entity.Property(e => e.TotalAmount).HasPrecision(10, 2);
                 entity.Property(e => e.BillingPeriod).HasMaxLength(7); // YYYY-MM format
-                // Note: MeterReadingId foreign key will be added later when data is migrated
             });
 
             // Payment configuration
@@ -84,6 +87,10 @@ namespace MyApi.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.RatePerUnit).HasPrecision(10, 2);
                 entity.Property(e => e.PenaltyRate).HasPrecision(5, 2);
+                entity.HasOne(s => s.UpdatedByUser)
+                    .WithMany()
+                    .HasForeignKey(s => s.UpdatedByUserId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             // PriceHistory configuration
@@ -162,6 +169,18 @@ namespace MyApi.Data
                 entity.Property(e => e.MpesaReceiptNumber).HasMaxLength(50);
                 entity.Property(e => e.TransactionDate).HasMaxLength(50);
                 entity.Property(e => e.ErrorMessage).HasMaxLength(500);
+            });
+
+            // RefreshToken configuration
+            modelBuilder.Entity<RefreshToken>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Token).IsRequired().HasMaxLength(500);
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(e => e.Token).IsUnique();
             });
         }
     }
