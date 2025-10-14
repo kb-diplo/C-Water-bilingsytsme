@@ -192,13 +192,7 @@ public partial class Program
             {
                 policy.WithOrigins(
                         "http://localhost:4200",
-                        "http://localhost:4201", 
-                        "http://localhost:4202",
-                        "https://localhost:4200",
-                        "https://denkamwaterskenya.vercel.app",
-                        "https://c-water-bilingsytsme.vercel.app",
-                        "https://c-water-bilingsytsme-git-master-kb-diplos-projects.vercel.app",
-                        "https://c-water-bilingsytsme.onrender.com"
+                        "https://denkamwaterskenya.vercel.app"
                     )
                       .AllowAnyHeader()
                       .AllowAnyMethod()
