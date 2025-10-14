@@ -12,6 +12,7 @@ using MyApi.Models;
 using MyApi.Services;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 
 namespace MyApi;
 

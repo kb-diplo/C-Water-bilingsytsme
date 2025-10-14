@@ -200,13 +200,18 @@ namespace MyApi.Controllers
         {
             try
             {
+                _logger.LogInformation("Processing forgot password request for email: {Email}", dto.Email);
+                
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Invalid model state for forgot password request");
                     return BadRequest(ModelState);
                 }
 
                 var user = await _context.Users
                     .FirstOrDefaultAsync(u => u.Email.ToLower() == dto.Email.ToLower() && u.IsActive);
+
+                _logger.LogInformation("User lookup result for {Email}: {Found}", dto.Email, user != null ? "Found" : "Not Found");
 
                 // Always return success for security (don't reveal if email exists)
                 var response = new { message = "If an account with that email exists, a password reset link has been sent." };
@@ -218,12 +223,17 @@ namespace MyApi.Controllers
                     user.ResetToken = resetToken;
                     user.ResetTokenExpiry = DateTime.UtcNow.AddMinutes(15);
 
+                    _logger.LogInformation("Generated reset token for user {Email}, expires at {Expiry}", user.Email, user.ResetTokenExpiry);
+
                     await _context.SaveChangesAsync();
+                    _logger.LogInformation("Saved reset token to database for user {Email}", user.Email);
 
                     // Get first name from client record or use username
                     var client = await _context.Clients
                         .FirstOrDefaultAsync(c => c.CreatedByUserId == user.Id);
                     var firstName = client?.FirstName ?? user.Username;
+
+                    _logger.LogInformation("Attempting to send password reset email to {Email} with firstName: {FirstName}", user.Email, firstName);
 
                     // Send email
                     var emailSent = await _emailService.SendPasswordResetEmailAsync(user.Email, firstName, resetToken);

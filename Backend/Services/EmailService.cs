@@ -40,22 +40,11 @@ namespace MyApi.Services
             {
                 _logger.LogInformation("Starting password reset email process for {Email}", toEmail);
                 
-                // Log email configuration (without password)
-                _logger.LogInformation("Email Configuration - Server: {Server}, Port: {Port}, Sender: {Sender}", 
-                    _emailSettings.SmtpServer, _emailSettings.SmtpPort, _emailSettings.SenderEmail);
-
-                if (string.IsNullOrEmpty(_emailSettings.SenderEmail) || string.IsNullOrEmpty(_emailSettings.SenderPassword))
-                {
-                    _logger.LogError("Email settings are not configured properly. SenderEmail or SenderPassword is missing.");
-                    return false;
-                }
-
                 var resetLink = $"http://localhost:4200/reset-password?token={resetToken}";
                 var subject = "Water Billing System - Password Reset Request";
                 var htmlBody = GetPasswordResetEmailTemplate(firstName, resetLink);
 
-                _logger.LogInformation("Prepared email - To: {Email}, Subject: {Subject}, ResetLink: {ResetLink}", 
-                    toEmail, subject, resetLink);
+                _logger.LogInformation("Prepared email - To: {Email}, Subject: {Subject}", toEmail, subject);
 
                 using var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort)
                 {
@@ -73,14 +62,14 @@ namespace MyApi.Services
 
                 mailMessage.To.Add(toEmail);
 
-                _logger.LogInformation("Attempting to send email via SMTP...");
+                _logger.LogInformation("Attempting to send password reset email via SMTP...");
                 await client.SendMailAsync(mailMessage);
                 _logger.LogInformation("Password reset email sent successfully to {Email}", toEmail);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to send password reset email to {Email}", toEmail);
+                _logger.LogError(ex, "Failed to send password reset email to {Email}. Error: {ErrorMessage}", toEmail, ex.Message);
                 return false;
             }
         }
