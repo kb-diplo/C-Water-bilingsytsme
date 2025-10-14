@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyApi.Data;
 using MyApi.Models;
+using MyApi.Services;
 using System.Security.Claims;
 
 namespace MyApi.Controllers
@@ -11,22 +12,32 @@ namespace MyApi.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class ClientsController(WaterBillingDbContext context, IPasswordHasher<Users> passwordHasher) : ControllerBase
+    public class ClientsController(WaterBillingDbContext context, IPasswordHasher<Users> passwordHasher, ICacheService cacheService) : ControllerBase
     {
         private readonly WaterBillingDbContext _context = context;
         private readonly IPasswordHasher<Users> _passwordHasher = passwordHasher;
+        private readonly ICacheService _cacheService = cacheService;
 
         /// <summary>
         /// Get current client's info (for logged-in clients)
         /// </summary>
         [HttpGet("my-info")]
         [Authorize(Roles = "Client,Customer")]
+        [ResponseCache(Duration = 300)] // Cache for 5 minutes
         public async Task<ActionResult<object>> GetMyClientInfo()
         {
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(username))
             {
                 return Unauthorized("User not authenticated");
+            }
+
+            // Check cache first
+            var cacheKey = $"client_info:{username}";
+            var cachedInfo = await _cacheService.GetAsync<object>(cacheKey);
+            if (cachedInfo != null)
+            {
+                return Ok(cachedInfo);
             }
 
             // Find the user and their client details
@@ -58,7 +69,7 @@ namespace MyApi.Controllers
                 return NotFound("Client details not found. Please contact administrator.");
             }
 
-            return Ok(new
+            var result = new
             {
                 id = clientDetails.Id,
                 username = user.Username,
@@ -69,7 +80,12 @@ namespace MyApi.Controllers
                 meterNumber = clientDetails.MeterNumber,
                 location = clientDetails.Location,
                 connectionStatus = clientDetails.ConnectionStatus
-            });
+            };
+
+            // Cache the result for 5 minutes
+            await _cacheService.SetAsync(cacheKey, result, TimeSpan.FromMinutes(5));
+
+            return Ok(result);
         }
 
         /// <summary>
