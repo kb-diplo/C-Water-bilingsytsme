@@ -12,11 +12,12 @@ namespace MyApi.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class ClientsController(WaterBillingDbContext context, IPasswordHasher<Users> passwordHasher, ICacheService cacheService) : ControllerBase
+    public class ClientsController(WaterBillingDbContext context, IPasswordHasher<Users> passwordHasher, ICacheService cacheService, ILogger<ClientsController> logger) : ControllerBase
     {
         private readonly WaterBillingDbContext _context = context;
         private readonly IPasswordHasher<Users> _passwordHasher = passwordHasher;
         private readonly ICacheService _cacheService = cacheService;
+        private readonly ILogger<ClientsController> _logger = logger;
 
         /// <summary>
         /// Get current client's info (for logged-in clients)

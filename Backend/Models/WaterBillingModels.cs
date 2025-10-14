@@ -32,6 +32,8 @@ namespace MyApi.Models
         [JsonIgnore]
         public Users? CreatedBy { get; set; }
         [JsonIgnore]
+        public Users? User { get; set; } // Navigation property to User
+        [JsonIgnore]
         public ICollection<MeterReading> MeterReadings { get; set; } = new List<MeterReading>();
         [JsonIgnore]
         public ICollection<Bill> Bills { get; set; } = new List<Bill>();

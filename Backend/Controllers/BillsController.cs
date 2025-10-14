@@ -28,12 +28,11 @@ namespace MyApi.Controllers
         {
             try
             {
-                // Simple, clean query - avoid problematic Client table for now
+                // Query Bills with Client and User information
                 var query = _context.Bills
                     .Include(b => b.Client)
                     .ThenInclude(c => c.User)
                     .AsNoTracking()
-                    .Where(b => b.Status != "Deleted") // Exclude deleted bills
                     .AsQueryable();
 
                 // Filter by user role - clients only see their own bills
@@ -63,16 +62,17 @@ namespace MyApi.Controllers
                         id = b.Id,
                         clientId = b.ClientId,
                         clientName = b.Client?.User?.Username ?? "Unknown Client",
+                        billNumber = b.BillNumber,
+                        unitsUsed = b.UnitsUsed,
+                        ratePerUnit = b.RatePerUnit,
+                        amount = b.Amount,
+                        penaltyAmount = b.PenaltyAmount,
+                        totalAmount = b.TotalAmount,
                         billDate = b.BillDate,
                         dueDate = b.DueDate,
-                        previousReading = b.PreviousReading,
-                        currentReading = b.CurrentReading,
-                        consumption = b.Consumption,
-                        amount = b.Amount,
-                        status = b.Status ?? "Pending",
-                        isPaid = b.IsPaid,
-                        paidDate = b.PaidDate,
-                        createdDate = b.CreatedDate
+                        status = b.Status ?? "Unpaid",
+                        billingPeriod = b.BillingPeriod,
+                        createdByUserId = b.CreatedByUserId
                     })
                     .ToListAsync();
 

@@ -176,9 +176,9 @@ namespace MyApi.Controllers
                     amount = p.Amount,
                     paymentDate = p.PaymentDate,
                     paymentMethod = p.PaymentMethod ?? "Cash",
-                    transactionReference = p.TransactionReference ?? "N/A",
+                    transactionReference = p.Reference ?? "N/A",
                     status = "Completed", // Payments in the system are completed
-                    createdDate = p.CreatedDate
+                    recordedByUserId = p.RecordedByUserId
                 }).ToList();
 
                 _logger.LogInformation("Successfully retrieved {Count} payments", paymentDtos.Count);
