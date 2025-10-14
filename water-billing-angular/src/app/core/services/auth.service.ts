@@ -119,11 +119,9 @@ export class AuthService {
 
   getCurrentUser(): User | null {
     const user = this.currentUserSubject.value;
-    if (environment.features.enableLogging && user) {
-      // Only log occasionally to avoid spam
-      if (Math.random() < 0.1) {
-        console.log('👤 AuthService.getCurrentUser() called:', user);
-      }
+    // Reduced logging frequency for production
+    if (environment.features.enableLogging && user && Math.random() < 0.05) {
+      console.log('👤 AuthService.getCurrentUser() called:', user);
     }
     return user;
   }
