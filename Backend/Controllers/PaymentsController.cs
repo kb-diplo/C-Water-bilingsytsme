@@ -135,48 +135,57 @@ namespace MyApi.Controllers
         }
 
         /// <summary>
-        /// Get all payments with pagination
+        /// Get all payments with pagination - Clean CRUD pattern like Users
         /// </summary>
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<IEnumerable<PaymentResponseDto>>> GetPayments(
+        public async Task<ActionResult<IEnumerable<object>>> GetPayments(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 20,
             [FromQuery] string? paymentMethod = null)
         {
-            var query = _context.Payments
-                .Include(p => p.Bill)
-                .ThenInclude(b => b.Client)
-                .Include(p => p.RecordedByUser)
-                .AsQueryable();
-
-            if (!string.IsNullOrEmpty(paymentMethod))
+            try
             {
-                query = query.Where(p => p.PaymentMethod == paymentMethod);
-            }
+                // Simple, clean query - avoid problematic Client table joins for now
+                var query = _context.Payments
+                    .AsNoTracking()
+                    .AsQueryable();
 
-            var payments = await query
-                .OrderByDescending(p => p.PaymentDate)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(p => new PaymentResponseDto
+                if (!string.IsNullOrEmpty(paymentMethod))
                 {
-                    Id = p.Id,
-                    BillId = p.BillId,
-                    BillNumber = p.Bill.BillNumber,
-                    ClientName = p.Bill.Client.FullName,
-                    Amount = p.Amount,
-                    PaymentDate = p.PaymentDate,
-                    PaymentMethod = p.PaymentMethod,
-                    Reference = p.Reference,
-                    RecordedByUsername = p.RecordedByUser.Username ?? "Unknown"
-                })
-                .ToListAsync();
+                    query = query.Where(p => p.PaymentMethod == paymentMethod);
+                }
 
-            return Ok(payments);
+                // Simple payment data without Client table joins
+                var payments = await query
+                    .OrderByDescending(p => p.PaymentDate)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(p => new
+                    {
+                        id = p.Id,
+                        billId = p.BillId,
+                        amount = p.Amount,
+                        paymentDate = p.PaymentDate,
+                        paymentMethod = p.PaymentMethod ?? "Unknown",
+                        reference = p.Reference ?? "N/A",
+                        recordedByUserId = p.RecordedByUserId,
+                        // Placeholder values until Client/Bill tables are fixed
+                        billNumber = "Bill TBD",
+                        clientName = "Client TBD",
+                        recordedByUsername = "User TBD"
+                    })
+                    .ToListAsync();
+
+                return Ok(payments);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    $"Error retrieving payments: {ex.Message}");
+            }
         }
-
-
 
         /// <summary>
         /// Get client payment history

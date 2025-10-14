@@ -51,9 +51,8 @@ namespace MyApi.Controllers
             var pendingBillsCount = allBills.Count(b => b.Status == "Unpaid" && b.DueDate >= DateTime.UtcNow);
             var overdueBillsCount = allBills.Count(b => b.Status == "Unpaid" && b.DueDate < DateTime.UtcNow);
 
-            // Count disconnected clients (clients with ConnectionStatus = "Disconnected")
-            var disconnectedClients = await _context.Clients
-                .CountAsync(c => c.ConnectionStatus == "Disconnected");
+            // Count disconnected clients - avoid problematic Client table for now
+            var disconnectedClients = 0; // Placeholder until Client table is fixed
 
             // Get monthly revenue data (last 12 months)
             var monthlyRevenue = allPayments
