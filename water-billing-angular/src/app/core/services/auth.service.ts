@@ -96,15 +96,17 @@ export class AuthService {
     return this.http.delete(`${this.apiUrl}/auth/users/${username}`);
   }
 
-  logout(): void {
+  logout(redirectToLogin: boolean = true): void {
     // Clear all authentication data
     localStorage.removeItem('token');
     localStorage.removeItem('currentUser');
     sessionStorage.clear(); // Clear any session data
     this.currentUserSubject.next(null);
     
-    // Navigate to login page immediately
-    this.router.navigate(['/login'], { replaceUrl: true });
+    // Only navigate to login if explicitly requested
+    if (redirectToLogin) {
+      this.router.navigate(['/login'], { replaceUrl: true });
+    }
   }
 
   getToken(): string | null {
@@ -177,7 +179,8 @@ export class AuthService {
         if (this.isAuthenticated()) {
           this.currentUserSubject.next(user);
         } else {
-          this.logout();
+          // Clear expired token without redirecting to login
+          this.logout(false);
         }
       } catch {
         localStorage.removeItem('currentUser');
