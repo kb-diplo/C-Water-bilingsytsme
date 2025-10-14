@@ -195,6 +195,8 @@ public partial class Program
                         "http://localhost:4201", 
                         "http://localhost:4202",
                         "https://denkamwaterskenya.vercel.app",
+                        "https://c-water-bilingsytsme-git-master-kb-diplos-projects.vercel.app",
+                        "https://c-water-bilingsytsme.vercel.app",
                         "https://c-water-bilingsytsme.onrender.com"
                     )
                       .AllowAnyHeader()
@@ -506,8 +508,8 @@ public partial class Program
             app.UseHttpsRedirection();
         }
         
-        // Use CORS (must be before Swagger) - temporarily using AllowAll for debugging
-        app.UseCors("AllowAll");
+        // Use CORS (must be before Swagger) - using specific policy for security
+        app.UseCors("AllowAngularApp");
 
         // ============ ENTERPRISE MIDDLEWARE ============
         

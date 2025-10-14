@@ -76,11 +76,6 @@ export class ClientDashboardComponent implements OnInit {
     this.loadDashboardData();
   }
 
-  // Add a manual refresh method for debugging
-  refreshData(): void {
-    console.log('Manual refresh triggered');
-    this.loadDashboardData();
-  }
 
   loadDashboardData(): void {
     const user = this.authService.getCurrentUser();
