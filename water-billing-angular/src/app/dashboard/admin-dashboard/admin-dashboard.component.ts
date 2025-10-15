@@ -157,14 +157,19 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   loadDashboardData(): void {
+    console.log('🔄 Loading dashboard data...');
+    
     // Load clients count - use same endpoint as clients list for consistency
     this.http.get<any[]>(`${this.apiUrl}/clients`).subscribe({
       next: (clients) => {
+        console.log('📊 Clients API response:', clients);
         // Filter out any clients with invalid IDs (same as clients list)
         const validClients = clients?.filter(client => client.id && client.id > 0) || [];
         this.stats.clients = validClients.length;
+        console.log('✅ Valid clients count:', this.stats.clients);
       },
       error: (error) => {
+        console.error('❌ Error loading clients:', error);
         this.stats.clients = 0;
       }
     });
@@ -172,6 +177,7 @@ export class AdminDashboardComponent implements OnInit {
     // Load bills data
     this.http.get<any[]>(`${this.apiUrl}/bills`).subscribe({
       next: (bills) => {
+        console.log('📊 Bills API response:', bills);
         this.stats.bills = bills?.length || 0;
         this.stats.paidBillsCount = bills?.filter(b => b.status === 'Paid').length || 0;
         
@@ -191,8 +197,17 @@ export class AdminDashboardComponent implements OnInit {
         this.stats.outstandingPayments = bills
           ?.filter(b => b.status === 'Unpaid')
           .reduce((sum, bill) => sum + (bill.balance || bill.totalAmount || 0), 0) || 0;
+        
+        console.log('✅ Bills stats:', {
+          total: this.stats.bills,
+          paid: this.stats.paidBillsCount,
+          pending: this.stats.pendingBillsCount,
+          overdue: this.stats.overdueBillsCount,
+          outstanding: this.stats.outstandingPayments
+        });
       },
       error: (error) => {
+        console.error('❌ Error loading bills:', error);
         this.stats.bills = 0;
         this.stats.paidBillsCount = 0;
         this.stats.pendingBillsCount = 0;
@@ -205,9 +220,12 @@ export class AdminDashboardComponent implements OnInit {
     // Load payments data
     this.http.get<any[]>(`${this.apiUrl}/payments`).subscribe({
       next: (payments) => {
+        console.log('📊 Payments API response:', payments);
         this.stats.totalRevenue = payments?.reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0;
+        console.log('✅ Total revenue:', this.stats.totalRevenue);
       },
       error: (error) => {
+        console.error('❌ Error loading payments:', error);
         this.stats.totalRevenue = 0;
       }
     });
@@ -215,10 +233,13 @@ export class AdminDashboardComponent implements OnInit {
     // Load users count (for meter readers)
     this.http.get<any[]>(`${this.apiUrl}/auth/users`).subscribe({
       next: (users) => {
+        console.log('📊 Users API response:', users);
         this.stats.meterReadersCount = users.filter(u => u.role === 'MeterReader').length;
+        console.log('✅ Meter readers count:', this.stats.meterReadersCount);
         this.loading = false;
       },
       error: (error) => {
+        console.error('❌ Error loading users:', error);
         this.stats.meterReadersCount = 0;
         this.loading = false;
       }

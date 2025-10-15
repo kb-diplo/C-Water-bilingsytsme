@@ -24,6 +24,7 @@ export interface LoginResponse {
   username: string;
   role: string;
   token: string;
+  email?: string;
   dashboardData?: any;
 }
 
@@ -34,6 +35,8 @@ export class AuthService {
   private apiUrl = environment.apiUrl;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  private dashboardDataSubject = new BehaviorSubject<any>(null);
+  public dashboardData$ = this.dashboardDataSubject.asObservable();
 
   constructor(
     private http: HttpClient,
@@ -62,6 +65,14 @@ export class AuthService {
             }
 
             this.setCurrentUser(user);
+
+            // Store dashboard data if available
+            if (response.dashboardData) {
+              this.setDashboardData(response.dashboardData);
+              if (environment.features.enableLogging) {
+                console.log('📊 Dashboard data stored:', response.dashboardData);
+              }
+            }
 
             if (environment.features.enableLogging) {
               console.log('✅ User set in AuthService, current user:', this.getCurrentUser());
@@ -102,6 +113,7 @@ export class AuthService {
     localStorage.removeItem('currentUser');
     sessionStorage.clear(); // Clear any session data
     this.currentUserSubject.next(null);
+    this.clearDashboardData(); // Clear dashboard data
     
     // Only navigate to login if explicitly requested
     if (redirectToLogin) {
@@ -176,6 +188,8 @@ export class AuthService {
         // Verify token is still valid
         if (this.isAuthenticated()) {
           this.currentUserSubject.next(user);
+          // Also load dashboard data if available
+          this.getDashboardData();
         } else {
           // Clear expired token without redirecting to login
           this.logout(false);
@@ -307,5 +321,26 @@ export class AuthService {
         this.router.navigate(['/login']);
       }
     }, 100);
+  }
+
+  // Dashboard data methods
+  setDashboardData(data: any): void {
+    localStorage.setItem('dashboardData', JSON.stringify(data));
+    this.dashboardDataSubject.next(data);
+  }
+
+  getDashboardData(): any {
+    const stored = localStorage.getItem('dashboardData');
+    if (stored) {
+      const data = JSON.parse(stored);
+      this.dashboardDataSubject.next(data);
+      return data;
+    }
+    return null;
+  }
+
+  clearDashboardData(): void {
+    localStorage.removeItem('dashboardData');
+    this.dashboardDataSubject.next(null);
   }
 }
