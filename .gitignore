@@ -4,10 +4,10 @@
 
 # ============ SENSITIVE FILES ============
 # Configuration files with secrets
-# Backend/appsettings.json
-# Backend/appsettings.Development.json
-# Backend/appsettings.Production.json
-# **/appsettings.*.json
+Backend/appsettings.json
+Backend/appsettings.Development.json
+Backend/appsettings.Production.json
+**/appsettings.*.json
 # Allow example/template files
 !**/appsettings.example.json
 !**/appsettings.template.json
