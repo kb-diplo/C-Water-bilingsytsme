@@ -127,7 +127,7 @@ namespace MyApi.Controllers
                 catch (Exception ex)
                 {
                     // Log email error but don't fail the payment
-                    // Failed to send payment confirmation email - continuing with payment processing
+                    _logger.LogWarning(ex, "Failed to send payment confirmation email for payment ID {PaymentId} - continuing with payment processing", response.Id);
                 }
             }
 
