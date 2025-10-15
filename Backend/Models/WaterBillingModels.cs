@@ -23,6 +23,9 @@ namespace MyApi.Models
         [Required]
         public string Location { get; set; } = string.Empty;
         public string ConnectionStatus { get; set; } = "Pending"; // Connected, Disconnected, Pending
+        public decimal InitialReading { get; set; } = 0; // Initial meter reading set by admin (defaults to 0)
+        public DateTime? InitialReadingDate { get; set; } // When initial reading was set
+        public int? InitialReadingSetByUserId { get; set; } // Who set the initial reading
         public bool IsActive { get; set; } = true;
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public int CreatedByUserId { get; set; }

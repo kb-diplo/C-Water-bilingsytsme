@@ -31,7 +31,9 @@ namespace MyApi.Data
                 entity.Property(e => e.MeterNumber).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Location).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.ConnectionStatus).HasMaxLength(20);
-                entity.Property(e => e.InitialReading).HasPrecision(10, 2);
+                entity.Property(e => e.InitialReading).HasPrecision(10, 2).HasColumnName("initial_reading");
+                entity.Property(e => e.InitialReadingDate).HasColumnName("initial_reading_date");
+                entity.Property(e => e.InitialReadingSetByUserId).HasColumnName("initial_reading_set_by_user_id");
                 // Map UserId property to the correct database column name
                 entity.Property(e => e.UserId).HasColumnName("users_id");
             });
