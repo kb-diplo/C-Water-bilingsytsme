@@ -36,6 +36,18 @@ namespace MyApi.Data
                 entity.Property(e => e.InitialReadingSetByUserId).HasColumnName("initial_reading_set_by_user_id");
                 // Map UserId property to the correct database column name
                 entity.Property(e => e.UserId).HasColumnName("users_id");
+                
+                // Configure Client-User relationship
+                entity.HasOne(c => c.User)
+                    .WithMany()
+                    .HasForeignKey(c => c.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                    
+                // Configure Client-CreatedBy relationship  
+                entity.HasOne(c => c.CreatedBy)
+                    .WithMany()
+                    .HasForeignKey(c => c.CreatedByUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             // MeterReading configuration
@@ -120,20 +132,7 @@ namespace MyApi.Data
                 entity.Property(e => e.Role).IsRequired().HasMaxLength(20);
             });
             
-            // Configure Client relationships
-            modelBuilder.Entity<Client>()
-                .HasOne(c => c.CreatedBy)
-                .WithMany()
-                .HasForeignKey(c => c.CreatedByUserId)
-                .OnDelete(DeleteBehavior.Restrict);
-                
-            // Configure Client-User relationship
-            modelBuilder.Entity<Client>()
-                .HasOne(c => c.User)
-                .WithMany()
-                .HasForeignKey(c => c.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-                
+            
             // Configure MeterReading relationships
             modelBuilder.Entity<MeterReading>()
                 .HasOne(r => r.RecordedByUser)
