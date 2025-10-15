@@ -13,6 +13,7 @@ using MyApi.Services;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
+using Npgsql;
 
 namespace MyApi;
 
@@ -591,6 +592,107 @@ public partial class Program
         app.MapGet("/", () => Results.Redirect("/swagger"))
            .AllowAnonymous();
 
+        // Run database migrations on startup
+        await RunDatabaseMigrations(app);
+
         app.Run();
+    }
+
+    /// <summary>
+    /// Run database migrations on startup to ensure schema is up to date
+    /// </summary>
+    private static async Task RunDatabaseMigrations(WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+
+        try
+        {
+            logger.LogInformation("[MIGRATION] Checking database schema...");
+
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            
+            // Check if we're using PostgreSQL (production)
+            if (connectionString?.Contains("postgres") == true)
+            {
+                await RunPostgreSQLMigrations(connectionString, logger);
+            }
+            else
+            {
+                logger.LogInformation("[MIGRATION] SQL Server detected - no custom migrations needed");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "[MIGRATION] Database migration failed - continuing startup");
+            // Don't fail startup if migration fails - log and continue
+        }
+    }
+
+    /// <summary>
+    /// Run PostgreSQL-specific migrations for production
+    /// </summary>
+    private static async Task RunPostgreSQLMigrations(string connectionString, ILogger logger)
+    {
+        try
+        {
+            using var connection = new Npgsql.NpgsqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            // Check if initial_reading columns exist
+            var checkSql = @"
+                SELECT COUNT(*) 
+                FROM information_schema.columns 
+                WHERE table_name = 'clients' 
+                AND column_name IN ('initial_reading', 'initial_reading_date', 'initial_reading_set_by_user_id')";
+
+            using var checkCommand = new Npgsql.NpgsqlCommand(checkSql, connection);
+            var existingColumns = Convert.ToInt32(await checkCommand.ExecuteScalarAsync());
+
+            if (existingColumns < 3)
+            {
+                logger.LogInformation("[MIGRATION] Adding missing initial reading columns to clients table...");
+
+                var migrationSql = @"
+                    -- Add InitialReading columns to clients table
+                    ALTER TABLE clients 
+                    ADD COLUMN IF NOT EXISTS initial_reading DECIMAL(10,2) DEFAULT 0.0 NOT NULL,
+                    ADD COLUMN IF NOT EXISTS initial_reading_date TIMESTAMP NULL,
+                    ADD COLUMN IF NOT EXISTS initial_reading_set_by_user_id INTEGER NULL;
+
+                    -- Add foreign key constraint for initial_reading_set_by_user_id
+                    DO $$ 
+                    BEGIN
+                        IF NOT EXISTS (
+                            SELECT 1 FROM information_schema.table_constraints 
+                            WHERE constraint_name = 'fk_clients_initial_reading_set_by_user'
+                        ) THEN
+                            ALTER TABLE clients 
+                            ADD CONSTRAINT fk_clients_initial_reading_set_by_user 
+                            FOREIGN KEY (initial_reading_set_by_user_id) REFERENCES users(id);
+                        END IF;
+                    END $$;
+
+                    -- Add comments for documentation
+                    COMMENT ON COLUMN clients.initial_reading IS 'Initial meter reading set by admin (defaults to 0)';
+                    COMMENT ON COLUMN clients.initial_reading_date IS 'When initial reading was set';
+                    COMMENT ON COLUMN clients.initial_reading_set_by_user_id IS 'User ID who set the initial reading';";
+
+                using var migrationCommand = new Npgsql.NpgsqlCommand(migrationSql, connection);
+                await migrationCommand.ExecuteNonQueryAsync();
+
+                logger.LogInformation("[MIGRATION] Successfully added initial reading columns to clients table");
+            }
+            else
+            {
+                logger.LogInformation("[MIGRATION] Initial reading columns already exist - no migration needed");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "[MIGRATION] PostgreSQL migration failed");
+            throw;
+        }
     }
 }
