@@ -40,7 +40,6 @@ namespace MyApi.Controllers
 
             // Update client with initial reading information
             client.InitialReading = dto.InitialReading;
-            client.HasInitialReading = true; // Mark that initial reading has been set
             client.InitialReadingDate = DateTime.UtcNow;
             client.InitialReadingSetByUserId = userId;
 
