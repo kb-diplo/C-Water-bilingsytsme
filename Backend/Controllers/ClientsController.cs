@@ -117,6 +117,8 @@ namespace MyApi.Controllers
                     .Select(c => c.Value.ToLowerInvariant())
                     .ToHashSet();
                 
+                _logger.LogInformation("User roles found: {UserRoles}", string.Join(", ", userRoles));
+                
                 if (!userRoles.Contains("admin") && !userRoles.Contains("meterreader"))
                 {
                     _logger.LogWarning("Unauthorized access attempt by {Username}. User roles: {UserRoles}", 
