@@ -605,18 +605,18 @@ public partial class Program
     {
         using var scope = app.Services.CreateScope();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var context = scope.ServiceProvider.GetRequiredService<WaterBillingDbContext>();
 
         try
         {
             logger.LogInformation("[MIGRATION] Checking database schema...");
 
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            // Check if we're using PostgreSQL by checking the provider
+            var isPostgreSQL = context.Database.ProviderName?.Contains("Npgsql") == true;
             
-            // Check if we're using PostgreSQL (production)
-            if (connectionString?.Contains("postgres") == true)
+            if (isPostgreSQL)
             {
-                await RunPostgreSQLMigrations(connectionString, logger);
+                await RunPostgreSQLMigrations(context, logger);
             }
             else
             {
@@ -633,13 +633,10 @@ public partial class Program
     /// <summary>
     /// Run PostgreSQL-specific migrations for production
     /// </summary>
-    private static async Task RunPostgreSQLMigrations(string connectionString, ILogger logger)
+    private static async Task RunPostgreSQLMigrations(WaterBillingDbContext context, ILogger logger)
     {
         try
         {
-            using var connection = new Npgsql.NpgsqlConnection(connectionString);
-            await connection.OpenAsync();
-
             // Check if initial_reading columns exist
             var checkSql = @"
                 SELECT COUNT(*) 
@@ -647,10 +644,23 @@ public partial class Program
                 WHERE table_name = 'clients' 
                 AND column_name IN ('initial_reading', 'initial_reading_date', 'initial_reading_set_by_user_id')";
 
-            using var checkCommand = new Npgsql.NpgsqlCommand(checkSql, connection);
-            var existingColumns = Convert.ToInt32(await checkCommand.ExecuteScalarAsync());
+            var existingColumns = await context.Database.ExecuteSqlRawAsync(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_name = 'clients' AND column_name IN ('initial_reading', 'initial_reading_date', 'initial_reading_set_by_user_id')");
 
-            if (existingColumns < 3)
+            // Use a different approach - try to query the columns directly
+            var columnCount = 0;
+            try
+            {
+                var result = await context.Database.SqlQueryRaw<int>(checkSql).FirstOrDefaultAsync();
+                columnCount = result;
+            }
+            catch
+            {
+                // If query fails, assume columns don't exist
+                columnCount = 0;
+            }
+
+            if (columnCount < 3)
             {
                 logger.LogInformation("[MIGRATION] Adding missing initial reading columns to clients table...");
 
@@ -679,8 +689,7 @@ public partial class Program
                     COMMENT ON COLUMN clients.initial_reading_date IS 'When initial reading was set';
                     COMMENT ON COLUMN clients.initial_reading_set_by_user_id IS 'User ID who set the initial reading';";
 
-                using var migrationCommand = new Npgsql.NpgsqlCommand(migrationSql, connection);
-                await migrationCommand.ExecuteNonQueryAsync();
+                await context.Database.ExecuteSqlRawAsync(migrationSql);
 
                 logger.LogInformation("[MIGRATION] Successfully added initial reading columns to clients table");
             }
